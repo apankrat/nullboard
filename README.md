@@ -69,6 +69,7 @@ Also:
 * Written for desktop and keyboard/mouse use
 * Essentially untested on mobile devices and against tap/touch input
 * Works in Firefox, tested in Chrome, should work in Safari and may work in Edge (or what it's called now)
+* Uses localStorage for storing boards/lists/notes, so be careful around [clearing your cache](https://stackoverflow.com/questions/9948284/how-persistent-is-localstorage)
 
 You spot a bug, file an issue.
 
