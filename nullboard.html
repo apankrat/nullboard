@@ -47,7 +47,7 @@
   -->
   <meta charset="utf-8">
   <title>Nullboard</title>
-  <style><!--
+  <style>
 
 	/***/
 	@font-face {
@@ -679,7 +679,28 @@
 		padding-right: 10px;
 	}
 
-  --></style>
+	/***/
+
+	@media print {
+		.logo, .config,
+		.board .head .teaser,
+		.list .head .teaser {
+			visibility: hidden;
+			display: none;
+		}
+
+		.board .list .note {
+			box-shadow: none;
+			outline: 1px solid #ccc;
+		}
+
+		.board .list .note.raw {
+			outline: none;
+		}
+	}
+
+</style>
+
 </head>
 <body>
 	<div class=logo>
@@ -786,7 +807,7 @@
 <script type="text/javascript">
 
 	//
-	var nb_codeVersion = 20190525;
+	var nb_codeVersion = 20190610;
 	var nb_dataVersion = 20190412;
 
 	//
