@@ -120,8 +120,7 @@
 
 	/***/
 	.board {
-		max-width: 1040px;
-		min-width: 260px;
+		min-width: 250px;
 
 		width: -moz-max-content;    /* firefox */
 		width: -webkit-max-content; /* chrome  */
@@ -129,6 +128,10 @@
 
 		margin: 0 auto;
 		padding: 20px;
+	}
+
+	body.crowded .board {
+		margin-top: 28px;
 	}
 
 	.board u {
@@ -231,7 +234,7 @@
 	.board > .head {
 		background: #EAEDF0;
 		padding: 5px;
-		margin: 0 5px 10px;
+		margin: 0 0 10px;
 		border-radius: 2px;
 		position: relative;
 	}
@@ -241,12 +244,39 @@
 	}
 
 	/***/
+	.board .lists-scroller {
+		height: auto;
+		margin: -1px 0 10px;
+		overflow-x: auto;
+		overflow-y: hidden;
+		display: none;
+	}
+
+	.lists-scroller div {
+		height: 1px;
+	}
+
+	.board .lists {
+		white-space: nowrap;
+		overflow: auto;
+		scrollbar-width: none;
+	}
+
 	.board .list {
-		float: left;
+		display: inline-block;
+		vertical-align: top;
 		width: 250px;
 		margin: 0 5px 10px;
 		background: linear-gradient(#EAEDF0 30px, #DDE1E5 90px);
 		border-radius: 2px;
+	}
+
+	.board .list:first-child {
+		margin-left: 0;
+	}
+
+	.board .list:last-child {
+		margin-right: 0;
 	}
 
 	.board .list .notes {
@@ -481,12 +511,19 @@
 	/***/
 	.logo {
 		position: absolute;
-		top: 10px;
-		left: 20px;
+		top: 9px;
+		left: 9px;
 		font-size: 11px;
 		line-height: 19px;
-		padding: 5px;
+		padding: 6px 12px;
 		opacity: 0.6;
+		z-index: 3;
+		background: #f8f9fb;
+	}
+
+	body.crowded .logo:hover {
+		background: #fff;
+		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 	}
 
 	.logo:hover {
@@ -524,11 +561,16 @@
 	.config {
 		position: absolute;
 		top: 10px;
-		right: 20px;
+		right: 21px;
 		font-size: 11px;
 		line-height: 19px;
 		z-index: 3;
 		background: #f8f9fb;
+	}
+
+	body.crowded .config:hover {
+		background: #fff;
+		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 	}
 
 	.config a {
@@ -548,7 +590,7 @@
 
 	.config .bulk {
 		margin-right: 20px;
-		padding: 5px 0 10px 20px;
+		padding: 5px 0 10px 22px;
 		transition: opacity 400ms;
 	}
 
@@ -725,6 +767,7 @@
 			<a href=# class=exp-board>Export board...</a>
 		</div>
 	</div>
+	</div>
 
 	<div class=wrap>
 	</div>
@@ -748,6 +791,7 @@
 					</div>
 				</div>
 			</div>
+			<div class=lists-scroller><div></div></div>
 			<div class=lists>
 			</div>
 		</div>
@@ -807,7 +851,7 @@
 <script type="text/javascript">
 
 	//
-	var nb_codeVersion = 20190610;
+	var nb_codeVersion = 20190611;
 	var nb_dataVersion = 20190412;
 
 	//
@@ -976,6 +1020,7 @@
 		updatePageTitle();
 		updateUndoRedo();
 		updateBoardIndex();
+		setupListScrolling();
 	}
 
 	//
@@ -1326,13 +1371,19 @@
 	function addList()
 	{
 		var $board = $('.wrap .board');
+		var $lists = $board.find('.lists');
 		var $list = $('tt .list').clone();
 
 		$list.find('.text').html('');
 		$list.find('.head').addClass('brand-new');
 
-		$board.find('.lists').append($list);
+		$lists.append($list);
 		$board.find('.lists .list .head .text').last().click();
+
+		var lists = $lists[0];
+		lists.scrollLeft = Math.max(0, lists.scrollWidth - lists.clientWidth);
+
+		setupListScrolling();
 	}
 
 	function deleteList($list)
@@ -1352,6 +1403,8 @@
 			$list.remove();
 			saveBoard();
 		});
+
+		setupListScrolling();
 	}
 
 	function moveList($list, left)
@@ -2206,6 +2259,98 @@
 	});
 
 	//
+	function adjustLayout()
+	{
+		var $body = $('body');
+		var $board = $('.board');
+
+		if (! $board.length)
+			return;
+
+		var lists = $board.find('.list').length;
+		var lists_w = (lists < 2) ? 250 : 260 * lists - 10;
+		var body_w = $body.width();
+
+		if (lists_w + 190 <= body_w)
+		{
+			$board.css('max-width', '');
+			$body.removeClass('crowded');
+		}
+		else
+		{
+			var max = Math.floor( (body_w - 40) / 260 );
+			max = (max < 2) ? 250 : 260 * max - 10;
+			$board.css('max-width', max + 'px');
+			$body.addClass('crowded');
+		}
+	}
+
+	$(window).resize(adjustLayout);
+
+	adjustLayout();
+
+	//
+	function adjustListScroller()
+	{
+		var $board = $('.board');
+		if (! $board.length)
+			return;
+
+		var $lists    = $('.board .lists');
+		var $scroller = $('.board .lists-scroller');
+		var $inner    = $scroller.find('div');
+
+		var max  = $board.width();
+		var want = $lists[0].scrollWidth;
+		var have = $inner.width();
+
+		if (want <= max)
+		{
+			$scroller.hide();
+			return;
+		}
+
+		$scroller.show();
+		if (want == have)
+			return;
+
+		$inner.width(want);
+		cloneScrollPos($lists, $scroller);
+	}
+
+	//
+	function cloneScrollPos($src, $dst)
+	{
+		var src = $src[0];
+		var dst = $dst[0];
+
+		if (src._busyScrolling)
+		{
+			src._busyScrolling--;
+			return;
+		}
+
+		dst._busyScrolling++;
+		dst.scrollLeft = src.scrollLeft;
+	}
+
+	function setupListScrolling()
+	{
+		var $lists    = $('.board .lists');
+		var $scroller = $('.board .lists-scroller');
+
+		adjustListScroller();
+
+		$lists[0]._busyScrolling = 0;
+		$scroller[0]._busyScrolling = 0;
+
+		$scroller.on('scroll', function(){ cloneScrollPos($scroller, $lists); });
+		$lists   .on('scroll', function(){ cloneScrollPos($lists, $scroller); });
+
+		adjustLayout();
+	}
+
+	//
 	var board_id = localStorage.getItem('nullboard.last_board');
 
 	if (board_id)
@@ -2224,6 +2369,11 @@
 	{
 		showBoard(true);
 	}
+
+	//
+	setInterval(adjustListScroller, 100);
+
+	setupListScrolling();
 
 </script>
 
