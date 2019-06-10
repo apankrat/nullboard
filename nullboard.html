@@ -859,11 +859,6 @@
 	{
 		alert('Hmmm... no "localStorage" support');
 	}
-	else
-	if (typeof(Object.assign) === 'undefined')
-	{
-		alert('Hmmm... no "Object.assign" support');
-	}
 
 	/*
 	 *	poor man's error handling -- $fixme
@@ -1095,7 +1090,7 @@
 			return false;
 		}
 
-		return Object.assign(new Board, board);
+		return $.extend(new Board, board);
 	}
 
 	function loadBoard(board_id)
