@@ -1,14 +1,16 @@
 <!doctype html>
 <html>
-<head>
-  <!--
 
-	+-------------------------------------------------------------+
+<head>
+	<meta charset="utf-8">
+	<!--
+
+	+=============================================================+
 	|                                                             |
 	|             Nullboard, a minimalist kanban board            |
 	|                    https://nullboard.io                     |
 	|                                                             |
-	+-------------------------------------------------------------+
+	+=============================================================+
 
 	LICENSE
 
@@ -45,829 +47,833 @@
 	Licensor:  Alexander Pankratov / swapped.ch
 
   -->
-  <meta charset="utf-8">
-  <title>Nullboard</title>
-  <style>
-
-	/***/
-	@font-face {
-		font-family: 'Nullboard';
-		font-weight: 400;
-		font-style: normal;
-		src: url('extras/Barlow-Regular.woff') format('woff');
-	}
-
-	@font-face {
-		font-family: 'Nullboard';
-		font-weight: 500;
-		font-style: normal;
-		src: url('extras/Barlow-Medium.woff') format('woff');
-	}
-
-	/***/
-	html, body, h1, textarea, input {
-		padding: 0;
-		margin: 0;
-	}
-
-	body, input, textarea {
-		font-family: Nullboard, sans-serif;
-		font-size: 13px;
-	}
-
-	body {
-		background: #fff;
-		background: #f8f9fb;
-	}
-
-	body.dragging {
-		user-select: none;
-		-webkit-user-select: none;
-		-ms-user-select: none;
-		-webkit-touch-callout: none;
-		-o-user-select: none;
-		-moz-user-select: none;
-	}
-
-	body.ding {
-		padding-top: 2px;
-	}
-
-	a {
-		text-decoration: none;
-		transition: color 400ms;
-	}
-
-	a, a:active, a:focus, textarea, input {
-		outline: none;
-	}
-
-	tt {
-		display: none;
-	}
-
-	/***/
-	.clearfix:after,
-	.board:after,
-	.lists:after,
-	.notes:after,
-	.head:after,
-	.menu:after {
-		content: "";
-		display: table;
-		clear: both;
-	}
-
-	/***/
-	.board {
-		min-width: 250px;
-
-		width: -moz-max-content;    /* firefox */
-		width: -webkit-max-content; /* chrome  */
-		width: intrinsic;           /* safari  */
-
-		margin: 0 auto;
-		padding: 20px;
-	}
-
-	body.crowded .board {
-		margin-top: 28px;
-	}
-
-	.board u {
-		text-decoration: none;
-	}
-
-	.board u:before {
-		content: '\00D7';
-		position: relative;
-		top: 2px;
-		font-size: 17px;
-		line-height: 10px;
-		font-weight: 400;
-	}
-
-	/***/
-	.board .head {
-		padding: 5px 0;
-		margin: 0 5px;
-		position: relative;
-	}
-
-	.board .head .text,
-	.board .head .edit {
-		font-weight: 500;
-		font-size: 13.5px;
-		line-height: 20px;
-		padding: 0 5px 2px;
-		border: none;
-	}
-
-	.board .head .text {
-		min-height: 20px;
-		white-space: pre;
-		overflow: hidden;
-	}
-
-	.board .head .edit {
-		display: none;
-	}
-
-	.board .head .edit::placeholder {
-		font-weight: 400;
-		font-size: 10px;
-		line-height: 22px;
-		text-transform: uppercase;
-		color: #1489db;
-		opacity: 0.6;
-	}
-
-	.board .head.editing .text {
-		display: none;
-	}
-
-	.board .head.editing .edit {
-		display: block;
-		outline: 1px solid #8eaedd;
-	}
-
-	.board .menu {
-		position: absolute;
-		top: 0;
-		right: 0;
-		height: 20px;
-		padding: 5px 6px 7px 30px;
-		background: linear-gradient(to right, #EAEDF000, #EAEDF0 10px);
-		font-size: 11px;
-		line-height: 20px;
-	}
-
-	.board .menu a,
-	.board .ops  a {
-		color: #000000A0;
-		transition: color 200ms;
-	}
-
-	.board .menu a {
-		padding-left: 10px;
-	}
-
-	.board .menu a:hover,
-	.board .ops  a:hover {
-		color: #000;
-	}
-
-	.board .menu a.warn:hover,
-	.board .ops  a.warn:hover {
-		color: #c40;
-	}
-
-	.board .menu .undo-board,
-	.board .menu .redo-board {
-		display: none;
-	}
-
-	.board .head.editing .menu {
-		display: none;
-	}
-
-	.board > .head {
-		background: #EAEDF0;
-		padding: 5px;
-		margin: 0 0 10px;
-		border-radius: 2px;
-		position: relative;
-	}
-
-	.board > .head .menu {
-		margin-right: 5px;
-	}
-
-	/***/
-	.board .lists-scroller {
-		height: auto;
-		margin: -1px 0 10px;
-		overflow-x: auto;
-		overflow-y: hidden;
-		display: none;
-	}
-
-	.lists-scroller div {
-		height: 1px;
-	}
-
-	.board .lists {
-		white-space: nowrap;
-		overflow: auto;
-		scrollbar-width: none;
-	}
-
-	.board .list {
-		display: inline-block;
-		vertical-align: top;
-		width: 250px;
-		margin: 0 5px 10px;
-		background: linear-gradient(#EAEDF0 30px, #DDE1E5 90px);
-		border-radius: 2px;
-	}
-
-	.board .list::-webkit-scrollbar {
-		display: none;
-	}
-
-	.board .list:first-child {
-		margin-left: 0;
-	}
-
-	.board .list:last-child {
-		margin-right: 0;
-	}
-
-	.board .list .notes {
-		padding: 0 5px;
-	}
-
-	/***/
-	.board .head .menu .teaser {
-		position: absolute;
-		right: 3px;
-		top: 5px;
-		padding: 0 3px;
-	}
-
-	.board .head .menu .bulk {
-		display: none;
-		opacity: 0;
-		z-index: 1;
-	}
-
-	.board .head .menu:hover .bulk {
-		display: block;
-		opacity: 1;
-	}
-
-	.board .head .menu:hover .teaser {
-		display: none;
-	}
-
-	/***/
-	.board .list .menu .mov-list-r.half {
-		padding-left: 0;
-	}
-
-	.board .list .menu .full {
-		display: none;
-	}
-
-	.board .list:first-child .menu .half,
-	.board .list:last-child  .menu .half {
-		display: none;
-	}
-
-	.board .list:first-child .menu .mov-list-r.full,
-	.board .list:last-child  .menu .mov-list-l.full {
-		display: inline-block;
-	}
-
-	.board .list:first-child:last-child .menu .half,
-	.board .list:first-child:last-child .menu .full {
-		display: none;
-	}
-
-	/***/
-	.board .list .note {
-		background: #fff;
-		margin-top: 5px;
-		box-shadow: 0 1px 2px #bbb, 0 0 1px #ddd;
-		position: relative;
-	}
-
-	.board .list .note.dragging,
-	.board .list .note.dragging.raw {
-		background: #CED4DA;
-		box-shadow: 0 +1px 0 #00000010 inset, 
-			    0 -1px 0 #00000010 inset,
-			    +1px 0 0 #00000010 inset,
-			    -1px 0 0 #00000010 inset;
-	}
-
-	.board .list .note.dragging * {
-		opacity: 0 !important;
-	}
-
-	/***/
-	.board .list .note:last-child {
-		margin-bottom: 5px;
-	}
-
-	.board .list .note .text,
-	.board .list .note .edit {
-		padding: 5px 10px;
-		margin-right: 15px;
-		font-size: 11px;
-	}
-
-	.board .list .note .text {
-		min-height: 13px;
-		white-space: pre-wrap;
-	}
-
-	.board .list .note .edit {
-		display: none;
-		border: none;
-	}
-
-	.board .list .note.editing {
-		box-shadow: none;
-		outline: 1px solid #8eaedd;
-	}
-
-	.board .list .note.editing .text {
-		display: none;
-	}
-
-	.board .list .note.editing .edit {
-		display: block;
-		resize: none;
-	}
-
-	/***/
-	.board .list .note .ops {
-		position: absolute;
-		top: 0;
-		right: 0;
-		opacity: 0;
-		transition: opacity 400ms;
-		cursor: default;
-	}
-
-	.board .list .note.editing .ops {
-		display: none;
-	}
-
-	.board .list .note:hover .ops {
-		opacity: 1;
-	}
-
-	.board .list .note .ops .teaser {
-		display: block;
-		margin-top: 2px;
-		margin-right: 1px;
-		padding-right: 3px;
-		font-size: 9px;
-	}
-
-	.board .list .note .ops .teaser:before {
-		content: '\2261';
-	}
-
-	.board .list .note .ops .bulk {
-		display: none;
-		background: #fff;
-		border-left: none;
-		padding: 0 0 1px 5px;
-		font-size: 9px;
-		font-weight: 500;
-		border-left: 1px solid #ddd;
-		border-bottom: 1px solid #ddd;
-	}
-
-	.board .list .note .ops .bulk a {
-		padding-right: 4px;
-	}
-
-	.board .list .note .ops:hover .bulk {
-		display: block;
-	}
-
-	.board .list .note .ops:hover .teaser {
-		display: none;
-	}
-
-	/***/
-	.board .list .note.raw {
-		background: transparent;
-		box-shadow: none;
-		font-weight: 500;
-	}
-
-	.board .list .note.raw.editing {
-		background: #fff;
-	}
-
-	.board .list .note.raw .text {
-	}
-
-	.board .list .note.collapsed {
-		height: 23px;
-	}
-
-	.board .list .note.collapsed .text {
-		height: 13px;
-		overflow: hidden;
-		line-height: 22px;
-		padding-top: 0;
-	}
-
-	.board .list .note.collapsed .ops {
-		opacity: 1;
-	}
-
-	.board .list .note.collapsed .ops .teaser {
-		padding: 1px 3px 0 1px;
-	}
-
-	.board .list .note.collapsed .ops .teaser:before {
-		content: '_';
-		top: 1px;
-	}
-
-	.board .list .note.collapsed:hover .ops .teaser:before {
-		content: '\2261';
-	}
-
-	/***/
-	.dragster {
-		z-index: 2;
-		position: absolute;
-		opacity: 0;
-		box-shadow: 1px 2px 3px #00000050;
-		background: #fff;
-		white-space: pre-wrap;
-		cursor: move;
-
-		padding: 5px 25px 5px 10px;
-		font-size: 11px;
-
-		box-shadow: 0 +1px 0 #ACB4BC inset, 
-		            0 -1px 0 #ACB4BC inset,
-		            +1px 0 0 #ACB4BC inset,
-		            -1px 0 0 #ACB4BC inset,
-		            0px 1px 3px #00000030;
-	}
-
-	.dragster.collapsed {
-		overflow: hidden;
-		line-height: 22px;
-		padding-top: 0;
-	}
-
-	/***/
-	.logo {
-		position: absolute;
-		top: 9px;
-		left: 9px;
-		font-size: 11px;
-		line-height: 19px;
-		padding: 6px 12px;
-		opacity: 0.6;
-		z-index: 3;
-		background: #f8f9fb;
-	}
-
-	body.crowded .logo:hover {
-		background: #fff;
-		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-	}
-
-	.logo:hover {
-		opacity: 1.0;
-	}
-
-	.logo .bulk {
-		overflow: hidden;
-		height: 0;
-		opacity: 0;
-		transition: opacity 400ms;
-	}
-
-	.logo:hover .bulk {
-		height: auto;
-		opacity: 1;
-	}
-
-	.logo a {
-		color: #000;
-		display: block;
-	}
-
-	.logo a:hover {
-		color: #1489db;
-	}
-
-	.logo .bulk a:before {
-		display: inline-block;
-		content: '-';
-		width: 11px;
-	}
-
-	/***/
-	.config {
-		position: absolute;
-		top: 10px;
-		right: 21px;
-		font-size: 11px;
-		line-height: 19px;
-		z-index: 3;
-		background: #f8f9fb;
-	}
-
-	body.crowded .config:hover {
-		background: #fff;
-		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-	}
-
-	.config a {
-		display: block;
-		color: #000;
-		transition: color 200ms;
-	}
-
-	.config a:hover {
-		color: #1489db;
-	}
-
-	.config .teaser {
-		padding: 5px;
-		color: #999;
-	}
-
-	.config .bulk {
-		margin-right: 20px;
-		padding: 5px 0 10px 22px;
-		transition: opacity 400ms;
-	}
-
-	.config .bulk div {
-		display: none;
-		padding: 6px 2px;
-		margin: 6px -2px;
-		border-top: 1px solid #00000028;
-		border-bottom: 1px solid #00000028;
-	}
-
-	.config .bulk div a {
-		display: block;
-		margin-right: 10px;
-	}
-
-	.config .bulk div a.active {
-		color: #1489db;
-	}
-
-	.config .bulk div a.active:before {
-		content: '\2022 ';
-		display: inline-block;
-		width: 13px;
-		margin-left: -13px;
-	}
-
-	.config .bulk div a.active:hover {
-		color: #000;
-	}
-
-	.config .bulk input.imp-board-select {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		visibility: hidden;
-	}
-
-	/***/
-	.config .bulk {
-		display: none;
-		opacity: 0;
-	}
-
-	.config:hover .teaser {
-		display: none;
-	}
-
-	.config:hover .bulk {
-		display: block;
-		opacity: 1;
-	}
-
-	/***/
-	.overlay {
-		position: fixed;
-		z-index: 10;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background: rgba(0,0,0,0.9);
-		display: none;
-	}
-
-	/***/
-	.overlay .license {
-		font-size: 12px;
-		line-height: 16px;
-		white-space: pre-wrap;
-		width: 384px;
-		height: auto;
-		max-height: 600px;
-		padding: 20px 25px 22px;
-		overflow-y: auto;
-		background: #fff;
-		position: absolute;
-		top: 100px;
-		left: 50%;
-		margin-left: -192px;
-	}
-
-	.overlay .license a {
-		color: #1489db;
-	}
-
-	.overlay .license span {
-		display: inline-block;
-		padding-right: 8px;
-	}
-
-	/***/
-	.overlay .about {
-		font-size: 12px;
-		line-height: 16px;
-		text-align: center;
-		width: 240px;
-		height: auto;
-		padding: 50px 25px;
-		background: #fff;
-		position: absolute;
-		top: 100px;
-		left: 50%;
-		margin-left: -145px;
-	}
-
-	.overlay .about h1 {
-		font-size: 15px;
-		font-weight: 500;
-		margin-bottom: 10px;
-	}
-
-	.overlay .about a {
-		display: block;
-		color: #1489db;
-	}
-
-	.overlay .about div {
-		position: absolute;
-		bottom: -30px;
-		width: 240px;
-		color: #888;
-	}
-
-	.overlay .about div span {
-		display: inline-block;
-		text-align: left;
-		padding-right: 10px;
-	}
-
-	/***/
-
-	@media print {
-		.logo, .config,
-		.board .head .teaser,
-		.list .head .teaser {
-			visibility: hidden;
+	<title>Nullboard</title>
+	<style>
+		/***/
+		@font-face {
+			font-family: 'Nullboard';
+			font-weight: 400;
+			font-style: normal;
+			src: url('extras/Barlow-Regular.woff') format('woff');
+		}
+
+		@font-face {
+			font-family: 'Nullboard';
+			font-weight: 500;
+			font-style: normal;
+			src: url('extras/Barlow-Medium.woff') format('woff');
+		}
+
+		/***/
+		html,
+		body,
+		h1,
+		textarea,
+		input {
+			padding: 0;
+			margin: 0;
+		}
+
+		body,
+		input,
+		textarea {
+			font-family: Nullboard, sans-serif;
+			font-size: 13px;
+		}
+
+		body {
+			background: #fff;
+			background: #f8f9fb;
+		}
+
+		body.dragging {
+			user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+			-webkit-touch-callout: none;
+			-o-user-select: none;
+			-moz-user-select: none;
+		}
+
+		body.ding {
+			padding-top: 2px;
+		}
+
+		a {
+			text-decoration: none;
+			transition: color 400ms;
+		}
+
+		a,
+		a:active,
+		a:focus,
+		textarea,
+		input {
+			outline: none;
+		}
+
+		tt {
 			display: none;
 		}
 
+		/***/
+		.clearfix:after,
+		.board:after,
+		.lists:after,
+		.notes:after,
+		.head:after,
+		.menu:after {
+			content: "";
+			display: table;
+			clear: both;
+		}
+
+		/***/
+		.board {
+			min-width: 250px;
+
+			width: -moz-max-content;
+			/* firefox */
+			width: -webkit-max-content;
+			/* chrome  */
+			width: intrinsic;
+			/* safari  */
+
+			margin: 0 auto;
+			padding: 20px;
+		}
+
+		body.crowded .board {
+			margin-top: 28px;
+		}
+
+		.board u {
+			text-decoration: none;
+		}
+
+		.board u:before {
+			content: '\00D7';
+			position: relative;
+			top: 2px;
+			font-size: 17px;
+			line-height: 10px;
+			font-weight: 400;
+		}
+
+		/***/
+		.board .head {
+			padding: 5px 0;
+			margin: 0 5px;
+			position: relative;
+		}
+
+		.board .head .text,
+		.board .head .edit {
+			font-weight: 500;
+			font-size: 13.5px;
+			line-height: 20px;
+			padding: 0 5px 2px;
+			border: none;
+		}
+
+		.board .head .text {
+			min-height: 20px;
+			white-space: pre;
+			overflow: hidden;
+		}
+
+		.board .head .edit {
+			display: none;
+		}
+
+		.board .head .edit::placeholder {
+			font-weight: 400;
+			font-size: 10px;
+			line-height: 22px;
+			text-transform: uppercase;
+			color: #1489db;
+			opacity: 0.6;
+		}
+
+		.board .head.editing .text {
+			display: none;
+		}
+
+		.board .head.editing .edit {
+			display: block;
+			outline: 1px solid #8eaedd;
+		}
+
+		.board .menu {
+			position: absolute;
+			top: 0;
+			right: 0;
+			height: 20px;
+			padding: 5px 6px 7px 30px;
+			background: linear-gradient(to right, #EAEDF000, #EAEDF0 10px);
+			font-size: 11px;
+			line-height: 20px;
+		}
+
+		.board .menu a,
+		.board .ops a {
+			color: #000000A0;
+			transition: color 200ms;
+		}
+
+		.board .menu a {
+			padding-left: 10px;
+		}
+
+		.board .menu a:hover,
+		.board .ops a:hover {
+			color: #000;
+		}
+
+		.board .menu a.warn:hover,
+		.board .ops a.warn:hover {
+			color: #c40;
+		}
+
+		.board .menu .undo-board,
+		.board .menu .redo-board {
+			display: none;
+		}
+
+		.board .head.editing .menu {
+			display: none;
+		}
+
+		.board>.head {
+			background: #EAEDF0;
+			padding: 5px;
+			margin: 0 0 10px;
+			border-radius: 2px;
+			position: relative;
+		}
+
+		.board>.head .menu {
+			margin-right: 5px;
+		}
+
+		/***/
+		.board .lists-scroller {
+			height: auto;
+			margin: -1px 0 10px;
+			overflow-x: auto;
+			overflow-y: hidden;
+			display: none;
+		}
+
+		.lists-scroller div {
+			height: 1px;
+		}
+
+		.board .lists {
+			white-space: nowrap;
+			overflow: auto;
+			scrollbar-width: none;
+		}
+
+		.board .list {
+			display: inline-block;
+			vertical-align: top;
+			width: 250px;
+			margin: 0 5px 10px;
+			background: linear-gradient(#EAEDF0 30px, #DDE1E5 90px);
+			border-radius: 2px;
+		}
+
+		.board .list::-webkit-scrollbar {
+			display: none;
+		}
+
+		.board .list:first-child {
+			margin-left: 0;
+		}
+
+		.board .list:last-child {
+			margin-right: 0;
+		}
+
+		.board .list .notes {
+			padding: 0 5px;
+		}
+
+		/***/
+		.board .head .menu .teaser {
+			position: absolute;
+			right: 3px;
+			top: 5px;
+			padding: 0 3px;
+		}
+
+		.board .head .menu .bulk {
+			display: none;
+			opacity: 0;
+			z-index: 1;
+		}
+
+		.board .head .menu:hover .bulk {
+			display: block;
+			opacity: 1;
+		}
+
+		.board .head .menu:hover .teaser {
+			display: none;
+		}
+
+		/***/
+		.board .list .menu .mov-list-r.half {
+			padding-left: 0;
+		}
+
+		.board .list .menu .full {
+			display: none;
+		}
+
+		.board .list:first-child .menu .half,
+		.board .list:last-child .menu .half {
+			display: none;
+		}
+
+		.board .list:first-child .menu .mov-list-r.full,
+		.board .list:last-child .menu .mov-list-l.full {
+			display: inline-block;
+		}
+
+		.board .list:first-child:last-child .menu .half,
+		.board .list:first-child:last-child .menu .full {
+			display: none;
+		}
+
+		/***/
 		.board .list .note {
+			background: #fff;
+			margin-top: 5px;
+			box-shadow: 0 1px 2px #bbb, 0 0 1px #ddd;
+			position: relative;
+		}
+
+		.board .list .note.dragging,
+		.board .list .note.dragging.raw {
+			background: #CED4DA;
+			box-shadow: 0 +1px 0 #00000010 inset,
+				0 -1px 0 #00000010 inset,
+				+1px 0 0 #00000010 inset,
+				-1px 0 0 #00000010 inset;
+		}
+
+		.board .list .note.dragging * {
+			opacity: 0 !important;
+		}
+
+		/***/
+		.board .list .note:last-child {
+			margin-bottom: 5px;
+		}
+
+		.board .list .note .text,
+		.board .list .note .edit {
+			padding: 5px 10px;
+			margin-right: 15px;
+			font-size: 11px;
+		}
+
+		.board .list .note .text {
+			min-height: 13px;
+			white-space: pre-wrap;
+		}
+
+		.board .list .note .edit {
+			display: none;
+			border: none;
+		}
+
+		.board .list .note.editing {
 			box-shadow: none;
-			outline: 1px solid #ccc;
+			outline: 1px solid #8eaedd;
 		}
 
+		.board .list .note.editing .text {
+			display: none;
+		}
+
+		.board .list .note.editing .edit {
+			display: block;
+			resize: none;
+		}
+
+		/***/
+		.board .list .note .ops {
+			position: absolute;
+			top: 0;
+			right: 0;
+			opacity: 0;
+			transition: opacity 400ms;
+			cursor: default;
+		}
+
+		.board .list .note.editing .ops {
+			display: none;
+		}
+
+		.board .list .note:hover .ops {
+			opacity: 1;
+		}
+
+		.board .list .note .ops .teaser {
+			display: block;
+			margin-top: 2px;
+			margin-right: 1px;
+			padding-right: 3px;
+			font-size: 9px;
+		}
+
+		.board .list .note .ops .teaser:before {
+			content: '\2261';
+		}
+
+		.board .list .note .ops .bulk {
+			display: none;
+			background: #fff;
+			border-left: none;
+			padding: 0 0 1px 5px;
+			font-size: 9px;
+			font-weight: 500;
+			border-left: 1px solid #ddd;
+			border-bottom: 1px solid #ddd;
+		}
+
+		.board .list .note .ops .bulk a {
+			padding-right: 4px;
+		}
+
+		.board .list .note .ops:hover .bulk {
+			display: block;
+		}
+
+		.board .list .note .ops:hover .teaser {
+			display: none;
+		}
+
+		/***/
 		.board .list .note.raw {
-			outline: none;
+			background: transparent;
+			box-shadow: none;
+			font-weight: 500;
 		}
-	}
 
-</style>
+		.board .list .note.raw.editing {
+			background: #fff;
+		}
+
+		.board .list .note.raw .text {}
+
+		.board .list .note.collapsed {
+			height: 23px;
+		}
+
+		.board .list .note.collapsed .text {
+			height: 13px;
+			overflow: hidden;
+			line-height: 22px;
+			padding-top: 0;
+		}
+
+		.board .list .note.collapsed .ops {
+			opacity: 1;
+		}
+
+		.board .list .note.collapsed .ops .teaser {
+			padding: 1px 3px 0 1px;
+		}
+
+		.board .list .note.collapsed .ops .teaser:before {
+			content: '_';
+			top: 1px;
+		}
+
+		.board .list .note.collapsed:hover .ops .teaser:before {
+			content: '\2261';
+		}
+
+		/***/
+		.dragster {
+			z-index: 2;
+			position: absolute;
+			opacity: 0;
+			box-shadow: 1px 2px 3px #00000050;
+			background: #fff;
+			white-space: pre-wrap;
+			cursor: move;
+
+			padding: 5px 25px 5px 10px;
+			font-size: 11px;
+
+			box-shadow: 0 +1px 0 #ACB4BC inset,
+				0 -1px 0 #ACB4BC inset,
+				+1px 0 0 #ACB4BC inset,
+				-1px 0 0 #ACB4BC inset,
+				0px 1px 3px #00000030;
+		}
+
+		.dragster.collapsed {
+			overflow: hidden;
+			line-height: 22px;
+			padding-top: 0;
+		}
+
+		/***/
+		.logo {
+			position: absolute;
+			top: 9px;
+			left: 9px;
+			font-size: 11px;
+			line-height: 19px;
+			padding: 6px 12px;
+			opacity: 0.6;
+			z-index: 3;
+			background: #f8f9fb;
+		}
+
+		body.crowded .logo:hover {
+			background: #fff;
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+		}
+
+		.logo:hover {
+			opacity: 1.0;
+		}
+
+		.logo .bulk {
+			overflow: hidden;
+			height: 0;
+			opacity: 0;
+			transition: opacity 400ms;
+		}
+
+		.logo:hover .bulk {
+			height: auto;
+			opacity: 1;
+		}
+
+		.logo a {
+			color: #000;
+			display: block;
+		}
+
+		.logo a:hover {
+			color: #1489db;
+		}
+
+		.logo .bulk a:before {
+			display: inline-block;
+			content: '-';
+			width: 11px;
+		}
+
+		/***/
+		.config {
+			position: absolute;
+			top: 10px;
+			right: 21px;
+			font-size: 11px;
+			line-height: 19px;
+			z-index: 3;
+			background: #f8f9fb;
+		}
+
+		body.crowded .config:hover {
+			background: #fff;
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+		}
+
+		.config a {
+			display: block;
+			color: #000;
+			transition: color 200ms;
+		}
+
+		.config a:hover {
+			color: #1489db;
+		}
+
+		.config .teaser {
+			padding: 5px;
+			color: #999;
+		}
+
+		.config .bulk {
+			margin-right: 20px;
+			padding: 5px 0 10px 22px;
+			transition: opacity 400ms;
+		}
+
+		.config .bulk div {
+			display: none;
+			padding: 6px 2px;
+			margin: 6px -2px;
+			border-top: 1px solid #00000028;
+			border-bottom: 1px solid #00000028;
+		}
+
+		.config .bulk div a {
+			display: block;
+			margin-right: 10px;
+		}
+
+		.config .bulk div a.active {
+			color: #1489db;
+		}
+
+		.config .bulk div a.active:before {
+			content: '\2022 ';
+			display: inline-block;
+			width: 13px;
+			margin-left: -13px;
+		}
+
+		.config .bulk div a.active:hover {
+			color: #000;
+		}
+
+		.config .bulk input.imp-board-select {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			visibility: hidden;
+		}
+
+		/***/
+		.config .bulk {
+			display: none;
+			opacity: 0;
+		}
+
+		.config:hover .teaser {
+			display: none;
+		}
+
+		.config:hover .bulk {
+			display: block;
+			opacity: 1;
+		}
+
+		/***/
+		.overlay {
+			position: fixed;
+			z-index: 10;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.9);
+			display: none;
+		}
+
+		/***/
+		.overlay .license {
+			font-size: 12px;
+			line-height: 16px;
+			white-space: pre-wrap;
+			width: 384px;
+			height: auto;
+			max-height: 600px;
+			padding: 20px 25px 22px;
+			overflow-y: auto;
+			background: #fff;
+			position: absolute;
+			top: 100px;
+			left: 50%;
+			margin-left: -192px;
+		}
+
+		.overlay .license a {
+			color: #1489db;
+		}
+
+		.overlay .license span {
+			display: inline-block;
+			padding-right: 8px;
+		}
+
+		/***/
+		.overlay .about {
+			font-size: 12px;
+			line-height: 16px;
+			text-align: center;
+			width: 240px;
+			height: auto;
+			padding: 50px 25px;
+			background: #fff;
+			position: absolute;
+			top: 100px;
+			left: 50%;
+			margin-left: -145px;
+		}
+
+		.overlay .about h1 {
+			font-size: 15px;
+			font-weight: 500;
+			margin-bottom: 10px;
+		}
+
+		.overlay .about a {
+			display: block;
+			color: #1489db;
+		}
+
+		.overlay .about div {
+			position: absolute;
+			bottom: -30px;
+			width: 240px;
+			color: #888;
+		}
+
+		.overlay .about div span {
+			display: inline-block;
+			text-align: left;
+			padding-right: 10px;
+		}
+
+		/***/
+
+		@media print {
+
+			.logo,
+			.config,
+			.board .head .teaser,
+			.list .head .teaser {
+				visibility: hidden;
+				display: none;
+			}
+
+			.board .list .note {
+				box-shadow: none;
+				outline: 1px solid #ccc;
+			}
+
+			.board .list .note.raw {
+				outline: none;
+			}
+		}
+	</style>
 
 </head>
-<body>
-	<div class=logo>
-		<a href=https://nullboard.io>Nullboard</a>
-		<div class=bulk>
-			<a href=# class=view-about>About</a>
-			<a href=# class=view-license>License</a>
-			<a href=https://nullboard.io/github  target=_blank>Github</a>
-			<a href=https://nullboard.io/twitter target=_blank>Twitter</a>
-		</div>
-	</div>
 
-	<div class=config>
-		<a href=# class=teaser>&equiv;</a>
-		<div class=bulk>
-			<a href=# class=add-board>Add new board...</a>
-			<div class=boards>
+<body>
+
+	<div class="config">
+		<a href="#" class="teaser">&equiv;</a>
+		<div class="bulk">
+			<a href="#" class="add-board">Add new board...</a>
+			<div class="boards">
 				<!-- here'll be boards -->
 			</div>
-			<a href=# class=imp-board>Import board...</a>
-				<input class=imp-board-select type="file" accept=".nbx">
-			<a href=# class=exp-board>Export board...</a>
+			<a href="#" class="imp-board">Import board...</a>
+			<input class="imp-board-select" type="file" accept=".nbx">
+			<a href="#" class="exp-board">Export board...</a>
 		</div>
 	</div>
+
+	<div class="wrap">
 	</div>
 
-	<div class=wrap>
-	</div>
-
-	<div class=overlay>
+	<div class="overlay">
 	</div>
 
 	<tt>
 		<!-- templates -->
-		<div class=board>
-			<div class=head>
-				<div class=text></div>
-				<input class=edit spellcheck=false placeholder='Name of the board'>
-				<div class=menu>
-					<a href=# class=teaser>&equiv;</a>
-					<div class=bulk>
-						<a href=# class='del-board warn'><u></u> Board</a>
-						<a href=# class='undo-board'>Undo</a>
-						<a href=# class='redo-board'>Redo</a>
-						<a href=# class='add-list'>+ List</a>
+		<div class="board">
+			<div class="head">
+				<div class="text"></div>
+				<input class="edit" spellcheck="false" placeholder='Name of the board'>
+				<div class="menu">
+					<a href="#" class="teaser">&equiv;</a>
+					<div class="bulk">
+						<a href="#" class="del-board warn"><u></u> Board</a>
+						<a href="#" class="undo-board">Undo</a>
+						<a href="#" class="redo-board">Redo</a>
+						<a href="#" class="add-list">+ List</a>
 					</div>
 				</div>
 			</div>
-			<div class=lists-scroller><div></div></div>
-			<div class=lists>
+			<div class="lists-scroller">
+				<div></div>
+			</div>
+			<div class="lists">
 			</div>
 		</div>
 
-		<div class=list>
-			<div class=head>
-				<div class=text></div>
-				<input class=edit spellcheck=false placeholder='Name of the list'>
-				<div class=menu>
-					<a href=# class=teaser>&equiv;</a>
-					<div class=bulk>
-						<a href=# class='del-list warn'><u></u> List</a>
-						<a href=# class='mov-list-l full'>&lt; Move</a>
-						<a href=# class='mov-list-l half'>&lt; Mo</a><a href=# class='mov-list-r half'>ve &gt;</a>
-						<a href=# class='mov-list-r full'>Move &gt;</a>
-						<a href=# class='add-note'>+ Note</a>
+		<div class="list">
+			<div class="head">
+				<div class="text"></div>
+				<input class="edit" spellcheck="false" placeholder="Name of the list">
+				<div class="menu">
+					<a href="#" class="teaser">&equiv;</a>
+					<div class="bulk">
+						<a href="#" class="del-list warn"><u></u> List</a>
+						<a href="#" class="mov-list-l full">&lt; Move</a>
+						<a href="#" class="mov-list-l half">&lt; Mo</a><a href=# class="mov-list-r half">ve &gt;</a>
+						<a href="#" class="mov-list-r full">Move &gt;</a>
+						<a href="#" class="add-note">+ Note</a>
 					</div>
 				</div>
 			</div>
-			<div class=notes>
+			<div class="notes">
 			</div>
 		</div>
 
-		<div class=note>
-			<div class=ops>
-				<a href=# class=teaser></a>
-				<div class=bulk>
-					<a href=# class='del-note warn'><u></u></a>
-					<a href=# class='raw-note'>R</a>
-					<a href=# class='collapse'>_</a>
+		<div class="note">
+			<div class="ops">
+				<a href="#" class="teaser"></a>
+				<div class="bulk">
+					<a href="#" class="del-note warn"><u></u></a>
+					<a href="#" class="raw-note">R</a>
+					<a href="#" class="collapse">_</a>
 				</div>
 			</div>
-			<div class=text>
+			<div class="text">
 			</div>
-			<textarea class=edit spellcheck=false></textarea>
+			<textarea class="edit" spellcheck="false"></textarea>
 		</div>
 
-		<a href=# class=load-board></a>
+		<a href="#" class="load-board"></a>
 
-		<textarea class=encoder></textarea>
+		<textarea class="encoder"></textarea>
 
-		<div class=about>
+		<div class="about">
 			<h1>Nullboard</h1>
 			Minimalist locally-stored kanban board
-			<a href=https://nullboard.io target=_blank>https://nullboard.io</a>
+			<a href="https://nullboard.io" target="_blank">https://nullboard.io</a>
 			<div></div>
 		</div>
 
-		<div class=license>
+		<div class="license">
 		</div>
 	</tt>
 
 </body>
 
 <script src="extras/jquery-1.8.3.min.js"></script>
-<script>window.jQuery || document.write('<script src="https://code.jquery.com/jquery-1.8.3.min.js">\x3C/script>')</script>
+<script>
+	window.jQuery || document.write('<script src="https://code.jquery.com/jquery-1.8.3.min.js">\x3C/script>')
+</script>
 <script type="text/javascript">
-
 	//
 	var nb_codeVersion = 20190611;
 	var nb_dataVersion = 20190412;
 
 	//
-	if (typeof(localStorage) === "undefined")
-	{
+	if (typeof(localStorage) === "undefined") {
 		alert('Hmmm... no "localStorage" support');
 	}
 
 	/*
 	 *	poor man's error handling -- $fixme
 	 */
-	window.onerror = function(message, file, line, col, e){
+	window.onerror = function(message, file, line, col, e) {
 		alert("Error occurred: " + e.message);
 		return false;
 	};
@@ -880,36 +886,31 @@
 	/*
 	 *
 	 */
-	function Note(text)
-	{
+	function Note(text) {
 		this.text = text;
-		this.raw  = false;
-		this.min  = false;
+		this.raw = false;
+		this.min = false;
 	}
 
-	function List(title)
-	{
+	function List(title) {
 		this.title = title;
-		this.notes = [ ];
+		this.notes = [];
 
-		this.addNote = function(text)
-		{
+		this.addNote = function(text) {
 			var x = new Note(text);
 			this.notes.push(x);
 			return x;
 		}
 	}
 
-	function Board(title)
-	{
-		this.format   = nb_dataVersion;
-		this.id       = +new Date();
+	function Board(title) {
+		this.format = nb_dataVersion;
+		this.id = +new Date();
 		this.revision = 1;
-		this.title    = title;
-		this.lists    = [ ];
+		this.title = title;
+		this.lists = [];
 
-		this.addList = function(title)
-		{
+		this.addList = function(title) {
 			var x = new List(title);
 			this.lists.push(x);
 			return x;
@@ -917,66 +918,59 @@
 	}
 
 	//
-	function htmlEncode(raw)
-	{
+	function htmlEncode(raw) {
 		return $('tt .encoder').text(raw).html();
 	}
 
-	function htmlDecode(enc)
-	{
+	function htmlDecode(enc) {
 		return $('tt .encoder').html(enc).text();
 	}
 
-	function getHtml($item)
-	{
+	function getHtml($item) {
 		return htmlDecode($item.html());
 	}
 
-	function setHtml($item, html)
-	{
+	function setHtml($item, html) {
 		$item.html(htmlEncode(html));
 	}
 
 	//
-	function updatePageTitle()
-	{
-		if (! document.board)
-		{
+	function updatePageTitle() {
+		if (!document.board) {
 			document.title = 'Nullboard';
 			return;
 		}
 
 		var $text = $('.wrap .board > .head .text');
-		var title = getHtml( $text );
+		var title = getHtml($text);
 
 		document.board.title = title;
 		document.title = 'NB - ' + (title || '(unnamed board)');
 	}
 
-	function updateUndoRedo()
-	{
+	function updateUndoRedo() {
 		var $undo = $('.board .menu .undo-board');
 		var $redo = $('.board .menu .redo-board');
 
 		var undo = false;
 		var redo = false;
 
-		if (document.board)
-		{
+		if (document.board) {
 			var history = document.board.history;
 			var rev = document.board.revision;
 
-			undo = (rev != history[history.length-1]);
+			undo = (rev != history[history.length - 1]);
 			redo = (rev != history[0]);
 		}
 
-		if (undo) $undo.show(); else $undo.hide();
-		if (redo) $redo.show(); else $redo.hide();
+		if (undo) $undo.show();
+		else $undo.hide();
+		if (redo) $redo.show();
+		else $redo.hide();
 	}
 
 	//
-	function showBoard(quick)
-	{
+	function showBoard(quick) {
 		var board = document.board;
 
 		var $wrap = $('.wrap');
@@ -988,18 +982,18 @@
 		var $b_lists = $b.find('.lists');
 
 		$b[0].board_id = board.id;
-		setHtml( $b.find('.head .text'), board.title );
+		setHtml($b.find('.head .text'), board.title);
 
-		board.lists.forEach(function(list){
+		board.lists.forEach(function(list) {
 
 			var $l = $ldiv.clone();
 			var $l_notes = $l.find('.notes');
 
-			setHtml( $l.find('.head .text'), list.title );
+			setHtml($l.find('.head .text'), list.title);
 
-			list.notes.forEach(function(n){
+			list.notes.forEach(function(n) {
 				var $n = $ndiv.clone();
-				setHtml( $n.find('.text'), n.text );
+				setHtml($n.find('.text'), n.text);
 				if (n.raw) $n.addClass('raw');
 				if (n.min) $n.addClass('collapsed');
 				$l_notes.append($n);
@@ -1012,9 +1006,13 @@
 			$wrap.html('').append($b);
 		else
 			$wrap.html('')
-			  .css({ opacity: 0 })
-			  .append($b)
-			  .animate({ opacity: 1 });
+			.css({
+				opacity: 0
+			})
+			.append($b)
+			.animate({
+				opacity: 1
+			});
 
 		updatePageTitle();
 		updateUndoRedo();
@@ -1023,18 +1021,17 @@
 	}
 
 	//
-	function saveBoard()
-	{
+	function saveBoard() {
 		var $board = $('.wrap .board');
-		var board = new Board( getHtml($board.find('> .head .text')) );
+		var board = new Board(getHtml($board.find('> .head .text')));
 
-		$board.find('.list').each(function(){
+		$board.find('.list').each(function() {
 			var $list = $(this);
-			var l = board.addList( getHtml($list.find('.head .text')) );
+			var l = board.addList(getHtml($list.find('.head .text')));
 
-			$list.find('.note').each(function(){
+			$list.find('.note').each(function() {
 				var $note = $(this)
-				var n = l.addNote( getHtml($note.find('.text')) );
+				var n = l.addNote(getHtml($note.find('.text')));
 				n.raw = $note.hasClass('raw');
 				n.min = $note.hasClass('collapsed');
 			});
@@ -1046,7 +1043,7 @@
 
 		document.board.revision = rev_new;
 
-		board.id       = document.board.id;
+		board.id = document.board.id;
 		board.revision = document.board.revision;
 
 		var blob_id = board.id + '.' + board.revision;
@@ -1062,34 +1059,27 @@
 		updateBoardIndex();
 	}
 
-	function parseBoard(blob)
-	{
+	function parseBoard(blob) {
 		var board;
 
-		try
-		{
+		try {
 			board = JSON.parse(blob);
-		}
-		catch(x)
-		{
+		} catch (x) {
 			console.log('Malformed JSON');
 			return false;
 		}
 
-		if (typeof board.format === 'undefined')
-		{
+		if (typeof board.format === 'undefined') {
 			console.log('Board.format is missing');
 			return false;
 		}
 
-		if (board.format != nb_dataVersion)
-		{
+		if (board.format != nb_dataVersion) {
 			console.log('Board.format is wrong', board.format, nb_dataVersion);
 			return false;
 		}
 
-		if (! board.revision)
-		{
+		if (!board.revision) {
 			console.log("Board.revision is missing");
 			return false;
 		}
@@ -1097,30 +1087,27 @@
 		return $.extend(new Board, board);
 	}
 
-	function loadBoard(board_id)
-	{
+	function loadBoard(board_id) {
 		var revision;
 		var blob;
 		var board;
 
 		revision = localStorage.getItem('nullboard.board.' + board_id);
-		if (! revision)
+		if (!revision)
 			return false;
 
 		blob = localStorage.getItem('nullboard.board.' + board_id + '.' + revision);
-		if (! blob)
+		if (!blob)
 			return false;
 
 		board = parseBoard(blob);
-		if (! board)
-		{
+		if (!board) {
 			alert('Whoops. Error parsing board data.');
 			console.log('Whoops, there it is:', blob);
 			return false;
 		}
 
-		if (board.id != board_id || board.revision != revision)
-		{
+		if (board.id != board_id || board.revision != revision) {
 			alert('Whoops. Malformed board.');
 			console.log('Whoops, there it is:', board.id, board_id, board.revision, revision);
 			return false;
@@ -1132,63 +1119,55 @@
 	}
 
 	//
-	function loadBoardHistory(board_id)
-	{
+	function loadBoardHistory(board_id) {
 		var re = new RegExp('^nullboard\.board\.' + board_id + '\.(\\d+)$');
 		var r = [];
 
-		for (var i=0; i<localStorage.length; i++)
-		{
+		for (var i = 0; i < localStorage.length; i++) {
 			var m = localStorage.key(i).match(re);
-			if (m) r.push( parseInt(m[1]) );
+			if (m) r.push(parseInt(m[1]));
 		}
 
-		r.sort(function(a,b){ return b-a; });
+		r.sort(function(a, b) {
+			return b - a;
+		});
 		return r;
 	}
 
-	function trimBoardHistory(rev_old, rev_new, max_revs)
-	{
+	function trimBoardHistory(rev_old, rev_new, max_revs) {
 		var hist_1 = document.board.history;
 		var hist_2 = []
 		var k = 'nullboard.board.' + document.board.id + '.';
 
-		for (var i=0; i<hist_1.length; i++)
-		{
+		for (var i = 0; i < hist_1.length; i++) {
 			var rev = hist_1[i];
 			if (rev_old < rev && rev < rev_new)
 				nukeBoardRevision(rev);
 			else
 				hist_2.push(rev);
 		}
-		for (var i=max_revs; i<hist_2.length; i++)
-			nukeBoardRevision( hist_2[i] );
+		for (var i = max_revs; i < hist_2.length; i++)
+			nukeBoardRevision(hist_2[i]);
 
 		document.board.history = loadBoardHistory(document.board.id);
 	}
 
 	//
-	function nukeBoardRevision(rev)
-	{
+	function nukeBoardRevision(rev) {
 		var k = 'nullboard.board.' + document.board.id + '.' + rev;
 		localStorage.removeItem(k);
 		console.log("Removed " + k);
 	}
 
-	function nukeBoard()
-	{
+	function nukeBoard() {
 		var prefix = new RegExp('^nullboard\.board\.' + document.board.id);
 
-		for (var i=0; i<localStorage.length; )
-		{
+		for (var i = 0; i < localStorage.length;) {
 			var k = localStorage.key(i);
-			if (k.match(prefix))
-			{
+			if (k.match(prefix)) {
 				console.log("Removed " + k);
 				localStorage.removeItem(k);
-			}
-			else
-			{
+			} else {
 				i++;
 			}
 		}
@@ -1197,16 +1176,14 @@
 	}
 
 	//
-	function importBoard(blob)
-	{
+	function importBoard(blob) {
 		var board = parseBoard(blob);
-		if (! board)
-		{
+		if (!board) {
 			alert("This doesn't appear to be a valid Nullboard board export");
 			return false;
 		}
 
-		if (! confirm('Import board called "' + board.title + '", internal ID of [' + board.id + '] ?'))
+		if (!confirm('Import board called "' + board.title + '", internal ID of [' + board.id + '] ?'))
 			return false;
 
 		board.id = +new Date();
@@ -1219,8 +1196,7 @@
 	}
 
 	//
-	function createDemoBoard()
-	{
+	function createDemoBoard() {
 		var blob =
 			'{"format":20190412,"id":1555071015420,"revision":581,"title":"Welcome to Nullboard","lists":[{"title":"The Use' +
 			'r Manual","notes":[{"text":"This is a note.\\nA column of notes is a list.\\nA set of lists is a board.","raw"' +
@@ -1252,12 +1228,12 @@
 
 		var demo = parseBoard(blob);
 
-		if (! demo)
+		if (!demo)
 			return false;
 
 		demo.id = +new Date();
 		demo.revision = 1;
-		demo.history = [ 1 ];
+		demo.history = [1];
 
 		localStorage.setItem('nullboard.board.' + demo.id + '.' + demo.revision, JSON.stringify(demo));
 		localStorage.setItem('nullboard.board.' + demo.id, demo.revision);
@@ -1269,26 +1245,24 @@
 	/*
 	 *
 	 */
-	function startEditing($text, ev)
-	{
+	function startEditing($text, ev) {
 		var $note = $text.parent();
 		var $edit = $note.find('.edit');
 
 		$note[0]._collapsed = $note.hasClass('collapsed');
 		$note.removeClass('collapsed');
 
-		$edit.val( getHtml($text) );
-		$edit.width( $text.width() );
-		$edit.height( $text.height() );
+		$edit.val(getHtml($text));
+		$edit.width($text.width());
+		$edit.height($text.height());
 		$note.addClass('editing');
 
 		$edit.focus();
 	}
 
-	function stopEditing($edit, via_escape)
-	{
+	function stopEditing($edit, via_escape) {
 		var $item = $edit.parent();
-		if (! $item.hasClass('editing'))
+		if (!$item.hasClass('editing'))
 			return;
 
 		$item.removeClass('editing');
@@ -1298,24 +1272,20 @@
 		//
 		var $text = $item.find('.text');
 		var text_now = $edit.val().trimRight();
-		var text_was = getHtml( $text );
+		var text_was = getHtml($text);
 
 		//
 		var brand_new = $item.hasClass('brand-new');
 		$item.removeClass('brand-new');
 
-		if (via_escape)
-		{
-			if (brand_new)
-			{
+		if (via_escape) {
+			if (brand_new) {
 				$item.closest('.note, .list, .board').remove();
 				return;
 			}
-		}
-		else
-		if (text_now != text_was || brand_new)
-		{
-			setHtml( $text, text_now );
+		} else
+		if (text_now != text_was || brand_new) {
+			setHtml($text, text_now);
 
 			saveBoard();
 			updatePageTitle();
@@ -1327,27 +1297,21 @@
 	}
 
 	//
-	function addNote($list, $after, $before)
-	{
-		var $note  = $('tt .note').clone();
+	function addNote($list, $after, $before) {
+		var $note = $('tt .note').clone();
 		var $notes = $list.find('.notes');
 
 		$note.find('.text').html('');
 		$note.addClass('brand-new');
 
-		if ($before)
-		{
+		if ($before) {
 			$before.before($note);
 			$note = $before.prev();
-		}
-		else
-		if ($after)
-		{
+		} else
+		if ($after) {
 			$after.after($note);
 			$note = $after.next();
-		}
-		else
-		{
+		} else {
 			$notes.append($note);
 			$note = $notes.find('.note').last();
 		}
@@ -1355,20 +1319,20 @@
 		$note.find('.text').click();
 	}
 
-	function deleteNote($note)
-	{
+	function deleteNote($note) {
 		$note
-		.animate({ opacity: 0 }, 'fast')
-		.slideUp('fast')
-		.queue(function(){
-			$note.remove();
-			saveBoard();
-		});
+			.animate({
+				opacity: 0
+			}, 'fast')
+			.slideUp('fast')
+			.queue(function() {
+				$note.remove();
+				saveBoard();
+			});
 	}
 
 	//
-	function addList()
-	{
+	function addList() {
 		var $board = $('.wrap .board');
 		var $lists = $board.find('.lists');
 		var $list = $('tt .list').clone();
@@ -1385,29 +1349,29 @@
 		setupListScrolling();
 	}
 
-	function deleteList($list)
-	{
+	function deleteList($list) {
 		var empty = true;
 
-		$list.find('.note .text').each(function(){
+		$list.find('.note .text').each(function() {
 			empty &= ($(this).html().length == 0);
 		});
 
-		if (! empty && ! confirm("Delete this list and all its notes?"))
+		if (!empty && !confirm("Delete this list and all its notes?"))
 			return;
 
 		$list
-		.animate({ opacity: 0 })
-		.queue(function(){
-			$list.remove();
-			saveBoard();
-		});
+			.animate({
+				opacity: 0
+			})
+			.queue(function() {
+				$list.remove();
+				saveBoard();
+			});
 
 		setupListScrolling();
 	}
 
-	function moveList($list, left)
-	{
+	function moveList($list, left) {
 		var $a = $list;
 		var $b = left ? $a.prev() : $a.next();
 
@@ -1417,31 +1381,48 @@
 		var pos_a = $a.offset().left;
 		var pos_b = $b.offset().left;
 
-		$a.css({ position: 'relative' });
-		$b.css({ position: 'relative' });
+		$a.css({
+			position: 'relative'
+		});
+		$b.css({
+			position: 'relative'
+		});
 
 		$menu_a.hide();
 		$menu_b.hide();
 
-		$a.animate({ left: (pos_b - pos_a) + 'px' }, 'fast');
-		$b.animate({ left: (pos_a - pos_b) + 'px' }, 'fast', function(){
+		$a.animate({
+			left: (pos_b - pos_a) + 'px'
+		}, 'fast');
+		$b.animate({
+			left: (pos_a - pos_b) + 'px'
+		}, 'fast', function() {
 
 			if (left) $list.prev().before($list);
-			else      $list.before($list.next());
+			else $list.before($list.next());
 
-			$a.css({ position: '', left: '' });
-			$b.css({ position: '', left: '' });
+			$a.css({
+				position: '',
+				left: ''
+			});
+			$b.css({
+				position: '',
+				left: ''
+			});
 
-			$menu_a.css({ display: '' });
-			$menu_b.css({ display: '' });
+			$menu_a.css({
+				display: ''
+			});
+			$menu_b.css({
+				display: ''
+			});
 
 			saveBoard();
 		});
 	}
 
 	//
-	function openBoard(board_id)
-	{
+	function openBoard(board_id) {
 		closeBoard(true);
 
 		document.board = loadBoard(board_id);
@@ -1451,8 +1432,7 @@
 		showBoard(true);
 	}
 
-	function reopenBoard(revision)
-	{
+	function reopenBoard(revision) {
 		var board_id = document.board.id;
 
 		var via_menu = $('.wrap .board > .head .menu .bulk').is(':visible');
@@ -1460,27 +1440,33 @@
 		localStorage.setItem('nullboard.board.' + board_id, revision);
 		openBoard(board_id);
 
-		if (via_menu)
-		{
+		if (via_menu) {
 			var $menu = $('.wrap .board > .head .menu');
 			var $teaser = $menu.find('.teaser');
 			var $bulk = $menu.find('.bulk');
 
-			$teaser.hide().delay(100).queue(function(){ $(this).css('display', '').dequeue(); });
-			$bulk.show().delay(100).queue(function(){ $(this).css('display', '').dequeue(); });
+			$teaser.hide().delay(100).queue(function() {
+				$(this).css('display', '').dequeue();
+			});
+			$bulk.show().delay(100).queue(function() {
+				$(this).css('display', '').dequeue();
+			});
 		}
 	}
 
-	function closeBoard(quick)
-	{
+	function closeBoard(quick) {
 		var $board = $('.wrap .board');
 
 		if (quick)
 			$board.remove();
 		else
 			$board
-			 .animate({ opacity: 0 }, 'fast')
-			 .queue(function(){ $board.remove(); });
+			.animate({
+				opacity: 0
+			}, 'fast')
+			.queue(function() {
+				$board.remove();
+			});
 
 		document.board = null;
 		localStorage.setItem('nullboard.last_board', null);
@@ -1490,10 +1476,9 @@
 	}
 
 	//
-	function addBoard()
-	{
+	function addBoard() {
 		document.board = new Board('');
-		document.board.history = [ 0 ];
+		document.board.history = [0];
 
 		localStorage.setItem('nullboard.last_board', document.board_id);
 
@@ -1503,11 +1488,10 @@
 		$('.wrap .board .head .text').click();
 	}
 
-	function deleteBoard()
-	{
+	function deleteBoard() {
 		var $list = $('.wrap .board .list');
 
-		if ($list.length && ! confirm("PERMANENTLY delete this board, all its lists and their notes?"))
+		if ($list.length && !confirm("PERMANENTLY delete this board, all its lists and their notes?"))
 			return;
 
 		nukeBoard();
@@ -1515,21 +1499,19 @@
 	}
 
 	//
-	function undoBoard()
-	{
-		if (! document.board)
+	function undoBoard() {
+		if (!document.board)
 			return false;
 
 		var hist = document.board.history;
 		var have = document.board.revision;
 		var want = 0;
 
-		for (var i=0; i<hist.length-1 && ! want; i++)
+		for (var i = 0; i < hist.length - 1 && !want; i++)
 			if (have == hist[i])
-				want = hist[i+1];
+				want = hist[i + 1];
 
-		if (! want)
-		{
+		if (!want) {
 			console.log('Undo - failed');
 			return false;
 		}
@@ -1540,21 +1522,19 @@
 		return true;
 	}
 
-	function redoBoard()
-	{
-		if (! document.board)
+	function redoBoard() {
+		if (!document.board)
 			return false;
 
 		var hist = document.board.history;
 		var have = document.board.revision;
 		var want = 0;
 
-		for (var i=1; i<hist.length && ! want; i++)
+		for (var i = 1; i < hist.length && !want; i++)
 			if (have == hist[i])
-				want = hist[i-1];
+				want = hist[i - 1];
 
-		if (! want)
-		{
+		if (!want) {
 			console.log('Redo - failed');
 			return false;
 		}
@@ -1568,49 +1548,50 @@
 	/*
 	 *
 	 */
-	function Drag()
-	{
-		this.item    = null;                // .text of .note
+	function Drag() {
+		this.item = null; // .text of .note
 		this.priming = null;
-		this.primexy = { x: 0, y: 0 };
-		this.$drag   = null;
-		this.mouse   = null;
-		this.delta   = { x: 0, y: 0 };
+		this.primexy = {
+			x: 0,
+			y: 0
+		};
+		this.$drag = null;
+		this.mouse = null;
+		this.delta = {
+			x: 0,
+			y: 0
+		};
 		this.in_swap = false;
 
-		this.prime = function(item, ev)
-		{
+		this.prime = function(item, ev) {
 			var self = this;
 			this.item = item;
-			this.priming = setTimeout(function(){ self.onPrimed.call(self); }, ev.altKey ? 1 : 500);
+			this.priming = setTimeout(function() {
+				self.onPrimed.call(self);
+			}, ev.altKey ? 1 : 500);
 			this.primexy.x = ev.clientX;
 			this.primexy.y = ev.clientY;
 			this.mouse = ev;
 		}
 
-		this.cancelPriming = function()
-		{
-			if (this.item && this.priming)
-			{
+		this.cancelPriming = function() {
+			if (this.item && this.priming) {
 				clearTimeout(this.priming);
 				this.priming = null;
 				this.item = null;
 			}
 		}
 
-		this.end = function()
-		{
+		this.end = function() {
 			this.cancelPriming();
 			this.stopDragging();
 		}
 
-		this.isActive = function()
-		{
+		this.isActive = function() {
 			return this.item && (this.priming == null);
 		}
 
-		this.onPrimed = function()
-		{
+		this.onPrimed = function() {
 			clearTimeout(this.priming);
 			this.priming = null;
 			this.item.was_dragged = true;
@@ -1625,10 +1606,10 @@
 			if ($note.hasClass('collapsed'))
 				$drag.addClass('collapsed');
 
-			$drag.html( $text.html() );
+			$drag.html($text.html());
 
-			$drag.innerWidth ( $note.innerWidth()  );
-			$drag.innerHeight( $note.innerHeight() );
+			$drag.innerWidth($note.innerWidth());
+			$drag.innerHeight($note.innerHeight());
 
 			this.$drag = $drag;
 
@@ -1638,17 +1619,18 @@
 
 			var pos = $note.offset();
 			this.delta.x = pos.left - this.mouse.clientX - scroll_x;
-			this.delta.y = pos.top  - this.mouse.clientY - scroll_y;
+			this.delta.y = pos.top - this.mouse.clientY - scroll_y;
 			this.adjustDrag();
 
-			$drag.css({ opacity: 1 });
+			$drag.css({
+				opacity: 1
+			});
 
 			$('body').addClass('dragging');
 		}
 
-		this.adjustDrag = function()
-		{
-			if (! this.$drag)
+		this.adjustDrag = function() {
+			if (!this.$drag)
 				return;
 
 			var $win = $(window);
@@ -1658,7 +1640,10 @@
 			var drag_x = this.mouse.clientX + this.delta.x + scroll_x;
 			var drag_y = this.mouse.clientY + this.delta.y + scroll_y;
 
-			this.$drag.offset({ left: drag_x, top: drag_y });
+			this.$drag.offset({
+				left: drag_x,
+				top: drag_y
+			});
 
 			if (this.in_swap)
 				return;
@@ -1667,15 +1652,15 @@
 			 *	see if a swap is in order
 			 */
 			var pos = this.$drag.offset();
-			var x = pos.left + this.$drag.width()/2 - $win.scrollLeft();
-			var y = pos.top + this.$drag.height()/2 - $win.scrollTop();
+			var x = pos.left + this.$drag.width() / 2 - $win.scrollLeft();
+			var y = pos.top + this.$drag.height() / 2 - $win.scrollTop();
 
 			var drag = this;
-			var prepend = null;   // if dropping on the list header
-			var target = null;    // if over some item
-			var before = false;   // if should go before that item
+			var prepend = null; // if dropping on the list header
+			var target = null; // if over some item
+			var before = false; // if should go before that item
 
-			$(".board .list").each(function(){
+			$(".board .list").each(function() {
 
 				var list = this;
 				var rc = list.getBoundingClientRect();
@@ -1687,12 +1672,11 @@
 
 				var $list = $(list);
 
-				$list.find('.note').each(function(){
+				$list.find('.note').each(function() {
 					var note = this;
 					var rc = note.getBoundingClientRect();
 
-					if (rc.top < y_min)
-					{
+					if (rc.top < y_min) {
 						y_min = rc.top;
 						n_min = note;
 					}
@@ -1704,40 +1688,34 @@
 						return;
 
 					target = note;
-					before = (y < (rc.top + rc.bottom)/2);
+					before = (y < (rc.top + rc.bottom) / 2);
 				});
 
 				/*
 				 *	dropping on the list header
 				 */
-				if (! target && y < y_min)
-				{
+				if (!target && y < y_min) {
 					if (n_min) // non-empty list
 					{
 						target = n_min;
 						before = true;
-					}
-					else
-					{
+					} else {
 						prepend = list;
 					}
 				}
 			});
 
-			if (! target && ! prepend)
+			if (!target && !prepend)
 				return;
 
-			if (target)
-			{
+			if (target) {
 				if (target == drag.item.parentNode)
 					return;
 
-				if (! before && target.nextSibling == drag.item.parentNode ||
-				      before && target.previousSibling == drag.item.parentNode)
+				if (!before && target.nextSibling == drag.item.parentNode ||
+					before && target.previousSibling == drag.item.parentNode)
 					return;
-			}
-			else
-			{
+			} else {
 				if (prepend.firstChild == drag.item.parentNode)
 					return;
 			}
@@ -1748,27 +1726,23 @@
 			var $have = $(this.item.parentNode);
 			var $want = $have.clone();
 
-			$want.css({ display: 'none' });
+			$want.css({
+				display: 'none'
+			});
 
-			if (target)
-			{
+			if (target) {
 				var $target = $(target);
 
-				if (before)
-				{
+				if (before) {
 					$want.insertBefore($target);
 					$want = $target.prev();
-				}
-				else
-				{
+				} else {
 					$want.insertAfter($target);
 					$want = $target.next();
 				}
 
 				drag.item = $want.find('.text')[0];
-			}
-			else
-			{
+			} else {
 				var $notes = $(prepend).find('.notes');
 
 				$notes.prepend($want);
@@ -1781,52 +1755,62 @@
 
 			drag.in_swap = true;
 
-			$have.animate({ height: 0 }, 'fast', function(){
+			$have.animate({
+				height: 0
+			}, 'fast', function() {
 				$have.remove();
-				$want.css({ marginTop: 5 });
+				$want.css({
+					marginTop: 5
+				});
 				saveBoard();
 			});
 
-			$want.css({ display: 'block', height: 0, marginTop: 0 });
-			$want.animate({ height: h }, 'fast', function(){
-				$want.css({ opacity: '', height: '' });
+			$want.css({
+				display: 'block',
+				height: 0,
+				marginTop: 0
+			});
+			$want.animate({
+				height: h
+			}, 'fast', function() {
+				$want.css({
+					opacity: '',
+					height: ''
+				});
 				drag.in_swap = false;
 				drag.adjustDrag();
 			});
 		}
 
-		this.onMouseMove = function(ev)
-		{
+		this.onMouseMove = function(ev) {
 			this.mouse = ev;
 
-			if (! this.item)
+			if (!this.item)
 				return;
 
-			if (this.priming)
-			{
+			if (this.priming) {
 				var x = ev.clientX - this.primexy.x;
 				var y = ev.clientY - this.primexy.y;
-				if (x*x + y*y > 5*5)
+				if (x * x + y * y > 5 * 5)
 					this.onPrimed();
-			}
-			else
-			{
+			} else {
 				this.adjustDrag();
 			}
 		}
 
-		this.stopDragging = function()
-		{
+		this.stopDragging = function() {
 			$(this.item).parent().removeClass('dragging');
 			$('body').removeClass('dragging');
 
-			if (this.$drag)
-			{
+			if (this.$drag) {
 				this.$drag.remove();
 				this.$drag = null;
 
-				if (window.getSelection) { window.getSelection().removeAllRanges(); }
-				else if (document.selection) { document.selection.empty(); }
+				if (window.getSelection) {
+					window.getSelection().removeAllRanges();
+				} else if (document.selection) {
+					document.selection.empty();
+				}
 			}
 
 			this.item = null;
@@ -1836,29 +1820,31 @@
 	/*
 	 *
 	 */
-	function peekBoardTitle(board_id)
-	{
+	function peekBoardTitle(board_id) {
 		var revision = localStorage.getItem('nullboard.board.' + board_id);
-		if (! revision)
+		if (!revision)
 			return false;
 
 		var blob = localStorage.getItem('nullboard.board.' + board_id + '.' + revision);
-		if (! blob)
+		if (!blob)
 			return false;
 
 		var head = blob.indexOf(',"lists":\[{"');
 		var peek = (head != -1) ? blob.substring(0, head) + '}' : blob;
 
-		try { peek = JSON.parse(peek); } catch(x) { return false; }
+		try {
+			peek = JSON.parse(peek);
+		} catch (x) {
+			return false;
+		}
 
 		return peek && peek.title;
 	}
 
-	function updateBoardIndex()
-	{
-		var $index  = $('.config .boards');
+	function updateBoardIndex() {
+		var $index = $('.config .boards');
 		var $export = $('.config .exp-board');
-		var $entry  = $('tt .load-board');
+		var $entry = $('tt .load-board');
 
 		var $board = $('.wrap .board');
 		var id_now = document.board && document.board.id;
@@ -1867,11 +1853,10 @@
 		$index.html('');
 		$index.hide();
 
-		for (var i=0; i<localStorage.length; i++)
-		{
+		for (var i = 0; i < localStorage.length; i++) {
 			var k = localStorage.key(i);
 			var m = k.match(/^nullboard\.board\.(\d+)$/);
-			if (! m)
+			if (!m)
 				continue;
 
 			var board_id = m[1];
@@ -1881,7 +1866,7 @@
 
 			var $e = $entry.clone();
 			$e[0].board_id = board_id;
-			$e.html( title || '(unnamed board)' );
+			$e.html(title || '(unnamed board)');
 
 			if (board_id == id_now)
 				$e.addClass('active');
@@ -1891,46 +1876,51 @@
 		}
 
 		if (id_now) $export.show();
-		else        $export.hide();
+		else $export.hide();
 
-		if (! empty) $index.show();
+		if (!empty) $index.show();
 	}
 
 	//
-	function showDing()
-	{
+	function showDing() {
 		$('body')
-		.addClass('ding')
-		.delay(100)
-		.queue(function(){ $(this).removeClass('ding').dequeue(); });
+			.addClass('ding')
+			.delay(100)
+			.queue(function() {
+				$(this).removeClass('ding').dequeue();
+			});
 	}
 
 	//
-	function showOverlay($overlay, $div)
-	{
+	function showOverlay($overlay, $div) {
 		$overlay
-		.html('')
-		.append($div)
-		.css({ opacity: 0, display: 'block' })
-		.animate({ opacity: 1 });
+			.html('')
+			.append($div)
+			.css({
+				opacity: 0,
+				display: 'block'
+			})
+			.animate({
+				opacity: 1
+			});
 	}
 
-	function hideOverlay($overlay)
-	{
-		$overlay.animate({ opacity: 0 }, function(){
+	function hideOverlay($overlay) {
+		$overlay.animate({
+			opacity: 0
+		}, function() {
 			$overlay.hide();
 		});
 	}
 
 	//
-	function formatLicense()
-	{
+	function formatLicense() {
 		var text = document.head.childNodes[1].nodeValue;
 		var pos = text.search('LICENSE');
 		var qos = text.search('Software:');
 		var bulk;
 
-		bulk = text.substr(pos, qos-pos);
+		bulk = text.substr(pos, qos - pos);
 		bulk = bulk.replace(/([^\n])\n\t/g, '$1 ');
 		bulk = bulk.replace(/\n\n\t/g, '\n\n');
 		bulk = bulk.replace(/([A-Z ]{7,})/g, '<u>$1</u>');
@@ -1939,23 +1929,27 @@
 		var c1 = [];
 		var c2 = [];
 
-		text.substr(qos).trim().split('\n').forEach(function(line){
+		text.substr(qos).trim().split('\n').forEach(function(line) {
 			line = line.split(':');
-			c1.push( line[0].trim() + ':' );
-			c2.push( line[1].trim() );
+			c1.push(line[0].trim() + ':');
+			c2.push(line[1].trim());
 		});
 
 		bulk += '<span>' + c1.join('<br>') + '</span>';
 		bulk += '<span>' + c2.join('<br>') + '</span>';
 
 		//
-		var links =
-		[
-			{ text: '2-clause BSD license', href: 'https://opensource.org/licenses/BSD-2-Clause/' },
-			{ text: 'Commons Clause',       href: 'https://commonsclause.com/' }
+		var links = [{
+				text: '2-clause BSD license',
+				href: 'https://opensource.org/licenses/BSD-2-Clause/'
+			},
+			{
+				text: 'Commons Clause',
+				href: 'https://commonsclause.com/'
+			}
 		];
 
-		links.forEach(function(l){
+		links.forEach(function(l) {
 			bulk = bulk.replace(l.text, '<a href="' + l.href + '" target=_blank>' + l.text + '</a>');
 		});
 
@@ -1968,32 +1962,28 @@
 	var drag = new Drag();
 
 	//
-	$(document).live('keyup', function(ev){
+	$(document).live('keyup', function(ev) {
 
 		var raw = ev.originalEvent;
 
 		if (ev.target.nodeName == 'TEXTAREA' ||
-		    ev.target.nodeName == 'INPUT')
+			ev.target.nodeName == 'INPUT')
 			return;
 
-		if (ev.ctrlKey && (raw.code == 'KeyZ'))
-		{
+		if (ev.ctrlKey && (raw.code == 'KeyZ')) {
 			var ok = ev.shiftKey ? redoBoard() : undoBoard();
-			if (! ok)
+			if (!ok)
 				showDing();
-		}
-		else
-		if (ev.ctrlKey && (raw.code == 'KeyY'))
-		{
-			if (! redoBoard())
+		} else
+		if (ev.ctrlKey && (raw.code == 'KeyY')) {
+			if (!redoBoard())
 				showDing();
 		}
 	});
 
-	$('.board .text').live('click', function(ev){
+	$('.board .text').live('click', function(ev) {
 
-		if (this.was_dragged)
-		{
+		if (this.was_dragged) {
 			this.was_dragged = false;
 			return false;
 		}
@@ -2005,38 +1995,33 @@
 	});
 
 	//
-	function handleTab(ev)
-	{
+	function handleTab(ev) {
 		var $this = $(this);
 		var $note = $this.closest('.note');
 		var $sibl = ev.shiftKey ? $note.prev() : $note.next();
 
-		if ($sibl.length)
-		{
+		if ($sibl.length) {
 			stopEditing($this, false);
 			$sibl.find('.text').click();
 		}
 	}
 
-	$('.board .edit').live('keydown', function(ev){
+	$('.board .edit').live('keydown', function(ev) {
 
 		// esc
-		if (ev.keyCode == 27)
-		{
+		if (ev.keyCode == 27) {
 			stopEditing($(this), true);
 			return false;
 		}
 
 		// tab
-		if (ev.keyCode == 9)
-		{
+		if (ev.keyCode == 9) {
 			handleTab.call(this, ev);
 			return false;
 		}
 
 		// enter
-		if (ev.keyCode == 13 && ev.ctrlKey)
-		{
+		if (ev.keyCode == 13 && ev.ctrlKey) {
 			var $this = $(this);
 			var $note = $this.closest('.note');
 			var $list = $note.closest('.list');
@@ -2053,18 +2038,16 @@
 		}
 
 		if (ev.keyCode == 13 && this.tagName == 'INPUT' ||
-		    ev.keyCode == 13 && ev.altKey ||
-		    ev.keyCode == 13 && ev.shiftKey)
-		{
+			ev.keyCode == 13 && ev.altKey ||
+			ev.keyCode == 13 && ev.shiftKey) {
 			stopEditing($(this), false);
 			return false;
 		}
 
 		//
-		if (ev.key == '*' && ev.ctrlKey)
-		{
+		if (ev.key == '*' && ev.ctrlKey) {
 			var have = this.value;
-			var pos  = this.selectionStart;
+			var pos = this.selectionStart;
 			var want = have.substr(0, pos) + '\u2022 ' + have.substr(this.selectionEnd);
 			$(this).val(want);
 			this.selectionStart = this.selectionEnd = pos + 2;
@@ -2074,147 +2057,148 @@
 		return true;
 	});
 
-	$('.board .edit').live('keypress', function(ev){
+	$('.board .edit').live('keypress', function(ev) {
 
 		// tab
-		if (ev.keyCode == 9)
-		{
+		if (ev.keyCode == 9) {
 			handleTab.call(this, ev);
 			return false;
 		}
 	});
 
 	//
-	$('.board .edit').live('blur', function(ev){
+	$('.board .edit').live('blur', function(ev) {
 		if (document.activeElement != this)
 			stopEditing($(this));
 		else
-			; // switch away from the browser window
+		; // switch away from the browser window
 	});
 
 	//
-	$('.board .list .note .edit').live('input propertychange', function(){
+	$('.board .list .note .edit').live('input propertychange', function() {
 
 		var delta = $(this).outerHeight() - $(this).height();
 
 		$(this).height(10);
 
 		if (this.scrollHeight > this.clientHeight)
-			$(this).height(this.scrollHeight-delta);
+			$(this).height(this.scrollHeight - delta);
 
 	});
 
 	//
-	$('.config .add-board').live('click', function(){
+	$('.config .add-board').live('click', function() {
 		addBoard();
 		return false;
 	});
 
-	$('.config .load-board').live('click', function(){
+	$('.config .load-board').live('click', function() {
 
 		var board_id = $(this)[0].board_id;
 		if ((document.board && document.board.id) == board_id)
 			closeBoard();
 		else
-			openBoard( $(this)[0].board_id );
+			openBoard($(this)[0].board_id);
 
 		return false;
 	});
 
-	$('.board .del-board').live('click', function(){
+	$('.board .del-board').live('click', function() {
 		deleteBoard();
 		return false;
 	});
 
-	$('.board .undo-board').live('click', function(){
+	$('.board .undo-board').live('click', function() {
 		undoBoard();
 		return false;
 	});
 
-	$('.board .redo-board').live('click', function(){
+	$('.board .redo-board').live('click', function() {
 		redoBoard();
 		return false;
 	});
 
 	//
-	$('.board .add-list').live('click', function(){
+	$('.board .add-list').live('click', function() {
 		addList();
 		return false;
 	});
 
-	$('.board .del-list').live('click', function(){
-		deleteList( $(this).closest('.list') );
+	$('.board .del-list').live('click', function() {
+		deleteList($(this).closest('.list'));
 		return false;
 	});
 
-	$('.board .mov-list-l').live('click', function(){
-		moveList( $(this).closest('.list'), true );
+	$('.board .mov-list-l').live('click', function() {
+		moveList($(this).closest('.list'), true);
 		return false;
 	});
 
-	$('.board .mov-list-r').live('click', function(){
-		moveList( $(this).closest('.list'), false );
+	$('.board .mov-list-r').live('click', function() {
+		moveList($(this).closest('.list'), false);
 		return false;
 	});
 
 	//
-	$('.board .add-note').live('click', function(){
-		addNote( $(this).closest('.list') );
+	$('.board .add-note').live('click', function() {
+		addNote($(this).closest('.list'));
 		return false;
 	});
 
-	$('.board .del-note').live('click', function(){
-		deleteNote( $(this).closest('.note') );
+	$('.board .del-note').live('click', function() {
+		deleteNote($(this).closest('.note'));
 		return false;
 	});
 
-	$('.board .raw-note').live('click', function(){
+	$('.board .raw-note').live('click', function() {
 		$(this).closest('.note').toggleClass('raw');
 		saveBoard();
 		return false;
 	});
 
-	$('.board .collapse').live('click', function(){
+	$('.board .collapse').live('click', function() {
 		$(this).closest('.note').toggleClass('collapsed');
 		saveBoard();
 		return false;
 	});
 
 	//
-	$('.board .note .text').live('mousedown', function(ev){
+	$('.board .note .text').live('mousedown', function(ev) {
 		drag.prime(this, ev);
 	});
 
-	$(document).on('mouseup', function(ev){
+	$(document).on('mouseup', function(ev) {
 		drag.end();
 	});
 
-	$(document).on('mousemove', function(ev){
+	$(document).on('mousemove', function(ev) {
 		drag.onMouseMove(ev);
 	});
 
 	//
-	$('.config .imp-board').click(function(ev){
+	$('.config .imp-board').click(function(ev) {
 		$('.config .imp-board-select').click();
 		return false;
 	});
 
-	$('.config .imp-board-select').change(function(){
+	$('.config .imp-board-select').change(function() {
 		var files = this.files;
 		var reader = new FileReader();
-		reader.onload = function(ev){ importBoard(ev.target.result); };
+		reader.onload = function(ev) {
+			importBoard(ev.target.result);
+		};
 		reader.readAsText(files[0]);
 		return true;
 	});
 
-	$('.config .exp-board').click(function(){
+	$('.config .exp-board').click(function() {
 		var board = document.board;
 		var revision = localStorage.getItem('nullboard.board.' + board.id);
-		if (! revision)
+		if (!revision)
 			return false;
 
 		var blob = localStorage.getItem('nullboard.board.' + board.id + '.' + revision);
-		if (! blob)
+		if (!blob)
 			return false;
 
 		var file = 'Nullboard-' + board.id + '-' + board.title + '.nbx';
@@ -2230,26 +2214,26 @@
 	//
 	var $overlay = $('.overlay');
 
-	$overlay.click(function(ev){
+	$overlay.click(function(ev) {
 		if (ev.originalEvent.target != this)
 			return true;
 		hideOverlay($overlay);
 		return false;
 	});
 
-	$(window).keydown(function(ev){
+	$(window).keydown(function(ev) {
 		if ($overlay.css('display') != 'none' && ev.keyCode == 27)
 			hideOverlay($overlay);
 	});
 
-	$('.view-about').click(function(){
+	$('.view-about').click(function() {
 		var $div = $('tt .about').clone();
 		$div.find('div').html('Version ' + nb_codeVersion);
 		showOverlay($overlay, $div);
 		return false;
 	});
 
-	$('.view-license').click(function(){
+	$('.view-license').click(function() {
 
 		var $div = $('tt .license').clone();
 		$div.html(formatLicense());
@@ -2258,26 +2242,22 @@
 	});
 
 	//
-	function adjustLayout()
-	{
+	function adjustLayout() {
 		var $body = $('body');
 		var $board = $('.board');
 
-		if (! $board.length)
+		if (!$board.length)
 			return;
 
 		var lists = $board.find('.list').length;
 		var lists_w = (lists < 2) ? 250 : 260 * lists - 10;
 		var body_w = $body.width();
 
-		if (lists_w + 190 <= body_w)
-		{
+		if (lists_w + 190 <= body_w) {
 			$board.css('max-width', '');
 			$body.removeClass('crowded');
-		}
-		else
-		{
-			var max = Math.floor( (body_w - 40) / 260 );
+		} else {
+			var max = Math.floor((body_w - 40) / 260);
 			max = (max < 2) ? 250 : 260 * max - 10;
 			$board.css('max-width', max + 'px');
 			$body.addClass('crowded');
@@ -2289,22 +2269,20 @@
 	adjustLayout();
 
 	//
-	function adjustListScroller()
-	{
+	function adjustListScroller() {
 		var $board = $('.board');
-		if (! $board.length)
+		if (!$board.length)
 			return;
 
-		var $lists    = $('.board .lists');
+		var $lists = $('.board .lists');
 		var $scroller = $('.board .lists-scroller');
-		var $inner    = $scroller.find('div');
+		var $inner = $scroller.find('div');
 
-		var max  = $board.width();
+		var max = $board.width();
 		var want = $lists[0].scrollWidth;
 		var have = $inner.width();
 
-		if (want <= max)
-		{
+		if (want <= max) {
 			$scroller.hide();
 			return;
 		}
@@ -2318,13 +2296,11 @@
 	}
 
 	//
-	function cloneScrollPos($src, $dst)
-	{
+	function cloneScrollPos($src, $dst) {
 		var src = $src[0];
 		var dst = $dst[0];
 
-		if (src._busyScrolling)
-		{
+		if (src._busyScrolling) {
 			src._busyScrolling--;
 			return;
 		}
@@ -2333,9 +2309,8 @@
 		dst.scrollLeft = src.scrollLeft;
 	}
 
-	function setupListScrolling()
-	{
-		var $lists    = $('.board .lists');
+	function setupListScrolling() {
+		var $lists = $('.board .lists');
 		var $scroller = $('.board .lists-scroller');
 
 		adjustListScroller();
@@ -2343,8 +2318,12 @@
 		$lists[0]._busyScrolling = 0;
 		$scroller[0]._busyScrolling = 0;
 
-		$scroller.on('scroll', function(){ cloneScrollPos($scroller, $lists); });
-		$lists   .on('scroll', function(){ cloneScrollPos($lists, $scroller); });
+		$scroller.on('scroll', function() {
+			cloneScrollPos($scroller, $lists);
+		});
+		$lists.on('scroll', function() {
+			cloneScrollPos($lists, $scroller);
+		});
 
 		adjustLayout();
 	}
@@ -2357,15 +2336,13 @@
 
 	updateBoardIndex();
 
-	if (! document.board && ! $('.config .load-board').length)
-	{
+	if (!document.board && !$('.config .load-board').length) {
 		var demo_id = createDemoBoard();
 		document.board = loadBoard(demo_id);
 		updateBoardIndex();
 	}
 
-	if (document.board)
-	{
+	if (document.board) {
 		showBoard(true);
 	}
 
@@ -2373,7 +2350,6 @@
 	setInterval(adjustListScroller, 100);
 
 	setupListScrolling();
-
 </script>
 
 </html>
