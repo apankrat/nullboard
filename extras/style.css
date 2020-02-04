@@ -160,7 +160,7 @@ body.crowded .board {
 	right: 0;
 	height: 20px;
 	padding: 5px 6px 7px 30px;
-	background: linear-gradient(to right, #EAEDF000, #EAEDF0 10px);
+	background: #eaedf0;
 	font-size: 11px;
 	line-height: 20px;
 }
@@ -195,7 +195,7 @@ body.crowded .board {
 }
 
 .board>.head {
-	background: #EAEDF0;
+	background: #eaedf0;
 	padding: 5px;
 	margin: 0 0 10px;
 	border-radius: 2px;
@@ -230,7 +230,7 @@ body.crowded .board {
 	vertical-align: top;
 	width: 250px;
 	margin: 0 5px 10px;
-	background: linear-gradient(#EAEDF0 30px, #DDE1E5 90px);
+	background: #eaedf0;
 	border-radius: 2px;
 }
 
