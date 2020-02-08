@@ -2383,6 +2383,7 @@
 		var $head = $('.head');
 		var $config = $('.config');
 		var $config_items = $('.config a');
+		//var $config_itemsHover = $('.config a:hover');
 		var $list = $('.list');
 		var $menu = $('.menu');
 		var $menu_items = $('.menu a');
@@ -2398,15 +2399,16 @@
 			$body.css({'background-color': '#252525', 'color': '#ddd'});
 			$head.css('background-color', '#454545');
 			$config.css('background-color', '#454545');
+			$config_items.css('color', '#ddd');
+			//$config_itemsHover.css('color', '#fc5555'); this doesn't seem to work
 			$list.css('background', '#454545');
 			$menu.css('background', '#454545');
+			$menu_items.css('color', '#ddd');
 			$note.css({'background-color': '#656565', 'box-shadow': '0 1px 2px #656565, 0 0 1px #959595'});
 			$note_raw.css({'background-color': '#454545', 'box-shadow': '0 1px 2px #454545, 0 0 1px #656565'});
 			$textarea.css('background-color', '#959595');
 			$input.css('background-color', '#959595');
 			$teaser.css('color', '#ddd');
-			$menu_items.css('color', '#ddd');
-			$config_items.css('color', '#ddd');
 			$logo.css('background-color', '#454545');
 			$logo_items.css('color', '#ddd');
 			mode = 'dark';
