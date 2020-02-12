@@ -745,6 +745,71 @@
 		}
 	}
 
+	/*
+	Dark Mode Styles
+	================ */
+	body.dark {
+		background-color: #252525;
+		color: #ddd;
+	}
+
+	/* Board menu / upper-right menu */
+	body.dark .head, body.dark .config {
+		background: #454545;
+	}
+
+	body.dark .config a {
+		color: #ddd;
+	}
+
+	body.dark .config a:hover {
+		color: #fc5555;
+	}
+
+	body.dark .config .bulk div a.active {
+		color: #fcd62d;
+	}
+
+	/* Lists and Notes */
+	body.dark .list, body.dark .menu {
+		background: #454545;
+	}
+
+	body.dark .menu a {
+		color: #ddd;
+	}
+
+	body.dark .menu a:hover {
+		color: #959595;
+	}
+
+	body.dark .board .list .note {
+		background: #656565;
+		box-shadow: 0 1px 2px #656565, 0 0 1px #959595;
+	}
+
+	body.dark .note.raw {
+		background: #454545;
+		box-shadow': 0 1px 2px #454545, 0 0 1px #656565;
+	}
+
+	body.dark textarea, body.dark input {
+		background: #959595;
+	}
+
+	/* Misc */
+	body.dark .teaser, body.dark .logo a {
+		color: #ddd;
+	}
+
+	body.dark .logo {
+		background: #454545;
+	}
+
+	body.dark .logo a:hover {
+		color: #fc5555;
+	}
+
 </style>
 
 </head>
@@ -2379,55 +2444,13 @@
 	var mode = 'light';
 
 	$('.theme-swap').click(function() {
-		var $body = $('body');
-		var $head = $('.head');
-		var $config = $('.config');
-		var $config_items = $('.config a');
-		//var $config_itemsHover = $('.config a:hover');
-		var $list = $('.list');
-		var $menu = $('.menu');
-		var $menu_items = $('.menu a');
-		var $note = $('.note');
-		var $note_raw = $('.note.raw');
-		var $textarea = $('textarea');
-		var $input = $('input');
-		var $teaser = $('.teaser');
-		var $logo = $('.logo');
-		var $logo_items = $('.logo a');
 
 		if ( mode === 'light') {
-			$body.css({'background-color': '#252525', 'color': '#ddd'});
-			$head.css('background-color', '#454545');
-			$config.css('background-color', '#454545');
-			$config_items.css('color', '#ddd');
-			//$config_itemsHover.css('color', '#fc5555'); this doesn't seem to work
-			$list.css('background', '#454545');
-			$menu.css('background', '#454545');
-			$menu_items.css('color', '#ddd');
-			$note.css({'background-color': '#656565', 'box-shadow': '0 1px 2px #656565, 0 0 1px #959595'});
-			$note_raw.css({'background-color': '#454545', 'box-shadow': '0 1px 2px #454545, 0 0 1px #656565'});
-			$textarea.css('background-color', '#959595');
-			$input.css('background-color', '#959595');
-			$teaser.css('color', '#ddd');
-			$logo.css('background-color', '#454545');
-			$logo_items.css('color', '#ddd');
+			$('body').addClass('dark');
 			mode = 'dark';
 
-
 		} else if (mode === 'dark') {
-			$body.css({'background-color': '#f8f9fb', 'color': '#000'});
-			$head.css('background-color', '#eaedf0');
-			$config.css('background-color', '#f8f9fb');
-			$list.css('background', '#eaedf0');
-			$menu.css('background-color', '#eaedf0');
-			$note.css({'background-color': '#fff', 'box-shadow': '0 1px 2px #bbb, 0 0 1px #ddd'});
-			$note_raw.css({'background-color': '#eaedf0', 'box-shadow': '0 1px 2px #bbb, 0 0 1px #ddd'});
-			$textarea.css('background-color', '#fff');
-			$input.css('background-color', '#fff');
-			$teaser.css('color', '#000');
-			$menu_items.css('color', '#000');
-			$config_items.css('color', '#000');
-			$logo.css('background-color', '#f8f9fb');
+			$('body').removeClass('dark');
 			mode = 'light';
 		}
 	});
