@@ -2441,18 +2441,9 @@
 	setupListScrolling();
 
 	//Toggle board theme
-	var mode = 'light';
-
 	$('.theme-swap').click(function() {
-
-		if ( mode === 'light') {
-			$('body').addClass('dark');
-			mode = 'dark';
-
-		} else if (mode === 'dark') {
-			$('body').removeClass('dark');
-			mode = 'light';
-		}
+		$('body').toggleClass('dark');
+		return false;
 	});
 
 </script>
