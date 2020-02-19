@@ -179,7 +179,7 @@
 		line-height: 22px;
 		text-transform: uppercase;
 		color: #1489db;
-		opacity: 0.6;
+		opacity: 0.8;
 	}
 
 	.board .head.editing .text {
@@ -625,11 +625,27 @@
 		color: #000;
 	}
 
+	.config .bulk a i,
+	.config .bulk a b {
+		font-style: normal;
+		font-weight: inherit;
+	}
+
+	.config .bulk a i {
+		display: none;
+	}
+
 	.config .bulk input.imp-board-select {
 		position: absolute;
 		width: 1px;
 		height: 1px;
 		visibility: hidden;
+	}
+
+	.config .bulk a.switch-theme {
+		padding-top: 6px;
+		margin-top: 6px;
+		border-top: 1px solid #00000028;
 	}
 
 	/***/
@@ -870,8 +886,25 @@
 		color: #fc2;
 	}
 
+	.dark .config .bulk div {
+		border-top: 1px solid #fff2;
+		border-bottom: 1px solid #fff2;
+	}
+
 	.dark .config .bulk div a.active {
 		color: #fc2;
+	}
+
+	.dark .config .bulk a.switch-theme {
+		border-top: 1px solid #fff2;
+	}
+
+	.dark .config a.switch-theme i {
+		display: inline;
+	}
+
+	.dark .config a.switch-theme b {
+		display: none;
 	}
 
 	/***/
@@ -889,6 +922,122 @@
 
 	.dark .logo > a:hover {
 		color: #fff;
+	}
+
+	/*
+	 *	Larger font
+	 */
+	body.z1,
+	body.z1 input,
+	body.z1 textarea {
+		font-size: 15px;
+	}
+
+	.z1 .board {
+		min-width: 290px;
+	}
+
+	.z1 .board u:before {
+		font-size: 19px;
+		line-height: 12px;
+	}
+
+	.z1 .board .head .text {
+		min-height: 22px;
+	}
+
+	.z1 .board .head .text,
+	.z1 .board .head .edit {
+		font-size: 15px;
+		line-height: 22px;
+	}
+
+	.z1 .board .head .edit::placeholder {
+		font-size: 10px;
+		line-height: 23px;
+	}
+
+	.z1 .board .menu {
+		height: 22px;
+		font-size: 13px;
+		line-height: 22px;
+	}
+
+	.z1 .board .list {
+		width: 290px;
+	}
+
+	.z1 .board .list .note .text,
+	.z1 .board .list .note .edit,
+	.z1 .dragster {
+		font-size: 13px;
+	}
+
+	.z1 .board .list .note .text {
+		min-height: 16px;
+	}
+
+	.z1 .board .list .note.collapsed {
+		height: 26px;
+	}
+
+	.z1 .board .list .note.collapsed .text {
+		height: 17px;
+		line-height: 25px;
+	}
+
+	.z1 .dragster.collapsed {
+		line-height: 24px;
+	}
+
+	.z1 .board .list .note .ops {
+		font-size: 10px;
+	}
+
+	/***/
+	.z1 .logo {
+		font-size: 13px;
+		line-height: 21px;
+	}
+
+	.z1 .logo .bulk a:before {
+		width: 13px;
+	}
+
+	/***/
+	.z1 .config {
+		font-size: 13px;
+		line-height: 21px;
+	}
+
+	.z1 .config .bulk div a.active:before {
+		width: 15px;
+	}
+
+	.z1 .config a.switch-fsize i {
+		display: inline;
+	}
+
+	.z1 .config a.switch-fsize b {
+		display: none;
+	}
+
+	/***/
+	.z1 .overlay .license {
+		font-size: 14px;
+		line-height: 18px;
+		width: 443px;
+	}
+
+	.z1 .overlay .about {
+		font-size: 12px;
+		line-height: 18px;
+		width: 277px;
+	}
+
+	.z1 .overlay .about h1 {
+		font-size: 17px;
+		width: 277px;
 	}
 
 </style>
@@ -915,7 +1064,8 @@
 			<a href=# class=imp-board>Import board...</a>
 				<input class=imp-board-select type="file" accept=".nbx">
 			<a href=# class=exp-board>Export board...</a>
-			<a href="#" class="switch-theme">Switch theme...</a>
+			<a href="#" class="switch-theme">Use <i>light</i><b>dark</b> theme</a>
+			<a href="#" class="switch-fsize">Use <i>smaller</i><b>larger</b> font</a>
 		</div>
 	</div>
 	</div>
@@ -2383,6 +2533,13 @@
 		return false;
 	});
 
+	$('.config .switch-fsize').click(function(){
+		var $body = $('body');
+		$body.toggleClass('z1');
+		localStorage.setItem('nullboard.fsize', $body.hasClass('z1') ? 'z1' : '');
+		return false;
+	});
+
 	//
 	var $overlay = $('.overlay');
 
@@ -2506,10 +2663,11 @@
 	}
 
 	//
-	var theme_id = localStorage.getItem('nullboard.theme');
-
-	if (theme_id == 'dark')
+	if (localStorage.getItem('nullboard.theme') == 'dark')
 		$('body').addClass('dark');
+
+	if (localStorage.getItem('nullboard.fsize') == 'z1')
+		$('body').addClass('z1');
 
 	//
 	var board_id = localStorage.getItem('nullboard.last_board');
