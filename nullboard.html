@@ -345,7 +345,7 @@
 	.board .list .note.dragging,
 	.board .list .note.dragging.raw {
 		background: #CED4DA;
-		box-shadow: 0 +1px 0 #00000010 inset, 
+		box-shadow: 0 +1px 0 #00000010 inset,
 			    0 -1px 0 #00000010 inset,
 			    +1px 0 0 #00000010 inset,
 			    -1px 0 0 #00000010 inset;
@@ -499,7 +499,7 @@
 		padding: 5px 25px 5px 10px;
 		font-size: 11px;
 
-		box-shadow: 0 +1px 0 #ACB4BC inset, 
+		box-shadow: 0 +1px 0 #ACB4BC inset,
 		            0 -1px 0 #ACB4BC inset,
 		            +1px 0 0 #ACB4BC inset,
 		            -1px 0 0 #ACB4BC inset,
@@ -745,6 +745,71 @@
 		}
 	}
 
+	/*
+	Dark Mode Styles
+	================ */
+	body.dark {
+		background-color: #252525;
+		color: #ddd;
+	}
+
+	/* Board menu / upper-right menu */
+	body.dark .head, body.dark .config {
+		background: #454545;
+	}
+
+	body.dark .config a {
+		color: #ddd;
+	}
+
+	body.dark .config a:hover {
+		color: #fc5555;
+	}
+
+	body.dark .config .bulk div a.active {
+		color: #fcd62d;
+	}
+
+	/* Lists and Notes */
+	body.dark .list, body.dark .menu {
+		background: #454545;
+	}
+
+	body.dark .menu a {
+		color: #ddd;
+	}
+
+	body.dark .menu a:hover {
+		color: #959595;
+	}
+
+	body.dark .board .list .note {
+		background: #656565;
+		box-shadow: 0 1px 2px #656565, 0 0 1px #959595;
+	}
+
+	body.dark .board .list .note.raw {
+		background: #454545;
+		box-shadow: none;
+	}
+
+	body.dark textarea, body.dark input {
+		background: #959595;
+	}
+
+	/* Misc */
+	body.dark .teaser, body.dark .logo a {
+		color: #ddd;
+	}
+
+	body.dark .logo {
+		background: #454545;
+	}
+
+	body.dark .logo a:hover {
+		color: #fc5555;
+	}
+
 </style>
 
 </head>
@@ -769,6 +834,7 @@
 			<a href=# class=imp-board>Import board...</a>
 				<input class=imp-board-select type="file" accept=".nbx">
 			<a href=# class=exp-board>Export board...</a>
+			<a href="#" class="theme-swap">Swap theme mode</a>
 		</div>
 	</div>
 	</div>
@@ -2373,6 +2439,12 @@
 	setInterval(adjustListScroller, 100);
 
 	setupListScrolling();
+
+	//Toggle board theme
+	$('.theme-swap').click(function() {
+		$('body').toggleClass('dark');
+		return false;
+	});
 
 </script>
 
