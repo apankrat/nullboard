@@ -95,7 +95,7 @@
 
 	a {
 		text-decoration: none;
-		transition: color 400ms;
+		transition: color 200ms;
 	}
 
 	a, a:active, a:focus, textarea, input {
@@ -346,9 +346,9 @@
 	.board .list .note.dragging.raw {
 		background: #CED4DA;
 		box-shadow: 0 +1px 0 #00000010 inset,
-			    0 -1px 0 #00000010 inset,
-			    +1px 0 0 #00000010 inset,
-			    -1px 0 0 #00000010 inset;
+		            0 -1px 0 #00000010 inset,
+		            +1px 0 0 #00000010 inset,
+		            -1px 0 0 #00000010 inset;
 	}
 
 	.board .list .note.dragging * {
@@ -746,68 +746,145 @@
 	}
 
 	/*
-	Dark Mode Styles
-	================ */
+	 *	Dark mode
+	 */
 	body.dark {
-		background-color: #252525;
-		color: #ddd;
+		background-color: #15171A;
+		color: #d6d6d6;
 	}
 
-	/* Board menu / upper-right menu */
-	body.dark .head, body.dark .config {
-		background: #454545;
+	.dark .board .head {
+		background: #202224;
 	}
 
-	body.dark .config a {
-		color: #ddd;
+	/***/
+	.dark .board .menu {
+		background: linear-gradient(to right, #20222400, #202224 10px);
 	}
 
-	body.dark .config a:hover {
-		color: #fc5555;
+	.dark .board .menu a {
+		color: #aaa;
 	}
 
-	body.dark .config .bulk div a.active {
-		color: #fcd62d;
+	.dark .board .menu a:hover {
+		color: #fc4;
 	}
 
-	/* Lists and Notes */
-	body.dark .list, body.dark .menu {
-		background: #454545;
+	.dark .board .menu a.warn:hover,
+	.dark .board .ops  a.warn:hover {
+		color: #fc5555 !important;
 	}
 
-	body.dark .menu a {
-		color: #ddd;
+	.dark .board .head {
+		color: #eee;
 	}
 
-	body.dark .menu a:hover {
-		color: #959595;
+	/***/
+	.dark .board .list {
+		background: #202224;
 	}
 
-	body.dark .board .list .note {
-		background: #656565;
-		box-shadow: 0 1px 2px #656565, 0 0 1px #959595;
+	.dark .board .list .note {
+		background: #2B2C2F;
+		background: linear-gradient(#2B2C2F, #27282B);
+		box-shadow: 0 1px 3px #0005;
+		text-shadow: 0 0 4px #0008;
 	}
 
-	body.dark .board .list .note.raw {
-		background: #454545;
+	.dark .board .list .note.raw {
+		background: transparent;
 		box-shadow: none;
 	}
 
-	body.dark textarea, body.dark input {
-		background: #959595;
+	.dark .board .list .note.raw .text {
+		color: #eee;
+		text-shadow: 0 0 4px #0008;
 	}
 
-	/* Misc */
-	body.dark .teaser, body.dark .logo a {
+	.dark .board .list .note .ops .teaser {
+		color: #ccc;
+	}
+
+	.dark .board .list .note .ops .bulk {
+		background: #202224;
+		border-left: 1px solid #111;
+		border-bottom: 1px solid #111;
+	}
+
+	.dark .board .list .note.raw .ops .bulk {
+		border: none;
+	}
+
+	.dark .board .list .note .ops .bulk a {
+		color: #ccc;
+	}
+
+	.dark .board .list .note .ops .bulk a:hover {
+		color: #fc2;
+	}
+
+	.dark .board .list .note.dragging,
+	.dark .board .list .note.dragging.raw {
+		background: #15171A;
+		box-shadow: 0 +1px 0 #000 inset,
+		            0 -1px 0 #000 inset,
+		            +1px 0 0 #000 inset,
+		            -1px 0 0 #000 inset;
+	}
+
+	.dark .dragster {
+		box-shadow: 0px 1px 4px #000000;
+		background: #2e3032;
+	}
+
+	/***/
+	.dark textarea,
+	.dark input {
+		background: #111315;
+		color: #eee;
+	}
+
+	.dark .board .head.editing .edit {
+		outline: 1px solid #bc9908;
+	}
+
+	.dark .board .list .note.editing {
+		background: #111315;
+		outline: 1px solid #bc9908;
+	}
+
+	/***/
+	.dark .config {
+		background-color: #15171A;
+	}
+
+	.dark .config a {
 		color: #ddd;
 	}
 
-	body.dark .logo {
-		background: #454545;
+	.dark .config a:hover {
+		color: #fc2;
 	}
 
-	body.dark .logo a:hover {
-		color: #fc5555;
+	.dark .config .bulk div a.active {
+		color: #fc2;
+	}
+
+	/***/
+	.dark .logo a {
+		color: #ccc;
+	}
+
+	.dark .logo {
+		background: #15171A;
+	}
+
+	.dark .logo a:hover {
+		color: #fc2;
+	}
+
+	.dark .logo > a:hover {
+		color: #fff;
 	}
 
 </style>
@@ -834,7 +911,7 @@
 			<a href=# class=imp-board>Import board...</a>
 				<input class=imp-board-select type="file" accept=".nbx">
 			<a href=# class=exp-board>Export board...</a>
-			<a href="#" class="theme-swap">Swap theme mode</a>
+			<a href="#" class="switch-theme">Switch theme...</a>
 		</div>
 	</div>
 	</div>
@@ -2293,6 +2370,13 @@
 		return true;
 	});
 
+	$('.config .switch-theme').click(function() {
+		var $body = $('body');
+		$body.toggleClass('dark');
+		localStorage.setItem('nullboard.theme', $body.hasClass('dark') ? 'dark' : '');
+		return false;
+	});
+
 	//
 	var $overlay = $('.overlay');
 
@@ -2416,6 +2500,12 @@
 	}
 
 	//
+	var theme_id = localStorage.getItem('nullboard.theme');
+
+	if (theme_id == 'dark')
+		$('body').addClass('dark');
+
+	//
 	var board_id = localStorage.getItem('nullboard.last_board');
 
 	if (board_id)
@@ -2439,12 +2529,6 @@
 	setInterval(adjustListScroller, 100);
 
 	setupListScrolling();
-
-	//Toggle board theme
-	$('.theme-swap').click(function() {
-		$('body').toggleClass('dark');
-		return false;
-	});
 
 </script>
 
