@@ -1015,11 +1015,13 @@
 	 *	poor man's error handling -- $fixme
 	 */
 	window.onerror = function(message, file, line, col, e){
+		var cb1;
 		alert("Error occurred: " + e.message);
 		return false;
 	};
 
 	window.addEventListener("error", function(e) {
+		var cb2;
 		alert("Error occurred: " + e.error.message);
 		return false;
 	})
