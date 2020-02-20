@@ -372,6 +372,34 @@
 		white-space: pre-wrap;
 	}
 
+	/***/
+	.board .list .note .text a {
+		color: inherit;
+		cursor: default;
+		transition: none;
+	}
+
+	@keyframes whoomp {
+		0%   { color: inherit; }
+		30%  { color: #888;    }
+		100% { color: inherit; }
+	}
+
+	.board .list .note .text a:hover {
+		animation-name: whoomp;
+		animation-duration: 700ms;
+	}
+
+	.reveal .board .list .note .text a {
+		color: #1489db;
+		cursor: pointer;
+	}
+
+	.reveal .board .list .note .text a:hover {
+		animation-name: none;
+	}
+
+	/***/
 	.board .list .note .edit {
 		display: none;
 		border: none;
@@ -503,6 +531,10 @@
 		            +1px 0 0 #ACB4BC inset,
 		            -1px 0 0 #ACB4BC inset,
 		            0px 1px 3px #00000030;
+	}
+
+	.dragster a {
+		color: #000;
 	}
 
 	.dragster.collapsed {
@@ -811,6 +843,21 @@
 		text-shadow: 0 0 4px #0008;
 	}
 
+	.dark.reveal .board .list .note .text a {
+		color: #fc0;
+	}
+
+	@keyframes whoomp-dark {
+		0%   { color: inherit; }
+		30%  { color: #fff;    }
+		100% { color: inherit; }
+	}
+
+	.dark .board .list .note .text a:hover {
+		animation-name: whoomp-dark;
+	}
+
+
 	.dark .board .list .note.raw {
 		background: transparent;
 		box-shadow: none;
@@ -856,6 +903,11 @@
 		box-shadow: 0px 1px 4px #000000;
 		background: #2e3032;
 	}
+
+	.dark .dragster a {
+		color: #d6d6d6;
+	}
+
 
 	/***/
 	.dark textarea,
@@ -1152,7 +1204,7 @@
 <script type="text/javascript">
 
 	//
-	var nb_codeVersion = 20200219;
+	var nb_codeVersion = 20200220;
 	var nb_dataVersion = 20190412;
 
 	//
@@ -1237,6 +1289,26 @@
 	}
 
 	//
+	function setNoteText($note, text)
+	{
+		$note.attr('_text', text);
+
+		text = htmlEncode(text);
+                hmmm = /(https?:\/\/[^\s]+)/mg;
+
+		text = text.replace(hmmm, function(url){
+			return '<a href="' + url + '" target=_blank>' + url + '</a>';
+		});
+
+		$note.html(text);
+	}
+
+	function getNoteText($note)
+	{
+		return $note.attr('_text');
+	}
+
+	//
 	function updatePageTitle()
 	{
 		if (! document.board)
@@ -1298,7 +1370,7 @@
 
 			list.notes.forEach(function(n){
 				var $n = $ndiv.clone();
-				setHtml( $n.find('.text'), n.text );
+				setNoteText( $n.find('.text'), n.text );
 				if (n.raw) $n.addClass('raw');
 				if (n.min) $n.addClass('collapsed');
 				$l_notes.append($n);
@@ -1333,7 +1405,7 @@
 
 			$list.find('.note').each(function(){
 				var $note = $(this)
-				var n = l.addNote( getHtml($note.find('.text')) );
+				var n = l.addNote( getNoteText($note.find('.text')) );
 				n.raw = $note.hasClass('raw');
 				n.min = $note.hasClass('collapsed');
 			});
@@ -1538,16 +1610,18 @@
 			'over  \u2261  to reveal the options.","raw":false,"min":false},{"text":"\u2022   X  deletes the note.\\n\u2022' +
 			'   R changes how a note looks.\\n\u2022   _  collapses the note.","raw":false,"min":false},{"text":"This is a ' +
 			'raw note.","raw":true,"min":false},{"text":"This is a collapsed note. Only its first line is visible. Useful f' +
-			'or keeping lists compact.","raw":false,"min":true}]},{"title":"More things to try","notes":[{"text":"\u2022   ' +
-			'Drag notes around to rearrange.\\n\u2022   Works between the lists too.","raw":false,"min":false},{"text":"\u2022' +
-			'   Click on a list name to edit.\\n\u2022   Enter to save, Esc to cancel.","raw":false,"min":false},{"text":"\u2022' +
-			'   Try adding a new list.\\n\u2022   Try deleting one. This  _can_  be undone.","raw":false,"min":false},{"tex' +
-			't":"\u2022   Same for the board name.","raw":false,"min":false},{"text":"Boards","raw":true,"min":false},{"tex' +
-			't":"\u2022   Check out   \u2261   at the top right.","raw":false,"min":false},{"text":"\u2022   Try adding a n' +
-			'ew board.\\n\u2022   Try switching between the boards.","raw":false,"min":false},{"text":"\u2022   Try deletin' +
-			'g a board. Unlike deleting a\\n     list this  _cannot_  be undone.","raw":false,"min":false},{"text":"\u2022 ' +
-			'  Export the board   (save to a file, as json)\\n\u2022   Import the board   (load from a save)","raw":false,"' +
-			'min":false}]}]}';
+			'or keeping lists compact.","raw":false,"min":true}, {"text":"Links","raw":true,"min":false}, {"text":"Links pu' +
+			'lse on hover and can be opened via the right-click menu  -  https://nullboard.io","raw":false,"min":false}, {"tex' +
+			't":"Pressing CapsLock highlights all links and makes them left-clickable.","raw":false,"min":false}]},{"title"' +
+			':"More things to try","notes":[{"text":"\u2022   Drag notes around to rearrange.\\n\u2022   Works between the ' +
+			'lists too.","raw":false,"min":false},{"text":"\u2022   Click on a list name to edit.\\n\u2022   Enter to save,' +
+			' Esc to cancel.","raw":false,"min":false},{"text":"\u2022   Try adding a new list.\\n\u2022   Try deleting one' +
+			'. This  _can_  be undone.","raw":false,"min":false},{"text":"\u2022   Same for the board name.","raw":false,"m' +
+			'in":false},{"text":"Boards","raw":true,"min":false},{"text":"\u2022   Check out   \u2261   at the top right.",' +
+			'"raw":false,"min":false},{"text":"\u2022   Try adding a new board.\\n\u2022   Try switching between the boards' +
+			'.","raw":false,"min":false},{"text":"\u2022   Try deleting a board. Unlike deleting a\\n     list this  _canno' +
+			't_  be undone.","raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' + 
+			'\u2022   Import the board   (load from a save)","raw":false,"min":false}]}]}';
 
 		var demo = parseBoard(blob);
 
@@ -1576,7 +1650,7 @@
 		$note[0]._collapsed = $note.hasClass('collapsed');
 		$note.removeClass('collapsed');
 
-		$edit.val( getHtml($text) );
+		$edit.val( getNoteText($text) );
 		$edit.width( $text.width() );
 		$edit.height( $text.height() );
 		$note.addClass('editing');
@@ -1597,7 +1671,7 @@
 		//
 		var $text = $item.find('.text');
 		var text_now = $edit.val().trimRight();
-		var text_was = getHtml( $text );
+		var text_was = getNoteText( $text );
 
 		//
 		var brand_new = $item.hasClass('brand-new');
@@ -1614,7 +1688,7 @@
 		else
 		if (text_now != text_was || brand_new)
 		{
-			setHtml( $text, text_now );
+			setNoteText( $text, text_now );
 
 			saveBoard();
 			updatePageTitle();
@@ -2267,9 +2341,28 @@
 	var drag = new Drag();
 
 	//
+	function setRevealState(ev)
+	{
+		var raw = ev.originalEvent;
+		var caps = raw.getModifierState && raw.getModifierState( 'CapsLock' );
+
+		if (caps) $('body').addClass('reveal');
+		else      $('body').removeClass('reveal');
+	}
+
+	$(window).live('blur', function(){
+		$('body').removeClass('reveal');
+	});
+
+	$(document).live('keydown', function(ev){
+		setRevealState(ev);
+	});
+
 	$(document).live('keyup', function(ev){
 
 		var raw = ev.originalEvent;
+
+		setRevealState(ev);
 
 		if (ev.target.nodeName == 'TEXTAREA' ||
 		    ev.target.nodeName == 'INPUT')
@@ -2301,6 +2394,15 @@
 
 		startEditing($(this), ev);
 		return false;
+	});
+
+	$('.board .note .text a').live('click', function(ev){
+
+		if (! $('body').hasClass('reveal'))
+			return true;
+
+		ev.stopPropagation();
+		return true;
 	});
 
 	//
@@ -2489,6 +2591,7 @@
 	});
 
 	$(document).on('mousemove', function(ev){
+		setRevealState(ev);
 		drag.onMouseMove(ev);
 	});
 
