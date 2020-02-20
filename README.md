@@ -54,9 +54,21 @@ Notes can also be set to look a bit different. This is useful for partitioning l
 
 ![Raw notes](https://nullboard.io/images/nullboard-raw-notes.gif?x)
 
-List can be moved around as well, though not as flashy as notes:
+Links starting with https:// and http:// are recognized. They will "pulse" on mouse hover and can be opened via the right-click menu.
+
+![Links on hover](https://nullboard.io/images/nullboard-links-on-hover.gif)
+
+Pressing CapsLock will highlight all links and make them left-clickable.
+
+![Links reveal](https://nullboard.io/images/nullboard-links-reveal.gif)
+
+Lists can be moved around as well, though not as flashy as notes:
 
 ![List swapping](https://nullboard.io/images/nullboard-list-swap.gif?x)
+
+The color theme can be inversed and the font size can be increased:
+
+![Theme and zoom](https://nullboard.io/images/nullboard-theme-and-zoom.gif?x)
 
 Also:
 
