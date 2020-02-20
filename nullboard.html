@@ -335,15 +335,15 @@
 	}
 
 	/***/
-	.board .list .note {
+	.board .note {
 		background: #fff;
 		margin-top: 5px;
 		box-shadow: 0 1px 2px #bbb, 0 0 1px #ddd;
 		position: relative;
 	}
 
-	.board .list .note.dragging,
-	.board .list .note.dragging.raw {
+	.board .note.dragging,
+	.board .note.dragging.raw {
 		background: #CED4DA;
 		box-shadow: 0 +1px 0 #00000010 inset,
 		            0 -1px 0 #00000010 inset,
@@ -351,30 +351,31 @@
 		            -1px 0 0 #00000010 inset;
 	}
 
-	.board .list .note.dragging * {
+	.board .note.dragging * {
 		opacity: 0 !important;
 	}
 
 	/***/
-	.board .list .note:last-child {
+	.board .note:last-child {
 		margin-bottom: 5px;
 	}
 
-	.board .list .note .text,
-	.board .list .note .edit {
+	.board .note .text,
+	.board .note .edit {
 		padding: 5px 10px;
 		margin-right: 15px;
 		font-size: 11px;
 	}
 
-	.board .list .note .text {
+	.board .note .text {
 		min-height: 13px;
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
 	}
 
 	/***/
-	.board .list .note .text a {
+	.board .head .text a,
+	.board .note .text a {
 		color: inherit;
 		cursor: default;
 		transition: none;
@@ -386,42 +387,45 @@
 		100% { color: inherit; }
 	}
 
-	.board .list .note .text a:hover {
+	.board .head .text a:hover,
+	.board .note .text a:hover {
 		animation-name: whoomp;
 		animation-duration: 700ms;
 	}
 
-	.reveal .board .list .note .text a {
+	.reveal .board .head .text a,
+	.reveal .board .note .text a {
 		color: #1489db;
 		cursor: pointer;
 	}
 
-	.reveal .board .list .note .text a:hover {
+	.reveal .board .head .text a:hover,
+	.reveal .board .note .text a:hover {
 		animation-name: none;
 	}
 
 	/***/
-	.board .list .note .edit {
+	.board .note .edit {
 		display: none;
 		border: none;
 	}
 
-	.board .list .note.editing {
+	.board .note.editing {
 		box-shadow: none;
 		outline: 1px solid #8eaedd;
 	}
 
-	.board .list .note.editing .text {
+	.board .note.editing .text {
 		display: none;
 	}
 
-	.board .list .note.editing .edit {
+	.board .note.editing .edit {
 		display: block;
 		resize: none;
 	}
 
 	/***/
-	.board .list .note .ops {
+	.board .note .ops {
 		position: absolute;
 		top: 0;
 		right: 0;
@@ -431,26 +435,26 @@
 		font-size: 9px;
 	}
 
-	.board .list .note.editing .ops {
+	.board .note.editing .ops {
 		display: none;
 	}
 
-	.board .list .note:hover .ops {
+	.board .note:hover .ops {
 		opacity: 1;
 	}
 
-	.board .list .note .ops .teaser {
+	.board .note .ops .teaser {
 		display: block;
 		margin-top: 2px;
 		margin-right: 1px;
 		padding-right: 3px;
 	}
 
-	.board .list .note .ops .teaser:before {
+	.board .note .ops .teaser:before {
 		content: '\2261';
 	}
 
-	.board .list .note .ops .bulk {
+	.board .note .ops .bulk {
 		display: none;
 		background: #fff;
 		border-left: none;
@@ -460,57 +464,57 @@
 		border-bottom: 1px solid #ddd;
 	}
 
-	.board .list .note .ops .bulk a {
+	.board .note .ops .bulk a {
 		padding-right: 4px;
 	}
 
-	.board .list .note .ops:hover .bulk {
+	.board .note .ops:hover .bulk {
 		display: block;
 	}
 
-	.board .list .note .ops:hover .teaser {
+	.board .note .ops:hover .teaser {
 		display: none;
 	}
 
 	/***/
-	.board .list .note.raw {
+	.board .note.raw {
 		background: transparent;
 		box-shadow: none;
 		font-weight: 500;
 	}
 
-	.board .list .note.raw.editing {
+	.board .note.raw.editing {
 		background: #fff;
 	}
 
-	.board .list .note.raw .text {
+	.board .note.raw .text {
 	}
 
-	.board .list .note.collapsed {
+	.board .note.collapsed {
 		height: 23px;
 	}
 
-	.board .list .note.collapsed .text {
+	.board .note.collapsed .text {
 		height: 13px;
 		overflow: hidden;
 		line-height: 22px;
 		padding-top: 0;
 	}
 
-	.board .list .note.collapsed .ops {
+	.board .note.collapsed .ops {
 		opacity: 1;
 	}
 
-	.board .list .note.collapsed .ops .teaser {
+	.board .note.collapsed .ops .teaser {
 		padding: 1px 3px 0 1px;
 	}
 
-	.board .list .note.collapsed .ops .teaser:before {
+	.board .note.collapsed .ops .teaser:before {
 		content: '_';
 		top: 1px;
 	}
 
-	.board .list .note.collapsed:hover .ops .teaser:before {
+	.board .note.collapsed:hover .ops .teaser:before {
 		content: '\2261';
 	}
 
@@ -784,12 +788,12 @@
 			display: none;
 		}
 
-		.board .list .note {
+		.board .note {
 			box-shadow: none;
 			outline: 1px solid #ccc;
 		}
 
-		.board .list .note.raw {
+		.board .note.raw {
 			outline: none;
 		}
 	}
@@ -837,14 +841,15 @@
 		background: #202224;
 	}
 
-	.dark .board .list .note {
+	.dark .board .note {
 		background: #2B2C2F;
 		background: linear-gradient(#2B2C2F, #27282B);
 		box-shadow: 0 1px 3px #0005;
 		text-shadow: 0 0 4px #0008;
 	}
 
-	.dark.reveal .board .list .note .text a {
+	.dark.reveal .board .head .text a,
+	.dark.reveal .board .note .text a {
 		color: #fc0;
 	}
 
@@ -854,45 +859,46 @@
 		100% { color: inherit; }
 	}
 
-	.dark .board .list .note .text a:hover {
+	.dark .board .head .text a:hover,
+	.dark .board .note .text a:hover {
 		animation-name: whoomp-dark;
 	}
 
 
-	.dark .board .list .note.raw {
+	.dark .board .note.raw {
 		background: transparent;
 		box-shadow: none;
 	}
 
-	.dark .board .list .note.raw .text {
+	.dark .board .note.raw .text {
 		color: #eee;
 		text-shadow: 0 0 4px #0008;
 	}
 
-	.dark .board .list .note .ops .teaser {
+	.dark .board .note .ops .teaser {
 		color: #ccc;
 	}
 
-	.dark .board .list .note .ops .bulk {
+	.dark .board .note .ops .bulk {
 		background: #202224;
 		border-left: 1px solid #111;
 		border-bottom: 1px solid #111;
 	}
 
-	.dark .board .list .note.raw .ops .bulk {
+	.dark .board .note.raw .ops .bulk {
 		border: none;
 	}
 
-	.dark .board .list .note .ops .bulk a {
+	.dark .board .note .ops .bulk a {
 		color: #ccc;
 	}
 
-	.dark .board .list .note .ops .bulk a:hover {
+	.dark .board .note .ops .bulk a:hover {
 		color: #fc2;
 	}
 
-	.dark .board .list .note.dragging,
-	.dark .board .list .note.dragging.raw {
+	.dark .board .note.dragging,
+	.dark .board .note.dragging.raw {
 		background: #15171A;
 		box-shadow: 0 +1px 0 #000 inset,
 		            0 -1px 0 #000 inset,
@@ -921,7 +927,7 @@
 		outline: 1px solid #bc9908;
 	}
 
-	.dark .board .list .note.editing {
+	.dark .board .note.editing {
 		background: #111315;
 		outline: 1px solid #bc9908;
 	}
@@ -1020,21 +1026,21 @@
 		width: 290px;
 	}
 
-	.z1 .board .list .note .text,
-	.z1 .board .list .note .edit,
+	.z1 .board .note .text,
+	.z1 .board .note .edit,
 	.z1 .dragster {
 		font-size: 13px;
 	}
 
-	.z1 .board .list .note .text {
+	.z1 .board .note .text {
 		min-height: 16px;
 	}
 
-	.z1 .board .list .note.collapsed {
+	.z1 .board .note.collapsed {
 		height: 26px;
 	}
 
-	.z1 .board .list .note.collapsed .text {
+	.z1 .board .note.collapsed .text {
 		height: 17px;
 		line-height: 25px;
 	}
@@ -1043,7 +1049,7 @@
 		line-height: 24px;
 	}
 
-	.z1 .board .list .note .ops {
+	.z1 .board .note .ops {
 		font-size: 10px;
 	}
 
@@ -1279,23 +1285,13 @@
 		return $('tt .encoder').html(enc).text();
 	}
 
-	function getHtml($item)
-	{
-		return htmlDecode($item.html());
-	}
-
-	function setHtml($item, html)
-	{
-		$item.html(htmlEncode(html));
-	}
-
 	//
-	function setNoteText($note, text)
+	function setText($note, text)
 	{
 		$note.attr('_text', text);
 
 		text = htmlEncode(text);
-                hmmm = /(https?:\/\/[^\s]+)/mg;
+                hmmm = /\b(https?:\/\/[^\s]+)/mg;
 
 		text = text.replace(hmmm, function(url){
 			return '<a href="' + url + '" target=_blank>' + url + '</a>';
@@ -1304,7 +1300,7 @@
 		$note.html(text);
 	}
 
-	function getNoteText($note)
+	function getText($note)
 	{
 		return $note.attr('_text');
 	}
@@ -1319,7 +1315,7 @@
 		}
 
 		var $text = $('.wrap .board > .head .text');
-		var title = getHtml( $text );
+		var title = getText( $text );
 
 		document.board.title = title;
 		document.title = 'NB - ' + (title || '(unnamed board)');
@@ -1360,18 +1356,18 @@
 		var $b_lists = $b.find('.lists');
 
 		$b[0].board_id = board.id;
-		setHtml( $b.find('.head .text'), board.title );
+		setText( $b.find('.head .text'), board.title );
 
 		board.lists.forEach(function(list){
 
 			var $l = $ldiv.clone();
 			var $l_notes = $l.find('.notes');
 
-			setHtml( $l.find('.head .text'), list.title );
+			setText( $l.find('.head .text'), list.title );
 
 			list.notes.forEach(function(n){
 				var $n = $ndiv.clone();
-				setNoteText( $n.find('.text'), n.text );
+				setText( $n.find('.text'), n.text );
 				if (n.raw) $n.addClass('raw');
 				if (n.min) $n.addClass('collapsed');
 				$l_notes.append($n);
@@ -1398,15 +1394,15 @@
 	function saveBoard()
 	{
 		var $board = $('.wrap .board');
-		var board = new Board( getHtml($board.find('> .head .text')) );
+		var board = new Board( getText($board.find('> .head .text')) );
 
 		$board.find('.list').each(function(){
 			var $list = $(this);
-			var l = board.addList( getHtml($list.find('.head .text')) );
+			var l = board.addList( getText($list.find('.head .text')) );
 
 			$list.find('.note').each(function(){
 				var $note = $(this)
-				var n = l.addNote( getNoteText($note.find('.text')) );
+				var n = l.addNote( getText($note.find('.text')) );
 				n.raw = $note.hasClass('raw');
 				n.min = $note.hasClass('collapsed');
 			});
@@ -1651,7 +1647,7 @@
 		$note[0]._collapsed = $note.hasClass('collapsed');
 		$note.removeClass('collapsed');
 
-		$edit.val( getNoteText($text) );
+		$edit.val( getText($text) );
 		$edit.width( $text.width() );
 		$edit.height( $text.height() );
 		$note.addClass('editing');
@@ -1672,7 +1668,7 @@
 		//
 		var $text = $item.find('.text');
 		var text_now = $edit.val().trimRight();
-		var text_was = getNoteText( $text );
+		var text_was = getText( $text );
 
 		//
 		var brand_new = $item.hasClass('brand-new');
@@ -1689,7 +1685,7 @@
 		else
 		if (text_now != text_was || brand_new)
 		{
-			setNoteText( $text, text_now );
+			setText( $text, text_now );
 
 			saveBoard();
 			updatePageTitle();
@@ -2495,7 +2491,7 @@
 	});
 
 	//
-	$('.board .list .note .edit').live('input propertychange', function(){
+	$('.board .note .edit').live('input propertychange', function(){
 
 		var delta = $(this).outerHeight() - $(this).height();
 
