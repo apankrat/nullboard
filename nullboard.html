@@ -1725,6 +1725,35 @@
 		$note.find('.text').click();
 	}
 
+	//
+	function addNoteOnClick($list, $after, $before)
+	{
+		var $note  = $('tt .note').clone();
+		var $notes = $list.find('.notes');
+
+		$note.find('.text').html('');
+		$note.addClass('brand-new');
+
+		if ($before)
+		{
+			$before.before($note);
+			$note = $before.prev();
+		}
+		else
+		if ($after)
+		{
+			$after.after($note);
+			$note = $after.next();
+		}
+		else
+		{
+			$notes.prepend($note);
+			$note = $notes.find('.note').first();
+		}
+
+		$note.find('.text').click();
+	}
+
 	function deleteNote($note)
 	{
 		$note
@@ -2557,7 +2586,7 @@
 
 	//
 	$('.board .add-note').live('click', function(){
-		addNote( $(this).closest('.list') );
+		addNoteOnClick( $(this).closest('.list') );
 		return false;
 	});
 
