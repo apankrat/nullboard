@@ -686,6 +686,7 @@
 	}
 
 	/***/
+
 	.config .bulk {
 		display: none;
 		opacity: 0;
@@ -698,6 +699,21 @@
 	.config:hover .bulk {
 		display: block;
 		opacity: 1;
+	}
+
+	.color-select {
+		display: none; /* not shown by default but is toggled */
+		position: absolute;
+		z-index: 10;
+		width: 100%;
+		top: 0px;
+		border-style: solid;
+		border-color: #00000028;
+		border-width: 1px;
+	}
+
+	.color-opt {
+		height: 20px;
 	}
 
 	/***/
@@ -1178,9 +1194,20 @@
 		<div class=note>
 			<div class=ops>
 				<a href=# class=teaser></a>
+				<!-- https://www.schemecolor.com/rainbow-pastels-color-scheme.php -->
+				<div class="color-select">
+					<div class="color-opt" style="background-color:white">&nbsp;</div>
+					<div class="color-opt" style="background-color:#FF9AA2">&nbsp;</div>
+					<div class="color-opt" style="background-color:#FFB7B2">&nbsp;</div>
+					<div class="color-opt" style="background-color:#FFDAC1">&nbsp;</div>
+					<div class="color-opt" style="background-color:#E2F0CB">&nbsp;</div>
+					<div class="color-opt" style="background-color:#B5EAD7">&nbsp;</div>
+					<div class="color-opt" style="background-color:#C7CEEA">&nbsp;</div>
+				</div>
 				<div class=bulk>
 					<a href=# class='del-note warn'><u></u></a>
 					<a href=# class='raw-note'>R</a>
+					<a href=# class='color-note'>C</a>
 					<a href=# class='collapse'>_</a>
 				</div>
 			</div>
@@ -1370,6 +1397,7 @@
 				setText( $n.find('.text'), n.text );
 				if (n.raw) $n.addClass('raw');
 				if (n.min) $n.addClass('collapsed');
+				if (n.color) $n.css('background-color', n.color);
 				$l_notes.append($n);
 			});
 
@@ -1405,6 +1433,7 @@
 				var n = l.addNote( getText($note.find('.text')) );
 				n.raw = $note.hasClass('raw');
 				n.min = $note.hasClass('collapsed');
+				n.color = $note.css('background-color')
 			});
 		});
 
@@ -1605,7 +1634,7 @@
 			'"raw":false,"min":false},{"text":"\u2022   Try Ctrl-Enter, see what it does.\\n\u2022   Try Ctrl-Shift-Enter t' +
 			'oo.","raw":false,"min":false},{"text":"\u2022   Hover over a note to show its  \u2261  menu.\\n\u2022   Hover ' +
 			'over  \u2261  to reveal the options.","raw":false,"min":false},{"text":"\u2022   X  deletes the note.\\n\u2022' +
-			'   R changes how a note looks.\\n\u2022   _  collapses the note.","raw":false,"min":false},{"text":"This is a ' +
+			'   R changes how a note looks.\\n\u2022   C changes the color of a note.\\n\u2022   _  collapses the note.","raw":false,"min":false},{"text":"This is a ' +
 			'raw note.","raw":true,"min":false},{"text":"This is a collapsed note. Only its first line is visible. Useful f' +
 			'or keeping lists compact.","raw":false,"min":true}, {"text":"Links","raw":true,"min":false}, {"text":"Links pu' +
 			'lse on hover and can be opened via the right-click menu  -  https://nullboard.io","raw":false,"min":false}, {"tex' +
@@ -1617,7 +1646,7 @@
 			'in":false},{"text":"Boards","raw":true,"min":false},{"text":"\u2022   Check out   \u2261   at the top right.",' +
 			'"raw":false,"min":false},{"text":"\u2022   Try adding a new board.\\n\u2022   Try switching between the boards' +
 			'.","raw":false,"min":false},{"text":"\u2022   Try deleting a board. Unlike deleting a\\n     list this  _canno' +
-			't_  be undone.","raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' + 
+			't_  be undone.","raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' +
 			'\u2022   Import the board   (load from a save)","raw":false,"min":false}]}]}';
 
 		var demo = parseBoard(blob);
@@ -2567,8 +2596,29 @@
 	});
 
 	$('.board .raw-note').live('click', function(){
-		$(this).closest('.note').toggleClass('raw');
+		let note = $(this).closest('.note');
+		note.toggleClass('raw');
+		note.find('.color-note').toggle();
+		note.css('background-color', '');
 		saveBoard();
+		return false;
+	});
+
+	$('.board .color-note').live('click', function(){
+		$(this).closest('.note').find('.color-select').show();
+		return false;
+	});
+
+	$('.board .color-opt').live('click', function(){
+		$(this).closest('.note').find('.color-select').hide();
+		let color = $(this).css('background-color');
+		$(this).closest('.note').css('background-color', color);
+		saveBoard();
+		return false;
+	});
+
+	$('.board .color-select').live('mouseleave', function(){
+		$(this).hide();
 		return false;
 	});
 
