@@ -8,6 +8,10 @@ https://nullboard.io/preview
 
 The name also happens to abbreviate to [NB](https://en.wikipedia.org/wiki/Nota_bene), which I think is a nice touch.
 
+## Run with docker
+
+Run Nullboard in a docker container using `docker-compose build && docker-compose up -d`
+
 ## Dead simple
 
 * Single-page web app - just one HTML file, an ancient jQuery package and a webfont pack.
