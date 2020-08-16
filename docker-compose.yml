@@ -1,0 +1,7 @@
+version: "3"
+services:
+  nullboard:
+    build: .
+    ports:
+      - "80:80"
+    container_name: "Nullboard"
