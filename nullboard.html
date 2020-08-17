@@ -615,13 +615,15 @@
 		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 	}
 
-	.config a {
+	.config a,
+	.settings a {
 		display: block;
 		color: #000;
 		transition: color 200ms;
 	}
 
-	.config a:hover {
+	.config a:hover,
+	.settings a:hover {
 		color: #1489db;
 	}
 
@@ -664,14 +666,29 @@
 		color: #000;
 	}
 
-	.config .bulk a i,
-	.config .bulk a b {
+	.config .view-settings {
+		margin: 6px -2px;
+		padding: 6px 2px;
+		border-top: 1px solid #00000028;
+	}
+
+	.settings a i,
+	.settings a b {
 		font-style: normal;
 		font-weight: inherit;
 	}
 
-	.config .bulk a i {
+	.settings a i {
 		display: none;
+	}
+
+	.settings a.switch-theme {
+		padding-top: 6px;
+		margin-top: 6px;
+	}
+
+	.settings h4 {
+		margin-top: 0;
 	}
 
 	.config .bulk input.imp-board-select {
@@ -679,12 +696,6 @@
 		width: 1px;
 		height: 1px;
 		visibility: hidden;
-	}
-
-	.config .bulk a.switch-theme {
-		padding-top: 6px;
-		margin-top: 6px;
-		border-top: 1px solid #00000028;
 	}
 
 	/***/
@@ -781,6 +792,19 @@
 	}
 
 	/***/
+
+	.overlay .settings {
+		font-size: 12px;
+		line-height: 16px;
+		width: 240px;
+		height: auto;
+		padding: 25px;
+		background: #fff;
+		position: absolute;
+		top: 100px;
+		left: 50%;
+		margin-left: -145px;
+	}
 
 	@media print {
 		.logo, .config,
@@ -956,15 +980,15 @@
 		color: #fc2;
 	}
 
-	.dark .config .bulk a.switch-theme {
+	.dark .settings a.switch-theme {
 		border-top: 1px solid #fff2;
 	}
 
-	.dark .config a.switch-theme i {
+	.dark .settings a.switch-theme i {
 		display: inline;
 	}
 
-	.dark .config a.switch-theme b {
+	.dark .settings a.switch-theme b {
 		display: none;
 	}
 
@@ -1075,11 +1099,11 @@
 		width: 15px;
 	}
 
-	.z1 .config a.switch-fsize i {
+	.z1 .settings a.switch-fsize i {
 		display: inline;
 	}
 
-	.z1 .config a.switch-fsize b {
+	.z1 .settings a.switch-fsize b {
 		display: none;
 	}
 
@@ -1125,8 +1149,7 @@
 			<a href=# class=imp-board>Import board...</a>
 				<input class=imp-board-select type="file" accept=".nbx">
 			<a href=# class=exp-board>Export board...</a>
-			<a href="#" class="switch-theme">Use <i>light</i><b>dark</b> theme</a>
-			<a href="#" class="switch-fsize">Use <i>smaller</i><b>larger</b> font</a>
+			<a href=# class=view-settings>Settings...</a>
 		</div>
 	</div>
 	</div>
@@ -1203,6 +1226,12 @@
 		</div>
 
 		<div class=license>
+		</div>
+
+		<div class=settings>
+			<h4>Settings</h3>
+			<a href="#" class="switch-theme">Use <i>light</i><b>dark</b> theme</a>
+			<a href="#" class="switch-fsize">Use <i>smaller</i><b>larger</b> font</a>
 		</div>
 	</tt>
 
@@ -2628,14 +2657,14 @@
 		return true;
 	});
 
-	$('.config .switch-theme').click(function() {
+	$('.settings .switch-theme').live('click', function() {
 		var $body = $('body');
 		$body.toggleClass('dark');
 		localStorage.setItem('nullboard.theme', $body.hasClass('dark') ? 'dark' : '');
 		return false;
 	});
 
-	$('.config .switch-fsize').click(function(){
+	$('.settings .switch-fsize').live('click', function(){
 		var $body = $('body');
 		$body.toggleClass('z1');
 		localStorage.setItem('nullboard.fsize', $body.hasClass('z1') ? 'z1' : '');
@@ -2668,6 +2697,13 @@
 
 		var $div = $('tt .license').clone();
 		$div.html(formatLicense());
+		showOverlay($overlay, $div);
+		return false;
+	});
+
+	$('.view-settings').click(function(){
+
+		var $div = $('tt .settings').clone();
 		showOverlay($overlay, $div);
 		return false;
 	});
