@@ -85,6 +85,10 @@ Also:
 
 You spot a bug, file an issue.
 
+## Dockerized version
+
+See [this fork](https://github.com/rsoper/nullboard).
+
 ## Background
 
 Nullboard is something that handles ToDo lists in the way that works really well. For *me* that is.
