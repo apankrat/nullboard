@@ -879,6 +879,14 @@
 		/* text-decoration-thickness: 2px; */
 	}
 
+	.dark .board .note.mark .text {
+		color: inherit;
+		text-shadow: 0 0 4px #0008;
+		text-decoration: line-through;
+		text-decoration-color: #f12e2e;
+		text-decoration-thickness: 1.6px;
+	}
+
 	.dark .board .note .ops .teaser {
 		color: #ccc;
 	}
@@ -1129,6 +1137,7 @@
 			<a href=# class=exp-board>Export board...</a>
 			<a href="#" class="switch-theme">Use <i>light</i><b>dark</b> theme</a>
 			<a href="#" class="switch-fsize">Use <i>smaller</i><b>larger</b> font</a>
+			<a href="#" class="clear-board">Clear Marked Notes</a>
 		</div>
 	</div>
 	</div>
@@ -1184,6 +1193,7 @@
 				<a href=# class=teaser></a>
 				<div class=bulk>
 					<a href=# class='del-note warn'><u></u></a>
+					<a href=# class='mark-note'>M</a>
 					<a href=# class='raw-note'>R</a>
 					<a href=# class='collapse'>_</a>
 				</div>
@@ -1245,6 +1255,7 @@
 	function Note(text)
 	{
 		this.text = text;
+		this.mark = false;
 		this.raw  = false;
 		this.min  = false;
 	}
@@ -1495,6 +1506,7 @@
 			list.notes.forEach(function(n){
 				var $n = $ndiv.clone();
 				setText( $n.find('.text'), n.text );
+				if (n.mark) $n.addClass('mark');
 				if (n.raw) $n.addClass('raw');
 				if (n.min) $n.addClass('collapsed');
 				$l_notes.append($n);
@@ -1518,7 +1530,7 @@
 	}
 
 	//
-	function saveBoard()
+	function saveBoard(clear_board=false)
 	{
 		var $board = $('.wrap .board');
 		var board = new Board( getText($board.find('> .head .text')) );
@@ -1529,9 +1541,15 @@
 
 			$list.find('.note').each(function(){
 				var $note = $(this)
-				var n = l.addNote( getText($note.find('.text')) );
-				n.raw = $note.hasClass('raw');
-				n.min = $note.hasClass('collapsed');
+				var ismark = $note.hasClass('mark');
+				if (clear_board && ismark){
+					;
+				}else{
+					var n = l.addNote( getText($note.find('.text')) );
+					n.mark = ismark;
+					n.raw = $note.hasClass('raw');
+					n.min = $note.hasClass('collapsed');
+				}
 			});
 		});
 
@@ -1744,34 +1762,34 @@
 	{
 		var blob =
 			'{"format":20190412,"id":1555071015420,"revision":581,"title":"Welcome to Nullboard","lists":[{"title":"The Use' +
-			'r Manual","notes":[{"text":"This is a note.\\nA column of notes is a list.\\nA set of lists is a board.","raw"' +
-			':false,"min":false},{"text":"All data is saved locally.\\nThe whole thing works completely offline.","raw":fal' +
-			'se,"min":false},{"text":"Last 50 board revisions are retained.","raw":false,"min":false},{"text":"Ctrl-Z is Un' +
-			'do  -  goes one revision back.\\nCtrl-Y is Redo  -  goes one revision forward.","raw":false,"min":false},{"tex' +
-			't":"Caveats","raw":true,"min":false},{"text":"Desktop-oriented.\\nMobile support is basically untested.","raw"' +
+			'r Manual","notes":[{"text":"This is a note.\\nA column of notes is a list.\\nA set of lists is a board.","mark":false,"raw"' +
+			':false,"min":false},{"text":"All data is saved locally.\\nThe whole thing works completely offline.","mark":false,"raw":fal' +
+			'se,"min":false},{"text":"Last 50 board revisions are retained.","mark":false,"raw":false,"min":false},{"text":"Ctrl-Z is Un' +
+			'do  -  goes one revision back.\\nCtrl-Y is Redo  -  goes one revision forward.","mark":false,"raw":false,"min":false},{"tex' +
+			't":"Caveats","mark":false,"raw":true,"min":false},{"text":"Desktop-oriented.\\nMobile support is basically untested.","mark":false,"raw"' +
 			':false,"min":false},{"text":"Works in Firefox, Chrome is supported.\\nShould work in Safari, may work in Edge.' +
-			'","raw":false,"min":false},{"text":"Still very much in beta. Caveat emptor.","raw":false,"min":false},{"text":' +
-			'"Issues and suggestions","raw":true,"min":false},{"text":"Post them on Github.\\nSee \\"Nullboard\\" at the to' +
-			'p left for the link.","raw":false,"min":false}]},{"title":"Things to try","notes":[{"text":"\u2022   Click on ' +
-			'a note to edit.","raw":false,"min":false},{"text":"\u2022   Click outside of it when done editing.\\n\u2022   ' +
-			'Alternatively, use Shift-Enter.","raw":false,"min":false},{"text":"\u2022   To discard changes press Escape.",' +
-			'"raw":false,"min":false},{"text":"\u2022   Try Ctrl-Enter, see what it does.\\n\u2022   Try Ctrl-Shift-Enter t' +
-			'oo.","raw":false,"min":false},{"text":"\u2022   Hover over a note to show its  \u2261  menu.\\n\u2022   Hover ' +
-			'over  \u2261  to reveal the options.","raw":false,"min":false},{"text":"\u2022   X  deletes the note.\\n\u2022' +
-			'   R changes how a note looks.\\n\u2022   _  collapses the note.","raw":false,"min":false},{"text":"This is a ' +
-			'raw note.","raw":true,"min":false},{"text":"This is a collapsed note. Only its first line is visible. Useful f' +
-			'or keeping lists compact.","raw":false,"min":true}, {"text":"Links","raw":true,"min":false}, {"text":"Links pu' +
-			'lse on hover and can be opened via the right-click menu  -  https://nullboard.io","raw":false,"min":false}, {"tex' +
-			't":"Pressing CapsLock highlights all links and makes them left-clickable.","raw":false,"min":false}]},{"title"' +
+			'","mark":false,"raw":false,"min":false},{"text":"Still very much in beta. Caveat emptor.","mark":false,"raw":false,"min":false},{"text":' +
+			'"Issues and suggestions","mark":false,"raw":true,"min":false},{"text":"Post them on Github.\\nSee \\"Nullboard\\" at the to' +
+			'p left for the link.","mark":false,"raw":false,"min":false}]},{"title":"Things to try","notes":[{"text":"\u2022   Click on ' +
+			'a note to edit.","mark":false,"raw":false,"min":false},{"text":"\u2022   Click outside of it when done editing.\\n\u2022   ' +
+			'Alternatively, use Shift-Enter.","mark":false,"raw":false,"min":false},{"text":"\u2022   To discard changes press Escape.",' +
+			'"mark":false,"raw":false,"min":false},{"text":"\u2022   Try Ctrl-Enter, see what it does.\\n\u2022   Try Ctrl-Shift-Enter t' +
+			'oo.","mark":false,"raw":false,"min":false},{"text":"\u2022   Hover over a note to show its  \u2261  menu.\\n\u2022   Hover ' +
+			'over  \u2261  to reveal the options.","mark":false,"raw":false,"min":false},{"text":"\u2022   X  deletes the note.\\n\u2022' +
+			'   R changes how a note looks.\\n\u2022   _  collapses the note.","mark":false,"raw":false,"min":false},{"text":"This is a ' +
+			'raw note.","mark":false,"raw":true,"min":false},{"text":"This is a collapsed note. Only its first line is visible. Useful f' +
+			'or keeping lists compact.","mark":false,"raw":false,"min":true}, {"text":"Links","mark":false,"raw":true,"min":false}, {"text":"Links pu' +
+			'lse on hover and can be opened via the right-click menu  -  https://nullboard.io","mark":false,"raw":false,"min":false}, {"tex' +
+			't":"Pressing CapsLock highlights all links and makes them left-clickable.","mark":false,"raw":false,"min":false}]},{"title"' +
 			':"More things to try","notes":[{"text":"\u2022   Drag notes around to rearrange.\\n\u2022   Works between the ' +
-			'lists too.","raw":false,"min":false},{"text":"\u2022   Click on a list name to edit.\\n\u2022   Enter to save,' +
-			' Esc to cancel.","raw":false,"min":false},{"text":"\u2022   Try adding a new list.\\n\u2022   Try deleting one' +
-			'. This  _can_  be undone.","raw":false,"min":false},{"text":"\u2022   Same for the board name.","raw":false,"m' +
-			'in":false},{"text":"Boards","raw":true,"min":false},{"text":"\u2022   Check out   \u2261   at the top right.",' +
-			'"raw":false,"min":false},{"text":"\u2022   Try adding a new board.\\n\u2022   Try switching between the boards' +
-			'.","raw":false,"min":false},{"text":"\u2022   Try deleting a board. Unlike deleting a\\n     list this  _canno' +
-			't_  be undone.","raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' + 
-			'\u2022   Import the board   (load from a save)","raw":false,"min":false}]}]}';
+			'lists too.","mark":false,"raw":false,"min":false},{"text":"\u2022   Click on a list name to edit.\\n\u2022   Enter to save,' +
+			' Esc to cancel.","mark":false,"raw":false,"min":false},{"text":"\u2022   Try adding a new list.\\n\u2022   Try deleting one' +
+			'. This  _can_  be undone.","mark":false,"raw":false,"min":false},{"text":"\u2022   Same for the board name.","mark":false,"raw":false,"m' +
+			'in":false},{"text":"Boards","mark":false,"raw":true,"min":false},{"text":"\u2022   Check out   \u2261   at the top right.",' +
+			'"mark":false,"raw":false,"min":false},{"text":"\u2022   Try adding a new board.\\n\u2022   Try switching between the boards' +
+			'.","mark":false,"raw":false,"min":false},{"text":"\u2022   Try deleting a board. Unlike deleting a\\n     list this  _canno' +
+			't_  be undone.","mark":false,"raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' + 
+			'\u2022   Import the board   (load from a save)","mark":false,"raw":false,"min":false}]}]}';
 
 		var demo = parseBoard(blob);
 
@@ -2729,6 +2747,12 @@
 		return false;
 	});
 
+	$('.board .mark-note').live('click', function(){
+		$(this).closest('.note').toggleClass('mark');
+		saveBoard();
+		return false;
+	});
+
 	$('.board .collapse').live('click', function(){
 		$(this).closest('.note').toggleClass('collapsed');
 		saveBoard();
@@ -2794,6 +2818,13 @@
 		var $body = $('body');
 		$body.toggleClass('z1');
 		localStorage.setItem('nullboard.fsize', $body.hasClass('z1') ? 'z1' : '');
+		return false;
+	});
+
+	$('.config .clear-board').click(function(){
+		saveBoard(clear_board=true);
+		var board_id = localStorage.getItem('nullboard.last_board');
+		openBoard(board_id);
 		return false;
 	});
 
