@@ -845,7 +845,7 @@
 
 	.dark .board .note {
 		background: #2B2C2F;
-		background: linear-gradient(#2B2C2F, #27282B);
+		background: linear-gradient(#3c3d40, #28292b);
 		box-shadow: 0 1px 3px #0005;
 		text-shadow: 0 0 4px #0008;
 	}
@@ -873,8 +873,10 @@
 	}
 
 	.dark .board .note.raw .text {
-		color: #eee;
+		color: #2adc41;
 		text-shadow: 0 0 4px #0008;
+		text-decoration: line-through white;
+		text-decoration-thickness: 2px;
 	}
 
 	.dark .board .note .ops .teaser {
@@ -1344,6 +1346,129 @@
 		if (redo) $redo.show(); else $redo.hide();
 	}
 
+	// 
+	function postBoard(data) {
+		$.ajax({
+			url: "/save",
+			type: "POST",
+			dataType : 'json',
+			data: data,
+			success: function (response) {
+				console.log('Successfully saved in cloud');
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.log(textStatus, errorThrown);
+			}
+    	});
+	}
+
+	function deleteBoardRemote(boardId) {
+		console.log('deleting', boardId);
+		var jqXHR = $.ajax({
+			url: `/delete?id=${boardId}`,
+			type: "GET",
+			dataType : 'json',
+			success: function (res) {
+				console.log("deleting from server");
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.log(textStatus, errorThrown);
+			},
+		});
+	}
+
+	function getBoard(boardId) {
+		var jqXHR = $.ajax({
+			url: `/get?id=${boardId}`,
+			type: "GET",
+			dataType : 'json',
+			success: function (res) {
+				console.log("loading from server");
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.log(textStatus, errorThrown);
+			},
+			async: false
+		});
+		return jqXHR.responseText;
+	}
+
+	function getBoardIds() {
+		var jqXHR = $.ajax({
+			url: `/getBoardIds`,
+			type: "GET",
+			dataType : 'json',
+			success: function (res) {
+				console.log("loading from server");
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.log(textStatus, errorThrown);
+			},
+			async: false
+		});
+		return jqXHR.responseText;
+	}
+
+	function syncBoards(initNew=false){
+		var remoteBoardIds = JSON.parse(getBoardIds());
+		console.log(remoteBoardIds);
+
+		// server to client
+		for (let index = 0; index < remoteBoardIds.length; index++) {
+			const element = remoteBoardIds[index];
+			var id = element.match(/nullboard\.board\.(\d+)/)[1];
+			console.log(id);
+			syncBoard(id);
+		}
+		if (initNew && remoteBoardIds[0]){
+			var id = remoteBoardIds[0].match(/nullboard\.board\.(\d+)/)[1];
+			console.log('hjjjjjj');
+			console.log(remoteBoardIds);
+			openBoard(id);
+			console.log(id);
+		}
+		// client to server for the keys not presented in remoteBoardIds
+		for (var i=0; i<localStorage.length; i++)
+		{
+			var k = localStorage.key(i);
+			var m = k.match(/^nullboard\.board\.(\d+)$/);
+			if (m && remoteBoardIds.indexOf(`nullboard.board.${m}`) < 0){
+				syncBoard(m[1], forceUpdateServer=true);
+			}
+		}
+	}
+
+	function syncBoard(boardId, forceUpdateServer=false){
+		var oldRevision = parseInt(localStorage.getItem('nullboard.board.' + boardId));
+		var serverData = JSON.parse(getBoard(boardId));
+		var initNew;
+		if (isNaN(oldRevision)){  // local key does not exsit
+			oldRevision = 0;
+			initNew = true;
+		}
+		// console.log(serverData);
+		if (serverData == null) {  // remote key does not exsit, initiating
+			console.log("Remote key does not exsit, initiating or problem happend on server.");
+			if (forceUpdateServer){
+				uploadBoardById(boardId);
+			}
+		}else{
+			var serverRevision = parseInt(serverData.boardRevision)
+			if (serverRevision > oldRevision) {
+				console.log(`Local Data is ${serverRevision-oldRevision} revision behind of server, Updating.`);
+				serverBoardData = serverData.boardContent;
+				console.log(serverData);
+				board = parseBoard(serverBoardData);
+				updateBoardFromServer(board, oldRevision, initNew);
+				board.history = loadBoardHistory(board.id);
+				document.board = board;
+			}
+			else if (serverRevision < oldRevision){
+				alert(`Local Data is ${oldRevision-serverRevision} revision ahead of server, This should Not happen.`);
+			}
+		}
+	}
+
 	//
 	function showBoard(quick)
 	{
@@ -1424,12 +1549,39 @@
 		localStorage.setItem('nullboard.board.' + blob_id, JSON.stringify(board));
 		localStorage.setItem('nullboard.board.' + board.id, board.revision);
 		console.log('Saved nullboard.board.' + blob_id + ' of ' + board.title);
+		var data = {boardId: board.id, boardRevision: board.revision, boardContent: JSON.stringify(board)}
+		postBoard(data);
 
 		//
 		trimBoardHistory(rev_old, rev_new, 50);
 
 		updateUndoRedo();
 		updateBoardIndex();
+	}
+
+	function uploadBoardById(board_id){
+		revision = localStorage.getItem('nullboard.board.' + board_id);
+		data = localStorage.getItem(`nullboard.board.${board_id}.${revision}`);
+		var data = {boardId: board_id, boardRevision: revision, boardContent: data}
+		postBoard(data);
+	}
+
+	function updateBoardFromServer(board, oldRevision, initNew=false)
+	{	
+		var rev_new = board.revision;
+		var rev_old = oldRevision;
+		console.log('aaaaaaa', board);
+		var blob_id = board.id + '.' + board.revision;
+
+		localStorage.setItem('nullboard.board.' + blob_id, JSON.stringify(board));
+		localStorage.setItem('nullboard.board.' + board.id, board.revision);
+		console.log('Saved nullboard.board.' + blob_id + ' of ' + board.title);
+
+		if (!initNew){
+			trimBoardHistory(rev_old, rev_new, 50);
+			updateUndoRedo();
+			updateBoardIndex();
+		}
 	}
 
 	function parseBoard(blob)
@@ -1497,7 +1649,6 @@
 		}
 
 		board.history = loadBoardHistory(board.id);
-
 		return board;
 	}
 
@@ -1635,6 +1786,7 @@
 		localStorage.setItem('nullboard.board.' + demo.id, demo.revision);
 		localStorage.setItem('nullboard.last_board', demo.id);
 
+		syncBoard(demo.id, forceUpdateServer=true);
 		return demo.id;
 	}
 
@@ -1817,6 +1969,7 @@
 		closeBoard(true);
 
 		document.board = loadBoard(board_id);
+		syncBoard(board_id);
 
 		localStorage.setItem('nullboard.last_board', board_id);
 
@@ -1867,7 +2020,7 @@
 		document.board = new Board('');
 		document.board.history = [ 0 ];
 
-		localStorage.setItem('nullboard.last_board', document.board_id);
+		localStorage.setItem('nullboard.last_board', document.board.id);
 
 		showBoard(false);
 
@@ -1882,6 +2035,8 @@
 		if ($list.length && ! confirm("PERMANENTLY delete this board, all its lists and their notes?"))
 			return;
 
+		var board_id = localStorage.getItem('nullboard.last_board');
+		deleteBoardRemote(board_id);
 		nukeBoard();
 		closeBoard();
 	}
@@ -2764,8 +2919,8 @@
 		adjustLayout();
 	}
 
-	//
-	if (localStorage.getItem('nullboard.theme') == 'dark')
+	// dark theme by default
+	if (localStorage.getItem('nullboard.theme') == 'dark' || localStorage.getItem('nullboard.theme') == null)
 		$('body').addClass('dark');
 
 	if (localStorage.getItem('nullboard.fsize') == 'z1')
@@ -2773,9 +2928,16 @@
 
 	//
 	var board_id = localStorage.getItem('nullboard.last_board');
+	var synced = false;
 
-	if (board_id)
+	if (board_id){
 		document.board = loadBoard(board_id);
+		syncBoard(board_id);
+	}
+	else if(board_id == null || board_id == "undefined" || board_id == null){  // new client which is empty
+		syncBoards(initNew=true);
+		synced = true;
+	}
 
 	updateBoardIndex();
 
@@ -2791,10 +2953,14 @@
 		showBoard(true);
 	}
 
+
 	//
 	setInterval(adjustListScroller, 100);
 
 	setupListScrolling();
+	if (!synced){
+		syncBoards();
+	}
 
 </script>
 
