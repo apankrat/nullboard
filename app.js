@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-const port = 3000;
 const path = require('path');
 const basicAuth = require('express-basic-auth')
 const bodyParser = require('body-parser');
@@ -67,6 +66,7 @@ app.get('/getBoardIds', staticUserAuth, (req, res) => {
   })
 })
 
+const port = process.env.PORT;
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 })
