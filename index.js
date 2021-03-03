@@ -1,9 +1,18 @@
 
-const deta = window.Deta("");
+
+
+
+import { customAlphabet  } from 'https://cdn.skypack.dev/nanoid';
+const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 7);
+
+function getCookieValue(a) {
+	var b = document.cookie.match('(^|;)\\s*' + a + '\\s*=\\s*([^;]+)')
+  
+	return b ? b.pop() : ''
+}
+
+const deta = window.Deta(getCookieValue("pk"));
 const db = deta.Base('nullboard');
-
-import { nanoid } from 'https://cdn.skypack.dev/nanoid';
-
 
 var nb_codeVersion = 20200429;
 var nb_dataVersion = 20190412;
@@ -199,10 +208,15 @@ function saveBoard() {
 	board.revision = document.board.revision;
 
 	var blob_id = board.id + '.' + board.revision;
+	
 
 	localStorage.setItem('nullboard.board.' + blob_id, JSON.stringify(board));
 	localStorage.setItem('nullboard.board.' + board.id, board.revision);
-	db.put({key: board.id, value:  JSON.stringify(board)});
+	board.revision = 1;
+	db.put({key: board.id, value:  JSON.stringify(board)}).then(data=> {
+		console.log(data);
+	})
+	board.revision = rev_new;
 	console.log('Saved nullboard.board.' + blob_id + ' of ' + board.title);
 
 	//
@@ -401,7 +415,9 @@ function importBoard(blob) {
 
 	localStorage.setItem('nullboard.board.' + blob_id, JSON.stringify(board));
 	localStorage.setItem('nullboard.board.' + board.id, board.revision);
-	db.put({key: board.id, value:  JSON.stringify(board)});
+	db.put({key: board.id, value:  JSON.stringify(board)}).then(data=> {
+		console.log(data);
+	})
 
 	openBoard(board.id);
 }
@@ -451,7 +467,12 @@ function createDemoBoard() {
 	localStorage.setItem('nullboard.board.' + demo.id + '.' + demo.revision, JSON.stringify(demo));
 	localStorage.setItem('nullboard.board.' + demo.id, demo.revision);
 	localStorage.setItem('nullboard.last_board', demo.id);
-	db.put({key: demo.id, value:  JSON.stringify(demo)});
+	db.put({key: 'last_board', value:  demo.id}).then(data=> {
+		console.log('last_board', data);
+	})
+	db.put({key: demo.id, value:  JSON.stringify(demo)}).then(data=> {
+		console.log(data);
+	})
 
 	return demo.id;
 }
@@ -623,7 +644,9 @@ function moveList($list, left) {
 	document.board = loadBoard(board_id);
 
 	localStorage.setItem('nullboard.last_board', board_id);
-	 db.put({key: 'last_board', value:  board_id});
+	db.put({key: 'last_board', value:  board_id}).then(data=> {
+		console.log('last_board', data);
+	})
 
 	showBoard(true);
 }
@@ -659,7 +682,9 @@ function reopenBoard(revision) {
 
 	document.board = null;
 	localStorage.setItem('nullboard.last_board', null);
-	 db.put({key: 'last_board', value:  null});
+	db.put({key: 'last_board', value:  null}).then(data=> {
+		console.log('last_board', null);
+	})
 	updateUndoRedo();
 	updateBoardIndex();
 }
@@ -668,9 +693,12 @@ function reopenBoard(revision) {
  function addBoard() {
 	document.board = new Board('');
 	document.board.history = [0];
-
-	localStorage.setItem('nullboard.last_board', document.board_id);
-	db.put({key: 'last_board', value:  document.board_id});
+	console.log(document.board.id);
+	document.board_id = document.board.id;
+	localStorage.setItem('nullboard.last_board', document.board.id);
+	db.put({key: 'last_board', value: document.board.id}).then(data=> {
+		console.log('last_board', data);
+	})
 	showBoard(false);
 
 	$('.wrap .board .head').addClass('brand-new');
@@ -1004,6 +1032,7 @@ function peekBoardTitle(board_id) {
 }
 
 function updateBoardIndex() {
+	console.log("triggered")
 	var $index = $('.config .boards');
 	var $export = $('.config .exp-board');
 	var $entry = $('tt .load-board');
@@ -1016,11 +1045,12 @@ function updateBoardIndex() {
 	$index.hide();
 
 	for (var i = 0; i < localStorage.length; i++) {
+
 		var k = localStorage.key(i);
-		var m = k.match(/^nullboard\.board\.(\d+)$/);
+		var m = k.match(/^nullboard\.board\.(\w+)$/);
+		console.log(m);
 		if (!m)
 			continue;
-
 		var board_id = m[1];
 		var title = peekBoardTitle(board_id);
 		if (title === false)
@@ -1394,7 +1424,7 @@ $('.config .switch-theme').click(function () {
 	var $body = $('body');
 	$body.toggleClass('dark');
 	localStorage.setItem('nullboard.theme', $body.hasClass('dark') ? 'dark' : '');
-
+	db.put({key:'nullboard.theme', value: $body.hasClass('dark') ? 'dark' : ''});
 	return false;
 });
 
@@ -1402,6 +1432,7 @@ $('.config .switch-fsize').click(function () {
 	var $body = $('body');
 	$body.toggleClass('z1');
 	localStorage.setItem('nullboard.fsize', $body.hasClass('z1') ? 'z1' : '');
+	db.put({key:'nullboard.fsize', value:$body.hasClass('z1') ? 'z1' : ''});
 	return false;
 });
 
@@ -1526,32 +1557,54 @@ if (localStorage.getItem('nullboard.theme') == 'dark')
 if (localStorage.getItem('nullboard.fsize') == 'z1')
 	$('body').addClass('z1');
 
-//
-var board_id = localStorage.getItem('nullboard.last_board');
+localStorage.clear();
+var board_id;
+db.fetch().next().then(data => {
+	if (data.value.length > 0){
+	for (const item of data.value) {
+		if (item.key == 'last_board'){
+			localStorage.setItem('nullboard.last_board', item.value);
+			board_id = item.value;
+		}
+		else if (item.key == 'nullboard.theme'){
+			localStorage.setItem('nullboard.theme', item.value);
+		}	
+		else if (item.key == 'nullboard.fsize'){
+			localStorage.setItem('nullboard.fsize', item.value);
+		}	
+		else {
+			var board = JSON.parse(item.value);
+			var blob_id = item.key + '.' + board.revision;
+			localStorage.setItem('nullboard.board.' + blob_id, JSON.stringify(board));
+			localStorage.setItem('nullboard.board.' + board.id, board.revision);
+		}
+	}
+	}
+	if (board_id){
+		console.log(board_id);
+		document.board = loadBoard(board_id);
+		console.log(document.board)
+	}
+	updateBoardIndex();
+	
+	if (!document.board && !$('.config .load-board').length) {
+		var demo_id = createDemoBoard();
+		document.board = loadBoard(demo_id);
+		updateBoardIndex();
+	}
+	
+	if (document.board) {
+		showBoard(true);
+	}
+	
+	//
+	setInterval(adjustListScroller, 100);
+	
+	setupListScrolling();
 
-db.get("last_board").then(data => {
-	board_id = data
+	console.log(data.value);
 })
 
-console.log(board_id);
 
-if (board_id){
-	document.board = loadBoard(board_id);
-	console.log(document.board)
-}
-updateBoardIndex();
 
-if (!document.board && !$('.config .load-board').length) {
-	var demo_id = createDemoBoard();
-	document.board = loadBoard(demo_id);
-	updateBoardIndex();
-}
 
-if (document.board) {
-	showBoard(true);
-}
-
-//
-setInterval(adjustListScroller, 100);
-
-setupListScrolling();
