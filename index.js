@@ -7,13 +7,14 @@ const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
 
 function getCookieValue(a) {
 	var b = document.cookie.match('(^|;)\\s*' + a + '\\s*=\\s*([^;]+)')
-
 	return b ? b.pop() : ''
 }
 
 const deta = window.Deta(getCookieValue("pk"));
 const db = deta.Base('nullboard');
+const boardDb = deta.Base('boards')
 const cards = deta.Base('cards');
+const listsDb = deta.Base('lists')
 var nb_codeVersion = 20200429;
 var nb_dataVersion = 20190412;
 
@@ -40,33 +41,37 @@ window.addEventListener("error", function (e) {
 /*
  *
  */
-function Note(text) {
+function Note( key, listId, text) {
 	this.text = text;
 	this.raw = false;
-	// this.key = nanoid(7);
+	this.key = key;
+	this.src_list_id = listId;
 	this.min = false;
 }
 
-function List(title) {
+function List(key, boardId, title) {
+
 	this.title = title;
 	this.notes = [];
+	this.src_board_id = boardId;
+	this.key = key;
 
-	this.addNote = function (text) {
-		var x = new Note(text);
+	this.addNote = function (noteId, listId, text) {
+		var x = new Note(noteId, listId, text);
 		this.notes.push(x);
 		return x;
 	}
 }
 
-function Board(title) {
+function Board(title, key) {
 	this.format = nb_dataVersion;
-	this.id = nanoid(7);
+	this.id = key;
 	this.revision = 1;
 	this.title = title;
 	this.lists = [];
 
-	this.addList = function (title) {
-		var x = new List(title);
+	this.addList = function (listId, boardId, title) {
+		var x = new List(listId, boardId, title);
 		this.lists.push(x);
 		return x;
 	}
@@ -115,22 +120,22 @@ function updatePageTitle() {
 }
 
 function updateUndoRedo() {
-	var $undo = $('.board .menu .undo-board');
-	var $redo = $('.board .menu .redo-board');
+	// var $undo = $('.board .menu .undo-board');
+	// var $redo = $('.board .menu .redo-board');
 
-	var undo = false;
-	var redo = false;
+	// var undo = false;
+	// var redo = false;
 
-	if (document.board) {
-		var history = document.board.history;
-		var rev = document.board.revision;
+	// if (document.board) {
+	// 	var history = document.board.history;
+	// 	var rev = document.board.revision;
 
-		undo = (rev != history[history.length - 1]);
-		redo = (rev != history[0]);
-	}
+	// 	undo = (rev != history[history.length - 1]);
+	// 	redo = (rev != history[0]);
+	// }
 
-	if (undo) $undo.show(); else $undo.hide();
-	if (redo) $redo.show(); else $redo.hide();
+	// if (undo) $undo.show(); else $undo.hide();
+	// if (redo) $redo.show(); else $redo.hide();
 }
 
 //
@@ -148,7 +153,7 @@ function showBoard(quick) {
 	$b[0].board_id = board.id;
 	console.log(board);
 	setText($b.find('.head .text'), board.title);
-
+	setText($b.find('.head .key'), board.id)
 
 	board.lists.forEach(function (list) {
 
@@ -156,10 +161,13 @@ function showBoard(quick) {
 		var $l_notes = $l.find('.notes');
 
 		setText($l.find('.head .text'), list.title);
-
+		setText($l.find('.head .key'), list.key);
+		setText($l.find('.head .src_board_id'), board.id);
 		list.notes.forEach(function (n) {
 			var $n = $ndiv.clone();
 			setText($n.find('.text'), n.text);
+			setText($n.find('.key'), n.key);
+			setText($n.find('.src_list_id'), list.key);
 			if (n.raw) $n.addClass('raw');
 			if (n.min) $n.addClass('collapsed');
 			$l_notes.append($n);
@@ -181,10 +189,10 @@ function showBoard(quick) {
 	updateBoardIndex();
 	setupListScrolling();
 }
-const putItems = async (items) => {
+const putItems = async (base, items) => {
     const l = items.length;
     if (items.length <= 24) {
-        return cards.putMany(items);
+        return base.putMany(items);
     }
     // putMany op supports only 25 items max 
     // send in batches of 25 items if more than 25 items 
@@ -195,8 +203,7 @@ const putItems = async (items) => {
             end = l;
         }
         try {
-			console.log(items.slice(start, end))
-            cards.putMany(items.slice(start, end));
+            base.putMany(items.slice(start, end));
         } catch(err){
             return Promise.reject(err);
         }
@@ -208,35 +215,47 @@ const saveCards = (lists, board_id) => {
 	var titleCards = [];
 	var noteCards = [];
 	for (var i = 0; i < lists.length; i++) {
-		titleCards.push({ id: board_id, cat: true, pos: i, title: lists[i].title });
+		titleCards.push({ id: board_id, key: lists[i].key , pos: i, title: lists[i].title });
 		
 		for (var j = 0; j < lists[i].notes.length; j++) {
-			noteCards.push({id: board_id, col: i, row: j, raw: lists[i].notes[j].raw, min: lists[i].notes[j].min, text: lists[i].notes[j].text })
+			noteCards.push({id: lists[i].key, key:lists[i].notes[j].key, pos: j, raw: lists[i].notes[j].raw, min: lists[i].notes[j].min, text: lists[i].notes[j].text })
 		}
 	}
 
-	var savedCards = titleCards.concat(noteCards);
-	putItems(savedCards).then();
+	putItems(cards, noteCards).then();
+	putItems(listsDb, titleCards).then();
 }
+
+async function getBoards () {
+    const board = await boardDb.fetch().next();
+    return board;
+}
+
+async function getLists (boardId) {
+    const lists = await listsDb.fetch({"id": boardId}).next();
+    return lists;
+}
+async function getCards (listId) {
+    const notes = await cards.fetch({"id": listId}).next();
+    return notes;
+}
+
 //
 function saveBoard() {
 	var $board = $('.wrap .board');
-	var board = new Board(getText($board.find('> .head .text')));
-	// var i = 0;
+	var board = new Board(getText($board.find('> .head .text')), document.board.id);
 	$board.find('.list').each(function () {
 		var $list = $(this);
-		var l = board.addList(getText($list.find('.head .text')));
-		// var j = 0;
+		console.log($list.find('.key').text())
+		var l = board.addList($list.find('.key').attr('_text'), document.board.id, getText($list.find('.head .text')));
 		$list.find('.note').each(function () {
 			var $note = $(this)
-			var n = l.addNote(getText($note.find('.text')));
-			// board.lists[i].notes[j].key = document.board.lists[i].notes[j].key;
+			var n = l.addNote($note.find('.key').attr('_text'), $list.find('.key').attr('_text'), getText($note.find('.text')));
 			n.raw = $note.hasClass('raw');
 			n.min = $note.hasClass('collapsed');
-			// j+=1;
 		});
-		// i+=1;
 	});
+	console.log(board);
 
 	//
 	var rev_new = document.board.history[0] + 1;
@@ -261,6 +280,7 @@ function saveBoard() {
 	saveCards(lists, board.id);
 
 	board.revision = 1;
+	boardDb.put({key: board.id, format: board.format, revision: board.revision, title: board.title}).then();
 	db.put({ key: board.id, value: JSON.stringify(board) }).then(data => {
 		console.log(data);
 	})
@@ -327,6 +347,7 @@ function loadBoard(board_id) {
 		return false;
 
 	blob = localStorage.getItem('nullboard.board.' + board_id + '.' + revision);
+	console.log(blob);
 	if (!blob)
 		return false;
 
@@ -468,7 +489,7 @@ function importBoard(blob) {
 
 	var lists = blobData.lists;
 	saveCards(lists, board.id);
-
+	boardDb.put({key: board.id, format: board.format, revision: board.revision, title: board.title}).then();
 	db.put({ key: board.id, value: JSON.stringify(board) }).then(data => {
 		console.log(data);
 	})
@@ -478,36 +499,51 @@ function importBoard(blob) {
 
 //
 function createDemoBoard() {
-	var blob =
-		'{"format":20190412,"id":1555071015420,"revision":581,"title":"Welcome to Nullboard","lists":[{"title":"The Use' +
-		'r Manual","notes":[{"text":"This is a note.\\nA column of notes is a list.\\nA set of lists is a board.","raw"' +
-		':false,"min":false},{"text":"All data is saved locally.\\nThe whole thing works completely offline.","raw":fal' +
-		'se,"min":false},{"text":"Last 50 board revisions are retained.","raw":false,"min":false},{"text":"Ctrl-Z is Un' +
-		'do  -  goes one revision back.\\nCtrl-Y is Redo  -  goes one revision forward.","raw":false,"min":false},{"tex' +
-		't":"Caveats","raw":true,"min":false},{"text":"Desktop-oriented.\\nMobile support is basically untested.","raw"' +
-		':false,"min":false},{"text":"Works in Firefox, Chrome is supported.\\nShould work in Safari, may work in Edge.' +
-		'","raw":false,"min":false},{"text":"Still very much in beta. Caveat emptor.","raw":false,"min":false},{"text":' +
-		'"Issues and suggestions","raw":true,"min":false},{"text":"Post them on Github.\\nSee \\"Nullboard\\" at the to' +
-		'p left for the link.","raw":false,"min":false}]},{"title":"Things to try","notes":[{"text":"\u2022   Click on ' +
-		'a note to edit.","raw":false,"min":false},{"text":"\u2022   Click outside of it when done editing.\\n\u2022   ' +
-		'Alternatively, use Shift-Enter.","raw":false,"min":false},{"text":"\u2022   To discard changes press Escape.",' +
-		'"raw":false,"min":false},{"text":"\u2022   Try Ctrl-Enter, see what it does.\\n\u2022   Try Ctrl-Shift-Enter t' +
-		'oo.","raw":false,"min":false},{"text":"\u2022   Hover over a note to show its  \u2261  menu.\\n\u2022   Hover ' +
-		'over  \u2261  to reveal the options.","raw":false,"min":false},{"text":"\u2022   X  deletes the note.\\n\u2022' +
-		'   R changes how a note looks.\\n\u2022   _  collapses the note.","raw":false,"min":false},{"text":"This is a ' +
-		'raw note.","raw":true,"min":false},{"text":"This is a collapsed note. Only its first line is visible. Useful f' +
-		'or keeping lists compact.","raw":false,"min":true}, {"text":"Links","raw":true,"min":false}, {"text":"Links pu' +
-		'lse on hover and can be opened via the right-click menu  -  https://nullboard.io","raw":false,"min":false}, {"tex' +
-		't":"Pressing CapsLock highlights all links and makes them left-clickable.","raw":false,"min":false}]},{"title"' +
-		':"More things to try","notes":[{"text":"\u2022   Drag notes around to rearrange.\\n\u2022   Works between the ' +
-		'lists too.","raw":false,"min":false},{"text":"\u2022   Click on a list name to edit.\\n\u2022   Enter to save,' +
-		' Esc to cancel.","raw":false,"min":false},{"text":"\u2022   Try adding a new list.\\n\u2022   Try deleting one' +
-		'. This  _can_  be undone.","raw":false,"min":false},{"text":"\u2022   Same for the board name.","raw":false,"m' +
-		'in":false},{"text":"Boards","raw":true,"min":false},{"text":"\u2022   Check out   \u2261   at the top right.",' +
-		'"raw":false,"min":false},{"text":"\u2022   Try adding a new board.\\n\u2022   Try switching between the boards' +
-		'.","raw":false,"min":false},{"text":"\u2022   Try deleting a board. Unlike deleting a\\n     list this  _canno' +
-		't_  be undone.","raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' +
-		'\u2022   Import the board   (load from a save)","raw":false,"min":false}]}]}';
+
+	var blob = '{"format":20190412,"id":1555071015420,"revision":581,"title":"Welcome to Nullboard","lists":[{"title":"The Use' +
+	'r Manual","notes":[{"text":"This is a note.\\nA column of notes is a list.\\nA set of lists is a board.","raw"' +
+	':false,"min":false},{"text":"All data is saved locally.\\nThe whole thing works completely offline.","raw":fal' +
+	'se,"min":false},{"text":"Last 50 board revisions are retained.","raw":false,"min":false},{"text":"Ctrl-Z is Un' +
+	'do  -  goes one revision back.\\nCtrl-Y is Redo  -  goes one revision forward.","raw":false,"min":false},{"tex' +
+	't":"Caveats","raw":true,"min":false},{"text":"Desktop-oriented.\\nMobile support is basically untested.","raw"' +
+	':false,"min":false},{"text":"Works in Firefox, Chrome is supported.\\nShould work in Safari, may work in Edge.' +
+	'","raw":false,"min":false},{"text":"Still very much in beta. Caveat emptor.","raw":false,"min":false},{"text":' +
+	'"Issues and suggestions","raw":true,"min":false},{"text":"Post them on Github.\\nSee \\"Nullboard\\" at the to' +
+	'p left for the link.","raw":false,"min":false}]},{"title":"Things to try","notes":[{"text":"\u2022   Click on ' +
+	'a note to edit.","raw":false,"min":false},{"text":"\u2022   Click outside of it when done editing.\\n\u2022   ' +
+	'Alternatively, use Shift-Enter.","raw":false,"min":false},{"text":"\u2022   To discard changes press Escape.",' +
+	'"raw":false,"min":false},{"text":"\u2022   Try Ctrl-Enter, see what it does.\\n\u2022   Try Ctrl-Shift-Enter t' +
+	'oo.","raw":false,"min":false},{"text":"\u2022   Hover over a note to show its  \u2261  menu.\\n\u2022   Hover ' +
+	'over  \u2261  to reveal the options.","raw":false,"min":false},{"text":"\u2022   X  deletes the note.\\n\u2022' +
+	'   R changes how a note looks.\\n\u2022   _  collapses the note.","raw":false,"min":false},{"text":"This is a ' +
+	'raw note.","raw":true,"min":false},{"text":"This is a collapsed note. Only its first line is visible. Useful f' +
+	'or keeping lists compact.","raw":false,"min":true}, {"text":"Links","raw":true,"min":false}, {"text":"Links pu' +
+	'lse on hover and can be opened via the right-click menu  -  https://nullboard.io","raw":false,"min":false}, {"tex' +
+	't":"Pressing CapsLock highlights all links and makes them left-clickable.","raw":false,"min":false}]},{"title"' +
+	':"More things to try","notes":[{"text":"\u2022   Drag notes around to rearrange.\\n\u2022   Works between the ' +
+	'lists too.","raw":false,"min":false},{"text":"\u2022   Click on a list name to edit.\\n\u2022   Enter to save,' +
+	' Esc to cancel.","raw":false,"min":false},{"text":"\u2022   Try adding a new list.\\n\u2022   Try deleting one' +
+	'. This  _can_  be undone.","raw":false,"min":false},{"text":"\u2022   Same for the board name.","raw":false,"m' +
+	'in":false},{"text":"Boards","raw":true,"min":false},{"text":"\u2022   Check out   \u2261   at the top right.",' +
+	'"raw":false,"min":false},{"text":"\u2022   Try adding a new board.\\n\u2022   Try switching between the boards' +
+	'.","raw":false,"min":false},{"text":"\u2022   Try deleting a board. Unlike deleting a\\n     list this  _canno' +
+	't_  be undone.","raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' +
+	'\u2022   Import the board   (load from a save)","raw":false,"min":false}]}]}';
+	
+	blob = JSON.parse(blob);
+	blob.id = nanoid(7);
+	var lists = blob.lists
+	for (var i = 0; i < lists.length; i++) {
+		lists[i].key = nanoid(7);
+		for (var j = 0; j < lists[i].notes.length; j++) {
+			lists[i].notes[j].key = nanoid(7);
+			lists[i].notes[j].src_list_id = lists[i].key;
+		}
+	}
+	blob.lists = lists;
+	console.log(lists[0].key);
+	blob = JSON.stringify(blob);
+	
 
 	var demo = parseBoard(blob);
 
@@ -521,13 +557,15 @@ function createDemoBoard() {
 	localStorage.setItem('nullboard.board.' + demo.id + '.' + demo.revision, JSON.stringify(demo));
 	localStorage.setItem('nullboard.board.' + demo.id, demo.revision);
 	localStorage.setItem('nullboard.last_board', demo.id);
+	boardDb.put({key: 'last_board', value: demo.id}).then();
 	db.put({ key: 'last_board', value: demo.id }).then(data => {
 		console.log('last_board', data);
 	})
+	
 	db.put({ key: demo.id, value: JSON.stringify(demo) }).then(data => {
 		console.log(data);
 	})
-
+	boardDb.put({key: demo.id, format: demo.format, revision: demo.revision, title: demo.title}).then();
 	var blobData = localStorage.getItem('nullboard.board.' + demo.id + '.' + demo.revision);
 
 	blobData = JSON.parse(blobData);
@@ -614,11 +652,21 @@ function addNote($list, $after, $before) {
 			$notes.append($note);
 			$note = $notes.find('.note').last();
 		}
+	var newNoteId = nanoid(7);
+	var listId = $list.find('.key').attr('_text');
+
+	$note.find(".key").attr('_text', newNoteId);
+	$note.find(".src_list_id").attr('_text', listId);
+
 
 	$note.find('.text').click();
 }
 
 function deleteNote($note) {
+
+	var noteId =  $note.find('.key').attr('_text');
+
+	cards.delete(noteId).then();
 	$note
 		.animate({ opacity: 0 }, 'fast')
 		.slideUp('fast')
@@ -638,6 +686,15 @@ function addList() {
 	$list.find('.head').addClass('brand-new');
 
 	$lists.append($list);
+
+	var newListId = nanoid(7);
+	var boardId = document.board.id;
+
+	$list.find(".key").attr('_text', newListId);
+	$list.find(".src_board_id").attr('_text', boardId);
+
+
+
 	$board.find('.lists .list .head .text').last().click();
 
 	var lists = $lists[0];
@@ -647,11 +704,25 @@ function addList() {
 }
 
 function deleteList($list) {
+
+	
 	var empty = true;
 
 	$list.find('.note .text').each(function () {
 		empty &= ($(this).html().length == 0);
 	});
+
+	var listId =  $list.find('.key').attr('_text');
+	//delete list
+	listsDb.delete(listId).then();
+
+	for (var i = 0; i < document.board.lists.length; i++) {
+		if (document.board.lists[i].key == listId) {
+			for (var j = 0; j < document.board.lists[i].notes.length; j++) {
+				cards.delete(document.board.lists[i].notes[j].key).then();
+			}
+		}
+	}
 
 	if (!empty && !confirm("Delete this list and all its notes?"))
 		return;
@@ -707,7 +778,8 @@ function openBoard(board_id) {
 	localStorage.setItem('nullboard.last_board', board_id);
 	db.put({ key: 'last_board', value: board_id }).then(data => {
 		console.log('last_board', data);
-	})
+	});
+	boardDb.put({key: 'last_board', value: board_id}).then();
 
 	showBoard(true);
 }
@@ -745,25 +817,28 @@ function closeBoard(quick) {
 	localStorage.setItem('nullboard.last_board', null);
 	db.put({ key: 'last_board', value: null }).then(data => {
 		console.log('last_board', null);
-	})
+	});
+	boardDb.put({key: 'last_board', value: null}).then();
 	updateUndoRedo();
 	updateBoardIndex();
 }
 
 //
 function addBoard() {
-	document.board = new Board('');
+	document.board = new Board('', nanoid(7));
 	document.board.history = [0];
 	console.log(document.board.id);
 	document.board_id = document.board.id;
 	localStorage.setItem('nullboard.last_board', document.board.id);
-	db.put({ key: 'last_board', value: document.board.id }).then(data => {
-		console.log('last_board', data);
-	})
+	// db.put({ key: 'last_board', value: document.board.id }).then(data => {
+	// 	console.log('last_board', data);
+	// });
+	boardDb.put({key: 'last_board', value: document.board.id}).then();
 	showBoard(false);
 
 	$('.wrap .board .head').addClass('brand-new');
 	$('.wrap .board .head .text').click();
+	$('.wrap .board .head .key').text(document.board.id);
 }
 
 function deleteBoard() {
@@ -778,49 +853,49 @@ function deleteBoard() {
 
 //
 function undoBoard() {
-	if (!document.board)
-		return false;
+	// if (!document.board)
+	// 	return false;
 
-	var hist = document.board.history;
-	var have = document.board.revision;
-	var want = 0;
+	// var hist = document.board.history;
+	// var have = document.board.revision;
+	// var want = 0;
 
-	for (var i = 0; i < hist.length - 1 && !want; i++)
-		if (have == hist[i])
-			want = hist[i + 1];
+	// for (var i = 0; i < hist.length - 1 && !want; i++)
+	// 	if (have == hist[i])
+	// 		want = hist[i + 1];
 
-	if (!want) {
-		console.log('Undo - failed');
-		return false;
-	}
+	// if (!want) {
+	// 	console.log('Undo - failed');
+	// 	return false;
+	// }
 
-	console.log('Undo -> ' + want);
+	// console.log('Undo -> ' + want);
 
-	reopenBoard(want);
-	return true;
+	// reopenBoard(want);
+	// return true;
 }
 
 function redoBoard() {
-	if (!document.board)
-		return false;
+	// if (!document.board)
+	// 	return false;
 
-	var hist = document.board.history;
-	var have = document.board.revision;
-	var want = 0;
+	// var hist = document.board.history;
+	// var have = document.board.revision;
+	// var want = 0;
 
-	for (var i = 1; i < hist.length && !want; i++)
-		if (have == hist[i])
-			want = hist[i - 1];
+	// for (var i = 1; i < hist.length && !want; i++)
+	// 	if (have == hist[i])
+	// 		want = hist[i - 1];
 
-	if (!want) {
-		console.log('Redo - failed');
-		return false;
-	}
+	// if (!want) {
+	// 	console.log('Redo - failed');
+	// 	return false;
+	// }
 
-	console.log('Redo -> ' + want);
+	// console.log('Redo -> ' + want);
 
-	reopenBoard(want);
-	return true;
+	// reopenBoard(want);
+	// return true;
 }
 
 /*
@@ -1485,6 +1560,7 @@ $('.config .switch-theme').click(function () {
 	$body.toggleClass('dark');
 	localStorage.setItem('nullboard.theme', $body.hasClass('dark') ? 'dark' : '');
 	db.put({ key: 'nullboard.theme', value: $body.hasClass('dark') ? 'dark' : '' });
+	boardDb.put({ key: 'nullboard.theme', value: $body.hasClass('dark') ? 'dark' : '' }).then();
 	return false;
 });
 
@@ -1493,6 +1569,7 @@ $('.config .switch-fsize').click(function () {
 	$body.toggleClass('z1');
 	localStorage.setItem('nullboard.fsize', $body.hasClass('z1') ? 'z1' : '');
 	db.put({ key: 'nullboard.fsize', value: $body.hasClass('z1') ? 'z1' : '' });
+	boardDb.put({ key: 'nullboard.fsize', value: $body.hasClass('z1') ? 'z1' : '' }).then();
 	return false;
 });
 
@@ -1619,28 +1696,49 @@ if (localStorage.getItem('nullboard.fsize') == 'z1')
 
 localStorage.clear();
 var board_id;
-db.fetch().next().then(data => {
-	if (data.value.length > 0) {
-		for (const item of data.value) {
-			if (item.key == 'last_board') {
-				localStorage.setItem('nullboard.last_board', item.value);
-				board_id = item.value;
-			}
-			else if (item.key == 'nullboard.theme') {
-				localStorage.setItem('nullboard.theme', item.value);
-			}
-			else if (item.key == 'nullboard.fsize') {
-				localStorage.setItem('nullboard.fsize', item.value);
-			}
-			else {
-				var board = JSON.parse(item.value);
-				var blob_id = item.key + '.' + board.revision;
-				localStorage.setItem('nullboard.board.' + blob_id, JSON.stringify(board));
-				localStorage.setItem('nullboard.board.' + board.id, board.revision);
-			}
-		}
-	}
+
+
+async function initializeBoard () {
+    var boards = await getBoards();
+    boards = boards.value;
+
+    if (boards.length > 0) {
+        for (const board of boards) {
+            if (board.key == 'last_board') {
+                localStorage.setItem('nullboard.last_board', board.value);
+                board_id = board.value;
+				console.log(board_id);
+				localStorage.setItem('nullboard.board.' + board_id, 1);
+            }
+            else {
+                var lists = await getLists(board.key);
+                lists = lists.value;
+                var blob = {format:board.format, id: board.key, revision: 1, title: board.title};
+                blob.lists =[]
+                lists.sort((a, b) => a.pos - b.pos);
+                for (const {id, key, pos, title} of lists) {
+
+                  var notes = await getCards(key);
+                  notes = notes.value;
+                  notes.sort((a, b) => {
+                    return a.pos - b.pos
+                  })
+                  notes = notes.map(({id,pos,...keep})=>keep)
+                  blob.lists.push({title, key, notes});
+                }
+                var blob_id = board.key + '.' + board.revision;
+                localStorage.setItem('nullboard.board.' + blob_id, JSON.stringify(blob));
+                localStorage.setItem('nullboard.board.' + board.key, board.revision);
+            }
+
+        }
+    }
+	return board_id;
+}
+
+initializeBoard().then(data => {
 	if (board_id) {
+		console.log(localStorage.getItem('nullboard.board.' + board_id, 1));
 		document.board = loadBoard(board_id);
 	}
 	updateBoardIndex();
@@ -1658,8 +1756,9 @@ db.fetch().next().then(data => {
 	//
 	setInterval(adjustListScroller, 100);
 
-	setupListScrolling();
-})
+	setupListScrolling();  
+});
+
 
 
 

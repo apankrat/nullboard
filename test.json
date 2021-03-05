@@ -1,6 +1,239 @@
 {
     "format": 20190412,
-    "id": "xFdYqhC",
+    "id": "Y75XrbS",
     "revision": 1,
     "title": "Welcome to Nullboard",
+    "lists": [
+        {
+            "title": "The User Manual",
+            "notes": [
+                {
+                    "text": "This is a note.\nA column of notes is a list.\nA set of lists is a board.",
+                    "raw": false,
+                    "min": false,
+                    "key": "oUacunO",
+                    "src_list_id": "ed7WgZj"
+                },
+                {
+                    "text": "All data is saved locally.\nThe whole thing works completely offline.",
+                    "raw": false,
+                    "min": false,
+                    "key": "H1u7Mss",
+                    "src_list_id": "ed7WgZj"
+                },
+                {
+                    "text": "Last 50 board revisions are retained.",
+                    "raw": false,
+                    "min": false,
+                    "key": "KqpvGTy",
+                    "src_list_id": "ed7WgZj"
+                },
+                {
+                    "text": "Ctrl-Z is Undo  -  goes one revision back.\nCtrl-Y is Redo  -  goes one revision forward.",
+                    "raw": false,
+                    "min": false,
+                    "key": "nR6QHAl",
+                    "src_list_id": "ed7WgZj"
+                },
+                {
+                    "text": "Caveats",
+                    "raw": true,
+                    "min": false,
+                    "key": "CrXHzDs",
+                    "src_list_id": "ed7WgZj"
+                },
+                {
+                    "text": "Desktop-oriented.\nMobile support is basically untested.",
+                    "raw": false,
+                    "min": false,
+                    "key": "kSQRIk2",
+                    "src_list_id": "ed7WgZj"
+                },
+                {
+                    "text": "Works in Firefox, Chrome is supported.\nShould work in Safari, may work in Edge.",
+                    "raw": false,
+                    "min": false,
+                    "key": "Oksjb0i",
+                    "src_list_id": "ed7WgZj"
+                },
+                {
+                    "text": "Still very much in beta. Caveat emptor.",
+                    "raw": false,
+                    "min": false,
+                    "key": "YOwlpkK",
+                    "src_list_id": "ed7WgZj"
+                },
+                {
+                    "text": "Issues and suggestions",
+                    "raw": true,
+                    "min": false,
+                    "key": "jRXBGra",
+                    "src_list_id": "ed7WgZj"
+                },
+                {
+                    "text": "Post them on Github.\nSee \"Nullboard\" at the top left for the link.",
+                    "raw": false,
+                    "min": false,
+                    "key": "sdf0Bb4",
+                    "src_list_id": "ed7WgZj"
+                }
+            ],
+            "key": "ed7WgZj"
+        },
+        {
+            "title": "Things to try",
+            "notes": [
+                {
+                    "text": "•   Click on a note to edit.",
+                    "raw": false,
+                    "min": false,
+                    "key": "mbZDf66",
+                    "src_list_id": "QawQFGE"
+                },
+                {
+                    "text": "•   Click outside of it when done editing.\n•   Alternatively, use Shift-Enter.",
+                    "raw": false,
+                    "min": false,
+                    "key": "XH7tyn5",
+                    "src_list_id": "QawQFGE"
+                },
+                {
+                    "text": "•   To discard changes press Escape.",
+                    "raw": false,
+                    "min": false,
+                    "key": "IXPRVT0",
+                    "src_list_id": "QawQFGE"
+                },
+                {
+                    "text": "•   Try Ctrl-Enter, see what it does.\n•   Try Ctrl-Shift-Enter too.",
+                    "raw": false,
+                    "min": false,
+                    "key": "5OysK0V",
+                    "src_list_id": "QawQFGE"
+                },
+                {
+                    "text": "•   Hover over a note to show its  ≡  menu.\n•   Hover over  ≡  to reveal the options.",
+                    "raw": false,
+                    "min": false,
+                    "key": "iH8yUuc",
+                    "src_list_id": "QawQFGE"
+                },
+                {
+                    "text": "•   X  deletes the note.\n•   R changes how a note looks.\n•   _  collapses the note.",
+                    "raw": false,
+                    "min": false,
+                    "key": "w7PWft8",
+                    "src_list_id": "QawQFGE"
+                },
+                {
+                    "text": "This is a raw note.",
+                    "raw": true,
+                    "min": false,
+                    "key": "vXftpcA",
+                    "src_list_id": "QawQFGE"
+                },
+                {
+                    "text": "This is a collapsed note. Only its first line is visible. Useful for keeping lists compact.",
+                    "raw": false,
+                    "min": true,
+                    "key": "wCjwRbY",
+                    "src_list_id": "QawQFGE"
+                },
+                {
+                    "text": "Links",
+                    "raw": true,
+                    "min": false,
+                    "key": "mNTzhly",
+                    "src_list_id": "QawQFGE"
+                },
+                {
+                    "text": "Links pulse on hover and can be opened via the right-click menu  -  https://nullboard.io",
+                    "raw": false,
+                    "min": false,
+                    "key": "fj4pyau",
+                    "src_list_id": "QawQFGE"
+                },
+                {
+                    "text": "Pressing CapsLock highlights all links and makes them left-clickable.",
+                    "raw": false,
+                    "min": false,
+                    "key": "ZiKgsUs",
+                    "src_list_id": "QawQFGE"
+                }
+            ],
+            "key": "QawQFGE"
+        },
+        {
+            "title": "More things to try",
+            "notes": [
+                {
+                    "text": "•   Drag notes around to rearrange.\n•   Works between the lists too.",
+                    "raw": false,
+                    "min": false,
+                    "key": "04o1qd9",
+                    "src_list_id": "EQOgcuy"
+                },
+                {
+                    "text": "•   Click on a list name to edit.\n•   Enter to save, Esc to cancel.",
+                    "raw": false,
+                    "min": false,
+                    "key": "dO7hID4",
+                    "src_list_id": "EQOgcuy"
+                },
+                {
+                    "text": "•   Try adding a new list.\n•   Try deleting one. This  _can_  be undone.",
+                    "raw": false,
+                    "min": false,
+                    "key": "qbv9hZo",
+                    "src_list_id": "EQOgcuy"
+                },
+                {
+                    "text": "•   Same for the board name.",
+                    "raw": false,
+                    "min": false,
+                    "key": "UkyviEi",
+                    "src_list_id": "EQOgcuy"
+                },
+                {
+                    "text": "Boards",
+                    "raw": true,
+                    "min": false,
+                    "key": "dtU43s5",
+                    "src_list_id": "EQOgcuy"
+                },
+                {
+                    "text": "•   Check out   ≡   at the top right.",
+                    "raw": false,
+                    "min": false,
+                    "key": "yaGmuzg",
+                    "src_list_id": "EQOgcuy"
+                },
+                {
+                    "text": "•   Try adding a new board.\n•   Try switching between the boards.",
+                    "raw": false,
+                    "min": false,
+                    "key": "C4xqf2d",
+                    "src_list_id": "EQOgcuy"
+                },
+                {
+                    "text": "•   Try deleting a board. Unlike deleting a\n     list this  _cannot_  be undone.",
+                    "raw": false,
+                    "min": false,
+                    "key": "YTLkabY",
+                    "src_list_id": "EQOgcuy"
+                },
+                {
+                    "text": "•   Export the board   (save to a file, as json)\n•   Import the board   (load from a save)",
+                    "raw": false,
+                    "min": false,
+                    "key": "3UtlTT2",
+                    "src_list_id": "EQOgcuy"
+                }
+            ],
+            "key": "EQOgcuy"
+        }
+    ],
+    "history": [
+        1
+    ]
 }
