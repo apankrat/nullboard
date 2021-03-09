@@ -1,7 +1,8 @@
 <!doctype html>
 <html>
+
 <head>
-  <!--
+	<!--
 
 	+-------------------------------------------------------------+
 	|                                                             |
@@ -45,1072 +46,1107 @@
 	Licensor:  Alexander Pankratov / swapped.ch
 
   -->
-  <meta charset="utf-8">
-  <title>Nullboard</title>
-  <style>
 
-	/***/
-	@font-face {
-		font-family: 'Nullboard';
-		font-weight: 400;
-		font-style: normal;
-		src: url('extras/Barlow-Regular.woff') format('woff');
-	}
-
-	@font-face {
-		font-family: 'Nullboard';
-		font-weight: 500;
-		font-style: normal;
-		src: url('extras/Barlow-Medium.woff') format('woff');
-	}
-
-	/***/
-	html, body, h1, textarea, input {
-		padding: 0;
-		margin: 0;
-	}
-
-	body, input, textarea {
-		font-family: Nullboard, sans-serif;
-		font-size: 13px;
-	}
-
-	body {
-		background: #fff;
-		background: #f8f9fb;
-	}
-
-	body.dragging {
-		user-select: none;
-		-webkit-user-select: none;
-		-ms-user-select: none;
-		-webkit-touch-callout: none;
-		-o-user-select: none;
-		-moz-user-select: none;
-	}
-
-	body.ding {
-		padding-top: 2px;
-	}
-
-	a {
-		text-decoration: none;
-		transition: color 200ms;
-	}
-
-	a, a:active, a:focus, textarea, input {
-		outline: none;
-	}
-
-	tt {
-		display: none;
-	}
-
-	/***/
-	.clearfix:after,
-	.board:after,
-	.lists:after,
-	.notes:after,
-	.head:after,
-	.menu:after {
-		content: "";
-		display: table;
-		clear: both;
-	}
-
-	/***/
-	.board {
-		min-width: 250px;
-
-		width: -moz-max-content;    /* firefox */
-		width: -webkit-max-content; /* chrome  */
-		width: intrinsic;           /* safari  */
-
-		margin: 0 auto;
-		padding: 20px;
-
-		user-select: none;
-	}
-
-	body.crowded .board {
-		margin-top: 28px;
-	}
-
-	.board u {
-		text-decoration: none;
-	}
-
-	.board u:before {
-		content: '\00D7';
-		position: relative;
-		top: 2px;
-		font-size: 17px;
-		line-height: 10px;
-		font-weight: 400;
-	}
-
-	/***/
-	.board .head {
-		padding: 5px 0;
-		margin: 0 5px;
-		position: relative;
-	}
-
-	.board .head .text,
-	.board .head .edit {
-		font-weight: 500;
-		font-size: 13.5px;
-		line-height: 20px;
-		padding: 0 5px 2px;
-		border: none;
-	}
-
-	.board .head .text {
-		min-height: 20px;
-		white-space: pre;
-		overflow: hidden;
-	}
-
-	.board .head .edit {
-		display: none;
-	}
-
-	.board .head .edit::placeholder {
-		font-weight: 400;
-		font-size: 10px;
-		line-height: 22px;
-		text-transform: uppercase;
-		color: #1489db;
-		opacity: 0.8;
-	}
-
-	.board .head.editing .text {
-		display: none;
-	}
-
-	.board .head.editing .edit {
-		display: block;
-		outline: 1px solid #8eaedd;
-	}
-
-	.board .menu {
-		position: absolute;
-		top: 0;
-		right: 0;
-		height: 20px;
-		padding: 5px 6px 7px 30px;
-		background: linear-gradient(to right, #EAEDF000, #EAEDF0 10px);
-		font-size: 11px;
-		line-height: 20px;
-	}
-
-	.board .menu a,
-	.board .ops  a {
-		color: #000000A0;
-		transition: color 200ms;
-	}
-
-	.board .menu a {
-		padding-left: 10px;
-	}
-
-	.board .menu a:hover,
-	.board .ops  a:hover {
-		color: #000;
-	}
-
-	.board .menu a.warn:hover,
-	.board .ops  a.warn:hover {
-		color: #c40;
-	}
-
-	.board .menu .undo-board,
-	.board .menu .redo-board {
-		display: none;
-	}
-
-	.board .head.editing .menu {
-		display: none;
-	}
-
-	.board > .head {
-		background: #EAEDF0;
-		padding: 5px;
-		margin: 0 0 10px;
-		border-radius: 2px;
-		position: relative;
-	}
-
-	.board > .head .menu {
-		margin-right: 5px;
-	}
-
-	/***/
-	.board .lists-scroller {
-		height: auto;
-		margin: -1px 0 10px;
-		overflow-x: auto;
-		overflow-y: hidden;
-		display: none;
-	}
-
-	.lists-scroller div {
-		height: 1px;
-	}
-
-	.board .lists {
-		white-space: nowrap;
-		overflow: auto;
-		scrollbar-width: none;
-	}
-
-	.board .list {
-		display: inline-block;
-		vertical-align: top;
-		width: 250px;
-		margin: 0 5px 10px;
-		background: linear-gradient(#EAEDF0 30px, #DDE1E5 90px);
-		border-radius: 2px;
-	}
-
-	.board .list::-webkit-scrollbar {
-		display: none;
-	}
-
-	.board .list:first-child {
-		margin-left: 0;
-	}
-
-	.board .list:last-child {
-		margin-right: 0;
-	}
-
-	.board .list .notes {
-		padding: 0 5px;
-	}
-
-	/***/
-	.board .head .menu .teaser {
-		position: absolute;
-		right: 3px;
-		top: 5px;
-		padding: 0 3px;
-	}
-
-	.board .head .menu .bulk {
-		display: none;
-		opacity: 0;
-		z-index: 1;
-	}
-
-	.board .head .menu:hover .bulk {
-		display: block;
-		opacity: 1;
-	}
-
-	.board .head .menu:hover .teaser {
-		display: none;
-	}
-
-	/***/
-	.board .list .menu .mov-list-r.half {
-		padding-left: 0;
-	}
-
-	.board .list .menu .full {
-		display: none;
-	}
-
-	.board .list:first-child .menu .half,
-	.board .list:last-child  .menu .half {
-		display: none;
-	}
-
-	.board .list:first-child .menu .mov-list-r.full,
-	.board .list:last-child  .menu .mov-list-l.full {
-		display: inline-block;
-	}
-
-	.board .list:first-child:last-child .menu .half,
-	.board .list:first-child:last-child .menu .full {
-		display: none;
-	}
-
-	/***/
-	.board .note {
-		background: #fff;
-		margin-top: 5px;
-		box-shadow: 0 1px 2px #bbb, 0 0 1px #ddd;
-		position: relative;
-	}
-
-	.board .note.dragging,
-	.board .note.dragging.raw {
-		background: #CED4DA;
-		box-shadow: 0 +1px 0 #00000010 inset,
-		            0 -1px 0 #00000010 inset,
-		            +1px 0 0 #00000010 inset,
-		            -1px 0 0 #00000010 inset;
-	}
-
-	.board .note.dragging * {
-		opacity: 0 !important;
-	}
-
-	/***/
-	.board .note:last-child {
-		margin-bottom: 5px;
-	}
-
-	.board .note .text,
-	.board .note .edit {
-		padding: 5px 10px;
-		margin-right: 15px;
-		font-size: 11px;
-	}
-
-	.board .note .text {
-		min-height: 13px;
-		white-space: pre-wrap;
-		overflow-wrap: anywhere;
-	}
-
-	/***/
-	.board .head .text a,
-	.board .note .text a {
-		color: inherit;
-		cursor: default;
-		transition: none;
-	}
-
-	@keyframes whoomp {
-		0%   { color: inherit; }
-		30%  { color: #888;    }
-		100% { color: inherit; }
-	}
-
-	.board .head .text a:hover,
-	.board .note .text a:hover {
-		animation-name: whoomp;
-		animation-duration: 700ms;
-	}
-
-	.reveal .board .head .text a,
-	.reveal .board .note .text a {
-		color: #1489db;
-		cursor: pointer;
-	}
-
-	.reveal .board .head .text a:hover,
-	.reveal .board .note .text a:hover {
-		animation-name: none;
-	}
-
-	/***/
-	.board .note .edit {
-		display: none;
-		border: none;
-	}
-
-	.board .note.editing {
-		box-shadow: none;
-		outline: 1px solid #8eaedd;
-	}
-
-	.board .note.editing .text {
-		display: none;
-	}
-
-	.board .note.editing .edit {
-		display: block;
-		resize: none;
-	}
-
-	/***/
-	.board .note .ops {
-		position: absolute;
-		top: 0;
-		right: 0;
-		opacity: 0;
-		transition: opacity 400ms;
-		cursor: default;
-		font-size: 9px;
-	}
-
-	.board .note.editing .ops {
-		display: none;
-	}
-
-	.board .note:hover .ops {
-		opacity: 1;
-	}
-
-	.board .note .ops .teaser {
-		display: block;
-		margin-top: 2px;
-		margin-right: 1px;
-		padding-right: 3px;
-	}
-
-	.board .note .ops .teaser:before {
-		content: '\2261';
-	}
-
-	.board .note .ops .bulk {
-		display: none;
-		background: #fff;
-		border-left: none;
-		padding: 0 0 1px 5px;
-		font-weight: 500;
-		border-left: 1px solid #ddd;
-		border-bottom: 1px solid #ddd;
-	}
-
-	.board .note .ops .bulk a {
-		padding-right: 4px;
-	}
-
-	.board .note .ops:hover .bulk {
-		display: block;
-	}
-
-	.board .note .ops:hover .teaser {
-		display: none;
-	}
-
-	/***/
-	.board .note.raw {
-		background: transparent;
-		box-shadow: none;
-		font-weight: 500;
-	}
-
-	.board .note.raw.editing {
-		background: #fff;
-	}
-
-	.board .note.raw .text {
-	}
-
-	.board .note.collapsed {
-		height: 23px;
-	}
-
-	.board .note.collapsed .text {
-		height: 13px;
-		overflow: hidden;
-		line-height: 22px;
-		padding-top: 0;
-	}
-
-	.board .note.collapsed .ops {
-		opacity: 1;
-	}
-
-	.board .note.collapsed .ops .teaser {
-		padding: 1px 3px 0 1px;
-	}
-
-	.board .note.collapsed .ops .teaser:before {
-		content: '_';
-		top: 1px;
-	}
-
-	.board .note.collapsed:hover .ops .teaser:before {
-		content: '\2261';
-	}
-
-	/***/
-	.dragster {
-		z-index: 2;
-		position: absolute;
-		opacity: 0;
-		box-shadow: 1px 2px 3px #00000050;
-		background: #fff;
-		white-space: pre-wrap;
-		cursor: move;
-
-		padding: 5px 25px 5px 10px;
-		font-size: 11px;
-
-		box-shadow: 0 +1px 0 #ACB4BC inset,
-		            0 -1px 0 #ACB4BC inset,
-		            +1px 0 0 #ACB4BC inset,
-		            -1px 0 0 #ACB4BC inset,
-		            0px 1px 3px #00000030;
-	}
-
-	.dragster a {
-		color: #000;
-	}
-
-	.dragster.collapsed {
-		overflow: hidden;
-		line-height: 22px;
-		padding-top: 0;
-	}
-
-	/***/
-	.logo {
-		position: absolute;
-		top: 9px;
-		left: 9px;
-		font-size: 11px;
-		line-height: 19px;
-		padding: 6px 12px;
-		opacity: 0.6;
-		z-index: 3;
-		background: #f8f9fb;
-	}
-
-	body.crowded .logo:hover {
-		background: #fff;
-		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-	}
-
-	.logo:hover {
-		opacity: 1.0;
-	}
-
-	.logo .bulk {
-		overflow: hidden;
-		height: 0;
-		opacity: 0;
-		transition: opacity 400ms;
-	}
-
-	.logo:hover .bulk {
-		height: auto;
-		opacity: 1;
-	}
-
-	.logo a {
-		color: #000;
-		display: block;
-	}
-
-	.logo a:hover {
-		color: #1489db;
-	}
-
-	.logo .bulk a:before {
-		display: inline-block;
-		content: '-';
-		width: 11px;
-	}
-
-	/***/
-	.config {
-		position: absolute;
-		top: 10px;
-		right: 21px;
-		font-size: 11px;
-		line-height: 19px;
-		z-index: 3;
-		background: #f8f9fb;
-	}
-
-	body.crowded .config:hover {
-		background: #fff;
-		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-	}
-
-	.config a {
-		display: block;
-		color: #000;
-		transition: color 200ms;
-	}
-
-	.config a:hover {
-		color: #1489db;
-	}
-
-	.config .teaser {
-		padding: 5px;
-		color: #999;
-	}
-
-	.config .bulk {
-		margin-right: 20px;
-		padding: 5px 0 10px 22px;
-		transition: opacity 400ms;
-	}
-
-	.config .bulk div {
-		display: none;
-		padding: 6px 2px;
-		margin: 6px -2px;
-		border-top: 1px solid #00000028;
-		border-bottom: 1px solid #00000028;
-	}
-
-	.config .bulk div a {
-		display: block;
-		margin-right: 10px;
-	}
-
-	.config .bulk div a.active {
-		color: #1489db;
-	}
-
-	.config .bulk div a.active:before {
-		content: '\2022 ';
-		display: inline-block;
-		width: 13px;
-		margin-left: -13px;
-	}
-
-	.config .bulk div a.active:hover {
-		color: #000;
-	}
-
-	.config .bulk a i,
-	.config .bulk a b {
-		font-style: normal;
-		font-weight: inherit;
-	}
-
-	.config .bulk a i {
-		display: none;
-	}
-
-	.config .bulk input.imp-board-select {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		visibility: hidden;
-	}
-
-	.config .bulk a.switch-theme {
-		padding-top: 6px;
-		margin-top: 6px;
-		border-top: 1px solid #00000028;
-	}
-
-	/***/
-	.config .bulk {
-		display: none;
-		opacity: 0;
-	}
-
-	.config:hover .teaser {
-		display: none;
-	}
-
-	.config:hover .bulk {
-		display: block;
-		opacity: 1;
-	}
-
-	/***/
-	.overlay {
-		position: fixed;
-		z-index: 10;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background: rgba(0,0,0,0.9);
-		display: none;
-		color: #000;
-	}
-
-	/***/
-	.overlay .license {
-		font-size: 12px;
-		line-height: 16px;
-		white-space: pre-wrap;
-		width: 384px;
-		height: auto;
-		max-height: 600px;
-		padding: 20px 25px 22px;
-		overflow-y: auto;
-		background: #fff;
-		position: absolute;
-		top: 100px;
-		left: 50%;
-		margin-left: -192px;
-	}
-
-	.overlay .license a {
-		color: #1489db;
-	}
-
-	.overlay .license span {
-		display: inline-block;
-		padding-right: 8px;
-	}
-
-	/***/
-	.overlay .about {
-		font-size: 12px;
-		line-height: 16px;
-		text-align: center;
-		width: 240px;
-		height: auto;
-		padding: 50px 25px;
-		background: #fff;
-		position: absolute;
-		top: 100px;
-		left: 50%;
-		margin-left: -145px;
-	}
-
-	.overlay .about h1 {
-		font-size: 15px;
-		font-weight: 500;
-		margin-bottom: 10px;
-	}
-
-	.overlay .about a {
-		display: block;
-		color: #1489db;
-	}
-
-	.overlay .about div {
-		position: absolute;
-		bottom: -30px;
-		width: 240px;
-		color: #888;
-	}
-
-	.overlay .about div span {
-		display: inline-block;
-		text-align: left;
-		padding-right: 10px;
-	}
-
-	/***/
-
-	@media print {
-		.logo, .config,
-		.board .head .teaser,
-		.list .head .teaser {
-			visibility: hidden;
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<meta charset="utf-8">
+	<title>Nullboard</title>
+	<style>
+		/***/
+		@font-face {
+			font-family: 'Nullboard';
+			font-weight: 400;
+			font-style: normal;
+			src: url('extras/Barlow-Regular.woff') format('woff');
+		}
+
+		@font-face {
+			font-family: 'Nullboard';
+			font-weight: 500;
+			font-style: normal;
+			src: url('extras/Barlow-Medium.woff') format('woff');
+		}
+
+		/***/
+		html,
+		body,
+		h1,
+		textarea,
+		input {
+			padding: 0;
+			margin: 0;
+		}
+
+		body,
+		input,
+		textarea {
+			font-family: Nullboard, sans-serif;
+			font-size: 13px;
+		}
+
+		body {
+			background: #fff;
+			background: #f8f9fb;
+		}
+
+		body.dragging {
+			user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+			-webkit-touch-callout: none;
+			-o-user-select: none;
+			-moz-user-select: none;
+		}
+
+		body.ding {
+			padding-top: 2px;
+		}
+
+		a {
+			text-decoration: none;
+			transition: color 200ms;
+		}
+
+		a,
+		a:active,
+		a:focus,
+		textarea,
+		input {
+			outline: none;
+		}
+
+		tt {
 			display: none;
 		}
 
+		/***/
+		.clearfix:after,
+		.board:after,
+		.lists:after,
+		.notes:after,
+		.head:after,
+		.menu:after {
+			content: "";
+			display: table;
+			clear: both;
+		}
+
+		/***/
+		.board {
+			min-width: 250px;
+
+			width: -moz-max-content;
+			/* firefox */
+			width: -webkit-max-content;
+			/* chrome  */
+			width: intrinsic;
+			/* safari  */
+
+			margin: 0 auto;
+			padding: 20px;
+
+			user-select: none;
+		}
+
+		body.crowded .board {
+			margin-top: 28px;
+		}
+
+		.board u {
+			text-decoration: none;
+		}
+
+		.board u:before {
+			content: '\00D7';
+			position: relative;
+			top: 2px;
+			font-size: 17px;
+			line-height: 10px;
+			font-weight: 400;
+		}
+
+		/***/
+		.board .head {
+			padding: 5px 0;
+			margin: 0 5px;
+			position: relative;
+		}
+
+		.board .head .text,
+		.board .head .edit {
+			font-weight: 500;
+			font-size: 13.5px;
+			line-height: 20px;
+			padding: 0 5px 2px;
+			border: none;
+		}
+
+		.board .head .text {
+			min-height: 20px;
+			white-space: pre;
+			overflow: hidden;
+		}
+
+		.board .head .edit {
+			display: none;
+		}
+
+		.board .head .edit::placeholder {
+			font-weight: 400;
+			font-size: 10px;
+			line-height: 22px;
+			text-transform: uppercase;
+			color: #1489db;
+			opacity: 0.8;
+		}
+
+		.board .head.editing .text {
+			display: none;
+		}
+
+		.board .head.editing .edit {
+			display: block;
+			outline: 1px solid #8eaedd;
+		}
+
+		.board .menu {
+			position: absolute;
+			top: 0;
+			right: 0;
+			height: 20px;
+			padding: 5px 6px 7px 30px;
+			background: linear-gradient(to right, #EAEDF000, #EAEDF0 10px);
+			font-size: 11px;
+			line-height: 20px;
+		}
+
+		.board .menu a,
+		.board .ops a {
+			color: #000000A0;
+			transition: color 200ms;
+		}
+
+		.board .menu a {
+			padding-left: 10px;
+		}
+
+		.board .menu a:hover,
+		.board .ops a:hover {
+			color: #000;
+		}
+
+		.board .menu a.warn:hover,
+		.board .ops a.warn:hover {
+			color: #c40;
+		}
+
+		.board .menu .undo-board,
+		.board .menu .redo-board {
+			display: none;
+		}
+
+		.board .head.editing .menu {
+			display: none;
+		}
+
+		.board>.head {
+			background: #EAEDF0;
+			padding: 5px;
+			margin: 0 0 10px;
+			border-radius: 2px;
+			position: relative;
+		}
+
+		.board>.head .menu {
+			margin-right: 5px;
+		}
+
+		/***/
+		.board .lists-scroller {
+			height: auto;
+			margin: -1px 0 10px;
+			overflow-x: auto;
+			overflow-y: hidden;
+			display: none;
+		}
+
+		.lists-scroller div {
+			height: 1px;
+		}
+
+		.board .lists {
+			white-space: nowrap;
+			overflow: auto;
+			scrollbar-width: none;
+		}
+
+		.board .list {
+			display: inline-block;
+			vertical-align: top;
+			width: 250px;
+			margin: 0 5px 10px;
+			background: linear-gradient(#EAEDF0 30px, #DDE1E5 90px);
+			border-radius: 2px;
+		}
+
+		.board .list::-webkit-scrollbar {
+			display: none;
+		}
+
+		.board .list:first-child {
+			margin-left: 0;
+		}
+
+		.board .list:last-child {
+			margin-right: 0;
+		}
+
+		.board .list .notes {
+			padding: 0 5px;
+		}
+
+		/***/
+		.board .head .menu .teaser {
+			position: absolute;
+			right: 3px;
+			top: 5px;
+			padding: 0 3px;
+		}
+
+		.board .head .menu .bulk {
+			display: none;
+			opacity: 0;
+			z-index: 1;
+		}
+
+		.board .head .menu:hover .bulk {
+			display: block;
+			opacity: 1;
+		}
+
+		.board .head .menu:hover .teaser {
+			display: none;
+		}
+
+		/***/
+		.board .list .menu .mov-list-r.half {
+			padding-left: 0;
+		}
+
+		.board .list .menu .full {
+			display: none;
+		}
+
+		.board .list:first-child .menu .half,
+		.board .list:last-child .menu .half {
+			display: none;
+		}
+
+		.board .list:first-child .menu .mov-list-r.full,
+		.board .list:last-child .menu .mov-list-l.full {
+			display: inline-block;
+		}
+
+		.board .list:first-child:last-child .menu .half,
+		.board .list:first-child:last-child .menu .full {
+			display: none;
+		}
+
+		/***/
 		.board .note {
+			background: #fff;
+			margin-top: 5px;
+			box-shadow: 0 1px 2px #bbb, 0 0 1px #ddd;
+			position: relative;
+		}
+
+		.board .note.dragging,
+		.board .note.dragging.raw {
+			background: #CED4DA;
+			box-shadow: 0 +1px 0 #00000010 inset,
+				0 -1px 0 #00000010 inset,
+				+1px 0 0 #00000010 inset,
+				-1px 0 0 #00000010 inset;
+		}
+
+		.board .note.dragging * {
+			opacity: 0 !important;
+		}
+
+		/***/
+		.board .note:last-child {
+			margin-bottom: 5px;
+		}
+
+		.board .note .text,
+		.board .note .edit {
+			padding: 5px 10px;
+			margin-right: 15px;
+			font-size: 11px;
+		}
+
+		.board .note .text {
+			min-height: 13px;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+		}
+
+		/***/
+		.board .head .text a,
+		.board .note .text a {
+			color: inherit;
+			cursor: default;
+			transition: none;
+		}
+
+		@keyframes whoomp {
+			0% {
+				color: inherit;
+			}
+
+			30% {
+				color: #888;
+			}
+
+			100% {
+				color: inherit;
+			}
+		}
+
+		.board .head .text a:hover,
+		.board .note .text a:hover {
+			animation-name: whoomp;
+			animation-duration: 700ms;
+		}
+
+		.reveal .board .head .text a,
+		.reveal .board .note .text a {
+			color: #1489db;
+			cursor: pointer;
+		}
+
+		.reveal .board .head .text a:hover,
+		.reveal .board .note .text a:hover {
+			animation-name: none;
+		}
+
+		/***/
+		.board .note .edit {
+			display: none;
+			border: none;
+		}
+
+		.board .note.editing {
 			box-shadow: none;
-			outline: 1px solid #ccc;
+			outline: 1px solid #8eaedd;
 		}
 
+		.board .note.editing .text {
+			display: none;
+		}
+
+		.board .note.editing .edit {
+			display: block;
+			resize: none;
+		}
+
+		/***/
+		.board .note .ops {
+			position: absolute;
+			top: 0;
+			right: 0;
+			opacity: 0;
+			transition: opacity 400ms;
+			cursor: default;
+			font-size: 9px;
+		}
+
+		.board .note.editing .ops {
+			display: none;
+		}
+
+		.board .note:hover .ops {
+			opacity: 1;
+		}
+
+		.board .note .ops .teaser {
+			display: block;
+			margin-top: 2px;
+			margin-right: 1px;
+			padding-right: 3px;
+		}
+
+		.board .note .ops .teaser:before {
+			content: '\2261';
+		}
+
+		.board .note .ops .bulk {
+			display: none;
+			background: #fff;
+			border-left: none;
+			padding: 0 0 1px 5px;
+			font-weight: 500;
+			border-left: 1px solid #ddd;
+			border-bottom: 1px solid #ddd;
+		}
+
+		.board .note .ops .bulk a {
+			padding-right: 4px;
+		}
+
+		.board .note .ops:hover .bulk {
+			display: block;
+		}
+
+		.board .note .ops:hover .teaser {
+			display: none;
+		}
+
+		/***/
 		.board .note.raw {
-			outline: none;
+			background: transparent;
+			box-shadow: none;
+			font-weight: 500;
 		}
-	}
 
-	/*
+		.board .note.raw.editing {
+			background: #fff;
+		}
+
+		.board .note.raw .text {}
+
+		.board .note.collapsed {
+			height: 23px;
+		}
+
+		.board .note.collapsed .text {
+			height: 13px;
+			overflow: hidden;
+			line-height: 22px;
+			padding-top: 0;
+		}
+
+		.board .note.collapsed .ops {
+			opacity: 1;
+		}
+
+		.board .note.collapsed .ops .teaser {
+			padding: 1px 3px 0 1px;
+		}
+
+		.board .note.collapsed .ops .teaser:before {
+			content: '_';
+			top: 1px;
+		}
+
+		.board .note.collapsed:hover .ops .teaser:before {
+			content: '\2261';
+		}
+
+		/***/
+		.dragster {
+			z-index: 2;
+			position: absolute;
+			opacity: 0;
+			box-shadow: 1px 2px 3px #00000050;
+			background: #fff;
+			white-space: pre-wrap;
+			cursor: move;
+
+			padding: 5px 25px 5px 10px;
+			font-size: 11px;
+
+			box-shadow: 0 +1px 0 #ACB4BC inset,
+				0 -1px 0 #ACB4BC inset,
+				+1px 0 0 #ACB4BC inset,
+				-1px 0 0 #ACB4BC inset,
+				0px 1px 3px #00000030;
+		}
+
+		.dragster a {
+			color: #000;
+		}
+
+		.dragster.collapsed {
+			overflow: hidden;
+			line-height: 22px;
+			padding-top: 0;
+		}
+
+		/***/
+		.logo {
+			position: absolute;
+			top: 9px;
+			left: 9px;
+			font-size: 11px;
+			line-height: 19px;
+			padding: 6px 12px;
+			opacity: 0.6;
+			z-index: 3;
+			background: #f8f9fb;
+		}
+
+		body.crowded .logo:hover {
+			background: #fff;
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+		}
+
+		.logo:hover {
+			opacity: 1.0;
+		}
+
+		.logo .bulk {
+			overflow: hidden;
+			height: 0;
+			opacity: 0;
+			transition: opacity 400ms;
+		}
+
+		.logo:hover .bulk {
+			height: auto;
+			opacity: 1;
+		}
+
+		.logo a {
+			color: #000;
+			display: block;
+		}
+
+		.logo a:hover {
+			color: #1489db;
+		}
+
+		.logo .bulk a:before {
+			display: inline-block;
+			content: '-';
+			width: 11px;
+		}
+
+		/***/
+		.config {
+			position: absolute;
+			top: 10px;
+			right: 21px;
+			font-size: 11px;
+			line-height: 19px;
+			z-index: 3;
+			background: #f8f9fb;
+		}
+
+		body.crowded .config:hover {
+			background: #fff;
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+		}
+
+		.config a {
+			display: block;
+			color: #000;
+			transition: color 200ms;
+		}
+
+		.config a:hover {
+			color: #1489db;
+		}
+
+		.config .teaser {
+			padding: 5px;
+			color: #999;
+		}
+
+		.config .bulk {
+			margin-right: 20px;
+			padding: 5px 0 10px 22px;
+			transition: opacity 400ms;
+		}
+
+		.config .bulk div {
+			display: none;
+			padding: 6px 2px;
+			margin: 6px -2px;
+			border-top: 1px solid #00000028;
+			border-bottom: 1px solid #00000028;
+		}
+
+		.config .bulk div a {
+			display: block;
+			margin-right: 10px;
+		}
+
+		.config .bulk div a.active {
+			color: #1489db;
+		}
+
+		.config .bulk div a.active:before {
+			content: '\2022 ';
+			display: inline-block;
+			width: 13px;
+			margin-left: -13px;
+		}
+
+		.config .bulk div a.active:hover {
+			color: #000;
+		}
+
+		.config .bulk a i,
+		.config .bulk a b {
+			font-style: normal;
+			font-weight: inherit;
+		}
+
+		.config .bulk a i {
+			display: none;
+		}
+
+		.config .bulk input.imp-board-select {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			visibility: hidden;
+		}
+
+		.config .bulk a.switch-theme {
+			padding-top: 6px;
+			margin-top: 6px;
+			border-top: 1px solid #00000028;
+		}
+
+		/***/
+		.config .bulk {
+			display: none;
+			opacity: 0;
+		}
+
+		.config:hover .teaser {
+			display: none;
+		}
+
+		.config:hover .bulk {
+			display: block;
+			opacity: 1;
+		}
+
+		/***/
+		.overlay {
+			position: fixed;
+			z-index: 10;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.9);
+			display: none;
+			color: #000;
+		}
+
+		/***/
+		.overlay .license {
+			font-size: 12px;
+			line-height: 16px;
+			white-space: pre-wrap;
+			width: 384px;
+			height: auto;
+			max-height: 600px;
+			padding: 20px 25px 22px;
+			overflow-y: auto;
+			background: #fff;
+			position: absolute;
+			top: 100px;
+			left: 50%;
+			margin-left: -192px;
+		}
+
+		.overlay .license a {
+			color: #1489db;
+		}
+
+		.overlay .license span {
+			display: inline-block;
+			padding-right: 8px;
+		}
+
+		/***/
+		.overlay .about {
+			font-size: 12px;
+			line-height: 16px;
+			text-align: center;
+			width: 240px;
+			height: auto;
+			padding: 50px 25px;
+			background: #fff;
+			position: absolute;
+			top: 100px;
+			left: 50%;
+			margin-left: -145px;
+		}
+
+		.overlay .about h1 {
+			font-size: 15px;
+			font-weight: 500;
+			margin-bottom: 10px;
+		}
+
+		.overlay .about a {
+			display: block;
+			color: #1489db;
+		}
+
+		.overlay .about div {
+			position: absolute;
+			bottom: -30px;
+			width: 240px;
+			color: #888;
+		}
+
+		.overlay .about div span {
+			display: inline-block;
+			text-align: left;
+			padding-right: 10px;
+		}
+
+		/***/
+
+		@media print {
+
+			.logo,
+			.config,
+			.board .head .teaser,
+			.list .head .teaser {
+				visibility: hidden;
+				display: none;
+			}
+
+			.board .note {
+				box-shadow: none;
+				outline: 1px solid #ccc;
+			}
+
+			.board .note.raw {
+				outline: none;
+			}
+		}
+
+		/*
 	 *	Dark mode
 	 */
-	body.dark {
-		background-color: #15171A;
-		color: #d6d6d6;
-	}
+		body.dark {
+			background-color: #15171A;
+			color: #d6d6d6;
+		}
 
-	.dark .board .head {
-		background: #202224;
-	}
+		.dark .board .head {
+			background: #202224;
+		}
 
-	/***/
-	.dark .board .menu {
-		background: linear-gradient(to right, #20222400, #202224 10px);
-	}
+		/***/
+		.dark .board .menu {
+			background: linear-gradient(to right, #20222400, #202224 10px);
+		}
 
-	.dark .board .menu a {
-		color: #aaa;
-	}
+		.dark .board .menu a {
+			color: #aaa;
+		}
 
-	.dark .board .menu a:hover {
-		color: #fc4;
-	}
+		.dark .board .menu a:hover {
+			color: #fc4;
+		}
 
-	.dark .board .menu a.warn:hover,
-	.dark .board .ops  a.warn:hover {
-		color: #fc5555 !important;
-	}
+		.dark .board .menu a.warn:hover,
+		.dark .board .ops a.warn:hover {
+			color: #fc5555 !important;
+		}
 
-	.dark .board .head {
-		color: #eee;
-	}
+		.dark .board .head {
+			color: #eee;
+		}
 
-	.dark .board .head .edit::placeholder {
-		color: #bf9d21;
-	}
+		.dark .board .head .edit::placeholder {
+			color: #bf9d21;
+		}
 
-	/***/
-	.dark .board .list {
-		background: #202224;
-	}
+		/***/
+		.dark .board .list {
+			background: #202224;
+		}
 
-	.dark .board .note {
-		background: #2B2C2F;
-		background: linear-gradient(#2B2C2F, #27282B);
-		box-shadow: 0 1px 3px #0005;
-		text-shadow: 0 0 4px #0008;
-	}
+		.dark .board .note {
+			background: #2B2C2F;
+			background: linear-gradient(#2B2C2F, #27282B);
+			box-shadow: 0 1px 3px #0005;
+			text-shadow: 0 0 4px #0008;
+		}
 
-	.dark.reveal .board .head .text a,
-	.dark.reveal .board .note .text a {
-		color: #fc0;
-	}
+		.dark.reveal .board .head .text a,
+		.dark.reveal .board .note .text a {
+			color: #fc0;
+		}
 
-	@keyframes whoomp-dark {
-		0%   { color: inherit; }
-		30%  { color: #fff;    }
-		100% { color: inherit; }
-	}
+		@keyframes whoomp-dark {
+			0% {
+				color: inherit;
+			}
 
-	.dark .board .head .text a:hover,
-	.dark .board .note .text a:hover {
-		animation-name: whoomp-dark;
-	}
+			30% {
+				color: #fff;
+			}
 
+			100% {
+				color: inherit;
+			}
+		}
 
-	.dark .board .note.raw {
-		background: transparent;
-		box-shadow: none;
-	}
-
-	.dark .board .note.raw .text {
-		color: #eee;
-		text-shadow: 0 0 4px #0008;
-	}
-
-	.dark .board .note .ops .teaser {
-		color: #ccc;
-	}
-
-	.dark .board .note .ops .bulk {
-		background: #202224;
-		border-left: 1px solid #111;
-		border-bottom: 1px solid #111;
-	}
-
-	.dark .board .note.raw .ops .bulk {
-		border: none;
-	}
-
-	.dark .board .note .ops .bulk a {
-		color: #ccc;
-	}
-
-	.dark .board .note .ops .bulk a:hover {
-		color: #fc2;
-	}
-
-	.dark .board .note.dragging,
-	.dark .board .note.dragging.raw {
-		background: #15171A;
-		box-shadow: 0 +1px 0 #000 inset,
-		            0 -1px 0 #000 inset,
-		            +1px 0 0 #000 inset,
-		            -1px 0 0 #000 inset;
-	}
-
-	.dark .dragster {
-		box-shadow: 0px 1px 4px #000000;
-		background: #2e3032;
-	}
-
-	.dark .dragster a {
-		color: #d6d6d6;
-	}
+		.dark .board .head .text a:hover,
+		.dark .board .note .text a:hover {
+			animation-name: whoomp-dark;
+		}
 
 
-	/***/
-	.dark textarea,
-	.dark input {
-		background: #111315;
-		color: #eee;
-	}
+		.dark .board .note.raw {
+			background: transparent;
+			box-shadow: none;
+		}
 
-	.dark .board .head.editing .edit {
-		outline: 1px solid #bc9908;
-	}
+		.dark .board .note.raw .text {
+			color: #eee;
+			text-shadow: 0 0 4px #0008;
+		}
 
-	.dark .board .note.editing {
-		background: #111315;
-		outline: 1px solid #bc9908;
-	}
+		.dark .board .note .ops .teaser {
+			color: #ccc;
+		}
 
-	/***/
-	.dark .config, .dark.crowded .config:hover {
-		background-color: #15171A;
-	}
+		.dark .board .note .ops .bulk {
+			background: #202224;
+			border-left: 1px solid #111;
+			border-bottom: 1px solid #111;
+		}
 
-	.dark .config a {
-		color: #ddd;
-	}
+		.dark .board .note.raw .ops .bulk {
+			border: none;
+		}
 
-	.dark .config a:hover {
-		color: #fc2;
-	}
+		.dark .board .note .ops .bulk a {
+			color: #ccc;
+		}
 
-	.dark .config .bulk div {
-		border-top: 1px solid #fff2;
-		border-bottom: 1px solid #fff2;
-	}
+		.dark .board .note .ops .bulk a:hover {
+			color: #fc2;
+		}
 
-	.dark .config .bulk div a.active {
-		color: #fc2;
-	}
+		.dark .board .note.dragging,
+		.dark .board .note.dragging.raw {
+			background: #15171A;
+			box-shadow: 0 +1px 0 #000 inset,
+				0 -1px 0 #000 inset,
+				+1px 0 0 #000 inset,
+				-1px 0 0 #000 inset;
+		}
 
-	.dark .config .bulk a.switch-theme {
-		border-top: 1px solid #fff2;
-	}
+		.dark .dragster {
+			box-shadow: 0px 1px 4px #000000;
+			background: #2e3032;
+		}
 
-	.dark .config a.switch-theme i {
-		display: inline;
-	}
+		.dark .dragster a {
+			color: #d6d6d6;
+		}
 
-	.dark .config a.switch-theme b {
-		display: none;
-	}
 
-	/***/
-	.dark .logo a {
-		color: #ccc;
-	}
+		/***/
+		.dark textarea,
+		.dark input {
+			background: #111315;
+			color: #eee;
+		}
 
-	.dark .logo, .dark.crowded .logo:hover {
-		background: #15171A;
-	}
+		.dark .board .head.editing .edit {
+			outline: 1px solid #bc9908;
+		}
 
-	.dark .logo a:hover {
-		color: #fc2;
-	}
+		.dark .board .note.editing {
+			background: #111315;
+			outline: 1px solid #bc9908;
+		}
 
-	.dark .logo > a:hover {
-		color: #fff;
-	}
+		/***/
+		.dark .config,
+		.dark.crowded .config:hover {
+			background-color: #15171A;
+		}
 
-	/*
+		.dark .config a {
+			color: #ddd;
+		}
+
+		.dark .config a:hover {
+			color: #fc2;
+		}
+
+		.dark .config .bulk div {
+			border-top: 1px solid #fff2;
+			border-bottom: 1px solid #fff2;
+		}
+
+		.dark .config .bulk div a.active {
+			color: #fc2;
+		}
+
+		.dark .config .bulk a.switch-theme {
+			border-top: 1px solid #fff2;
+		}
+
+		.dark .config a.switch-theme i {
+			display: inline;
+		}
+
+		.dark .config a.switch-theme b {
+			display: none;
+		}
+
+		/***/
+		.dark .logo a {
+			color: #ccc;
+		}
+
+		.dark .logo,
+		.dark.crowded .logo:hover {
+			background: #15171A;
+		}
+
+		.dark .logo a:hover {
+			color: #fc2;
+		}
+
+		.dark .logo>a:hover {
+			color: #fff;
+		}
+
+		/*
 	 *	Larger font
 	 */
-	body.z1,
-	body.z1 input,
-	body.z1 textarea {
-		font-size: 15px;
-	}
+		body.z1,
+		body.z1 input,
+		body.z1 textarea {
+			font-size: 15px;
+		}
 
-	.z1 .board {
-		min-width: 290px;
-	}
+		.z1 .board {
+			min-width: 290px;
+		}
 
-	.z1 .board u:before {
-		font-size: 19px;
-		line-height: 12px;
-	}
+		.z1 .board u:before {
+			font-size: 19px;
+			line-height: 12px;
+		}
 
-	.z1 .board .head .text {
-		min-height: 22px;
-	}
+		.z1 .board .head .text {
+			min-height: 22px;
+		}
 
-	.z1 .board .head .text,
-	.z1 .board .head .edit {
-		font-size: 15px;
-		line-height: 22px;
-	}
+		.z1 .board .head .text,
+		.z1 .board .head .edit {
+			font-size: 15px;
+			line-height: 22px;
+		}
 
-	.z1 .board .head .edit::placeholder {
-		font-size: 10px;
-		line-height: 23px;
-	}
+		.z1 .board .head .edit::placeholder {
+			font-size: 10px;
+			line-height: 23px;
+		}
 
-	.z1 .board .menu {
-		height: 22px;
-		font-size: 13px;
-		line-height: 22px;
-	}
+		.z1 .board .menu {
+			height: 22px;
+			font-size: 13px;
+			line-height: 22px;
+		}
 
-	.z1 .board .list {
-		width: 290px;
-	}
+		.z1 .board .list {
+			width: 290px;
+		}
 
-	.z1 .board .note .text,
-	.z1 .board .note .edit,
-	.z1 .dragster {
-		font-size: 13px;
-	}
+		.z1 .board .note .text,
+		.z1 .board .note .edit,
+		.z1 .dragster {
+			font-size: 13px;
+		}
 
-	.z1 .board .note .text {
-		min-height: 16px;
-	}
+		.z1 .board .note .text {
+			min-height: 16px;
+		}
 
-	.z1 .board .note.collapsed {
-		height: 26px;
-	}
+		.z1 .board .note.collapsed {
+			height: 26px;
+		}
 
-	.z1 .board .note.collapsed .text {
-		height: 17px;
-		line-height: 25px;
-	}
+		.z1 .board .note.collapsed .text {
+			height: 17px;
+			line-height: 25px;
+		}
 
-	.z1 .dragster.collapsed {
-		line-height: 24px;
-	}
+		.z1 .dragster.collapsed {
+			line-height: 24px;
+		}
 
-	.z1 .board .note .ops {
-		font-size: 10px;
-	}
+		.z1 .board .note .ops {
+			font-size: 10px;
+		}
 
-	/***/
-	.z1 .logo {
-		font-size: 13px;
-		line-height: 21px;
-	}
+		/***/
+		.z1 .logo {
+			font-size: 13px;
+			line-height: 21px;
+		}
 
-	.z1 .logo .bulk a:before {
-		width: 13px;
-	}
+		.z1 .logo .bulk a:before {
+			width: 13px;
+		}
 
-	/***/
-	.z1 .config {
-		font-size: 13px;
-		line-height: 21px;
-	}
+		/***/
+		.z1 .config {
+			font-size: 13px;
+			line-height: 21px;
+		}
 
-	.z1 .config .bulk div a.active:before {
-		width: 15px;
-	}
+		.z1 .config .bulk div a.active:before {
+			width: 15px;
+		}
 
-	.z1 .config a.switch-fsize i {
-		display: inline;
-	}
+		.z1 .config a.switch-fsize i {
+			display: inline;
+		}
 
-	.z1 .config a.switch-fsize b {
-		display: none;
-	}
+		.z1 .config a.switch-fsize b {
+			display: none;
+		}
 
-	/***/
-	.z1 .overlay .license {
-		font-size: 14px;
-		line-height: 18px;
-		width: 443px;
-	}
+		/***/
+		.z1 .overlay .license {
+			font-size: 14px;
+			line-height: 18px;
+			width: 443px;
+		}
 
-	.z1 .overlay .about {
-		font-size: 12px;
-		line-height: 18px;
-		width: 277px;
-	}
+		.z1 .overlay .about {
+			font-size: 12px;
+			line-height: 18px;
+			width: 277px;
+		}
 
-	.z1 .overlay .about h1 {
-		font-size: 17px;
-		width: 277px;
-	}
-
-</style>
+		.z1 .overlay .about h1 {
+			font-size: 17px;
+			width: 277px;
+		}
+	</style>
 
 </head>
+
 <body>
 	<div class=logo>
 		<a href=https://nullboard.io>Nullboard</a>
 		<div class=bulk>
 			<a href=# class=view-about>About</a>
 			<a href=# class=view-license>License</a>
-			<a href=https://nullboard.io/github  target=_blank>Github</a>
+			<a href=https://nullboard.io/github target=_blank>Github</a>
 			<a href=https://nullboard.io/twitter target=_blank>Twitter</a>
 		</div>
 	</div>
@@ -1123,7 +1159,7 @@
 				<!-- here'll be boards -->
 			</div>
 			<a href=# class=imp-board>Import board...</a>
-				<input class=imp-board-select type="file" accept=".nbx">
+			<input class=imp-board-select type="file" accept=".nbx">
 			<a href=# class=exp-board>Export board...</a>
 			<a href="#" class="switch-theme">Use <i>light</i><b>dark</b> theme</a>
 			<a href="#" class="switch-fsize">Use <i>smaller</i><b>larger</b> font</a>
@@ -1154,7 +1190,9 @@
 					</div>
 				</div>
 			</div>
-			<div class=lists-scroller><div></div></div>
+			<div class=lists-scroller>
+				<div></div>
+			</div>
 			<div class=lists>
 			</div>
 		</div>
@@ -1216,7 +1254,7 @@
 <script src="extras/jquery-1.8.3.min.js"></script>
 <script>window.jQuery || document.write('<script src="https://code.jquery.com/jquery-1.8.3.min.js">\x3C/script>')</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/nanoid/3.1.20/index.browser.js"> </script>
-<script src="deta.js" ></script>
-<script type="module" src="index.js" ></script>
+<script src="deta.js"></script>
+<script type="module" src="index.js"></script>
 
 </html>

@@ -11,7 +11,7 @@ function getCookieValue(a) {
 }
 
 const deta = window.Deta(getCookieValue("pk"));
-const db = deta.Base('nullboard');
+
 const boardDb = deta.Base('boards')
 const cards = deta.Base('cards');
 const listsDb = deta.Base('lists')
@@ -151,7 +151,7 @@ function showBoard(quick) {
 	var $b_lists = $b.find('.lists');
 
 	$b[0].board_id = board.id;
-	console.log(board);
+
 	setText($b.find('.head .text'), board.title);
 	setText($b.find('.head .key'), board.id)
 
@@ -215,10 +215,10 @@ const saveCards = (lists, board_id) => {
 	var titleCards = [];
 	var noteCards = [];
 	for (var i = 0; i < lists.length; i++) {
-		titleCards.push({ id: board_id, key: lists[i].key , pos: i, title: lists[i].title });
+		titleCards.push({ src_board_id: board_id, key: lists[i].key , pos: i, title: lists[i].title });
 		
 		for (var j = 0; j < lists[i].notes.length; j++) {
-			noteCards.push({id: lists[i].key, key:lists[i].notes[j].key, pos: j, raw: lists[i].notes[j].raw, min: lists[i].notes[j].min, text: lists[i].notes[j].text })
+			noteCards.push({src_list_id: lists[i].key, key:lists[i].notes[j].key, pos: j, raw: lists[i].notes[j].raw, min: lists[i].notes[j].min, text: lists[i].notes[j].text })
 		}
 	}
 
@@ -231,14 +231,16 @@ async function getBoards () {
     return board;
 }
 
-async function getLists (boardId) {
-    const lists = await listsDb.fetch({"id": boardId}).next();
+async function getLists () {
+    const lists = await listsDb.fetch().next();
     return lists;
 }
-async function getCards (listId) {
-    const notes = await cards.fetch({"id": listId}).next();
+async function getCards () {
+    const notes = await cards.fetch().next();
     return notes;
 }
+
+
 
 //
 function saveBoard() {
@@ -246,7 +248,7 @@ function saveBoard() {
 	var board = new Board(getText($board.find('> .head .text')), document.board.id);
 	$board.find('.list').each(function () {
 		var $list = $(this);
-		console.log($list.find('.key').text())
+
 		var l = board.addList($list.find('.key').attr('_text'), document.board.id, getText($list.find('.head .text')));
 		$list.find('.note').each(function () {
 			var $note = $(this)
@@ -255,7 +257,7 @@ function saveBoard() {
 			n.min = $note.hasClass('collapsed');
 		});
 	});
-	console.log(board);
+
 
 	//
 	var rev_new = document.board.history[0] + 1;
@@ -281,9 +283,7 @@ function saveBoard() {
 
 	board.revision = 1;
 	boardDb.put({key: board.id, format: board.format, revision: board.revision, title: board.title}).then();
-	db.put({ key: board.id, value: JSON.stringify(board) }).then(data => {
-		console.log(data);
-	})
+
 	board.revision = rev_new;
 
 
@@ -302,26 +302,26 @@ function parseBoard(blob) {
 		board = JSON.parse(blob);
 	}
 	catch (x) {
-		console.log(blob)
+
 		console.log('Malformed JSON');
 		return false;
 	}
 
 	if (typeof board.format === 'undefined') {
-		console.log("Format shit undefined")
+
 		console.log('Board.format is missing');
 		return false;
 	}
 
 	if (board.format != nb_dataVersion) {
-		console.log("dsta")
+
 		console.log('Board.format is wrong', board.format, nb_dataVersion);
 		return false;
 	}
 
 	if (!board.revision) {
 
-		console.log("revsisi")
+
 
 		console.log("Board.revision is missing");
 		return false;
@@ -329,13 +329,7 @@ function parseBoard(blob) {
 
 	return $.extend(new Board, board);
 }
-async function getStuff(key) {
-	db.get(key).then(data => {
-		return data.value;
-	}).catch(err => {
-		return err;
-	})
-}
+
 function loadBoard(board_id) {
 
 	var revision;
@@ -347,66 +341,26 @@ function loadBoard(board_id) {
 		return false;
 
 	blob = localStorage.getItem('nullboard.board.' + board_id + '.' + revision);
-	console.log(blob);
+
 	if (!blob)
 		return false;
 
 	board = parseBoard(blob);
 	if (!board) {
 		alert('Whoops. Error parsing board data.');
-		console.log('Whoops, there it is:', blob);
+
 		return false;
 	}
 
 	if (board.id != board_id || board.revision != revision) {
 		alert('Whoops. Malformed board.');
-		console.log('Whoops, there it is:', board.id, board_id, board.revision, revision);
+
 		return false;
 	}
 
 	board.history = loadBoardHistory(board.id);
 
 	return board;
-	// var revision;
-	// var blob;
-	// var board;
-	// revision = localStorage.getItem('nullboard.board.' + board_id);
-
-
-	// if (!revision)
-	// 	return false;
-
-	// var res; 
-	// db.get(board_id).then(data => {
-	// 	blob = data;
-	// 	if (!blob) {
-	// 		console.log(blob)
-	// 		return false;
-	// 	}
-
-	// 	board = parseBoard(blob.value);
-
-	// 	if (!board) {
-	// 		console("Not board")
-	// 		alert('Whoops. Error parsing board data.');
-	// 		console.log('Whoops, there it is:', blob);
-	// 		return false;
-	// 	}
-
-	// 	if (board.id != board_id || board.revision != revision) {
-	// 		console("Jank")
-	// 		alert('Whoops. Malformed board.');
-	// 		console.log('Whoops, there it is:', board.id, board_id, board.revision, revision);
-	// 		return false;
-	// 	}
-	// 	console.log(board);
-	// 	board.history = loadBoardHistory(board.id);
-	// 	res = board;
-	// }).catch(err => {
-	// 	res = false;
-	// })
-	// console.log(res);
-	// return res;
 
 }
 
@@ -446,7 +400,7 @@ function trimBoardHistory(rev_old, rev_new, max_revs) {
 function nukeBoardRevision(rev) {
 	var k = 'nullboard.board.' + document.board.id + '.' + rev;
 	localStorage.removeItem(k);
-	console.log("Removed " + k);
+
 }
 
 function nukeBoard() {
@@ -455,7 +409,7 @@ function nukeBoard() {
 	for (var i = 0; i < localStorage.length;) {
 		var k = localStorage.key(i);
 		if (k.match(prefix)) {
-			console.log("Removed " + k);
+
 			localStorage.removeItem(k);
 		}
 		else {
@@ -490,9 +444,7 @@ function importBoard(blob) {
 	var lists = blobData.lists;
 	saveCards(lists, board.id);
 	boardDb.put({key: board.id, format: board.format, revision: board.revision, title: board.title}).then();
-	db.put({ key: board.id, value: JSON.stringify(board) }).then(data => {
-		console.log(data);
-	})
+
 
 	openBoard(board.id);
 }
@@ -541,7 +493,7 @@ function createDemoBoard() {
 		}
 	}
 	blob.lists = lists;
-	console.log(lists[0].key);
+
 	blob = JSON.stringify(blob);
 	
 
@@ -558,13 +510,8 @@ function createDemoBoard() {
 	localStorage.setItem('nullboard.board.' + demo.id, demo.revision);
 	localStorage.setItem('nullboard.last_board', demo.id);
 	boardDb.put({key: 'last_board', value: demo.id}).then();
-	db.put({ key: 'last_board', value: demo.id }).then(data => {
-		console.log('last_board', data);
-	})
-	
-	db.put({ key: demo.id, value: JSON.stringify(demo) }).then(data => {
-		console.log(data);
-	})
+
+
 	boardDb.put({key: demo.id, format: demo.format, revision: demo.revision, title: demo.title}).then();
 	var blobData = localStorage.getItem('nullboard.board.' + demo.id + '.' + demo.revision);
 
@@ -776,9 +723,7 @@ function openBoard(board_id) {
 	document.board = loadBoard(board_id);
 
 	localStorage.setItem('nullboard.last_board', board_id);
-	db.put({ key: 'last_board', value: board_id }).then(data => {
-		console.log('last_board', data);
-	});
+
 	boardDb.put({key: 'last_board', value: board_id}).then();
 
 	showBoard(true);
@@ -815,9 +760,7 @@ function closeBoard(quick) {
 
 	document.board = null;
 	localStorage.setItem('nullboard.last_board', null);
-	db.put({ key: 'last_board', value: null }).then(data => {
-		console.log('last_board', null);
-	});
+
 	boardDb.put({key: 'last_board', value: null}).then();
 	updateUndoRedo();
 	updateBoardIndex();
@@ -827,12 +770,10 @@ function closeBoard(quick) {
 function addBoard() {
 	document.board = new Board('', nanoid(7));
 	document.board.history = [0];
-	console.log(document.board.id);
+
 	document.board_id = document.board.id;
 	localStorage.setItem('nullboard.last_board', document.board.id);
-	// db.put({ key: 'last_board', value: document.board.id }).then(data => {
-	// 	console.log('last_board', data);
-	// });
+
 	boardDb.put({key: 'last_board', value: document.board.id}).then();
 	showBoard(false);
 
@@ -1153,9 +1094,7 @@ function peekBoardTitle(board_id) {
 		return false;
 
 	var blob = localStorage.getItem('nullboard.board.' + board_id + '.' + revision);
-	db.get(board_id).then(data => {
-		console.log("peek ");
-	})
+
 	if (!blob)
 		return false;
 
@@ -1539,9 +1478,7 @@ $('.config .exp-board').click(function () {
 		return false;
 
 	var blob = localStorage.getItem('nullboard.board.' + board.id + '.' + revision);
-	db.get(board_id).then(data => {
-		console.log(data.value);
-	})
+
 	if (!blob)
 		return false;
 
@@ -1559,7 +1496,6 @@ $('.config .switch-theme').click(function () {
 	var $body = $('body');
 	$body.toggleClass('dark');
 	localStorage.setItem('nullboard.theme', $body.hasClass('dark') ? 'dark' : '');
-	db.put({ key: 'nullboard.theme', value: $body.hasClass('dark') ? 'dark' : '' });
 	boardDb.put({ key: 'nullboard.theme', value: $body.hasClass('dark') ? 'dark' : '' }).then();
 	return false;
 });
@@ -1568,7 +1504,6 @@ $('.config .switch-fsize').click(function () {
 	var $body = $('body');
 	$body.toggleClass('z1');
 	localStorage.setItem('nullboard.fsize', $body.hasClass('z1') ? 'z1' : '');
-	db.put({ key: 'nullboard.fsize', value: $body.hasClass('z1') ? 'z1' : '' });
 	boardDb.put({ key: 'nullboard.fsize', value: $body.hasClass('z1') ? 'z1' : '' }).then();
 	return false;
 });
@@ -1697,9 +1632,29 @@ if (localStorage.getItem('nullboard.fsize') == 'z1')
 localStorage.clear();
 var board_id;
 
+function getBoardList(lists, boardId) {
+
+    var alter = function(element) {
+        return element.src_board_id == boardId; 
+    }
+    return lists.filter(alter)
+}
+
+function getListNotes(notes, listId) {
+    var alter = function(element) {
+        return element.src_list_id == listId; 
+    }
+    return notes.filter(alter)
+}
+
 
 async function initializeBoard () {
     var boards = await getBoards();
+	var allLists = await getLists();
+    allLists = allLists.value;
+	var allNotes = await getCards();
+	allNotes = allNotes.value;
+	
     boards = boards.value;
 
     if (boards.length > 0) {
@@ -1707,23 +1662,21 @@ async function initializeBoard () {
             if (board.key == 'last_board') {
                 localStorage.setItem('nullboard.last_board', board.value);
                 board_id = board.value;
-				console.log(board_id);
+
 				localStorage.setItem('nullboard.board.' + board_id, 1);
             }
             else {
-                var lists = await getLists(board.key);
-                lists = lists.value;
+                var lists = getBoardList(allLists, board.key);
                 var blob = {format:board.format, id: board.key, revision: 1, title: board.title};
                 blob.lists =[]
                 lists.sort((a, b) => a.pos - b.pos);
-                for (const {id, key, pos, title} of lists) {
+                for (const {src_board_id, key, pos, title} of lists) {
 
-                  var notes = await getCards(key);
-                  notes = notes.value;
+                  var notes = getListNotes(allNotes, key);
                   notes.sort((a, b) => {
                     return a.pos - b.pos
                   })
-                  notes = notes.map(({id,pos,...keep})=>keep)
+                  notes = notes.map(({src_list_id,pos,...keep})=>keep)
                   blob.lists.push({title, key, notes});
                 }
                 var blob_id = board.key + '.' + board.revision;
@@ -1738,7 +1691,7 @@ async function initializeBoard () {
 
 initializeBoard().then(data => {
 	if (board_id) {
-		console.log(localStorage.getItem('nullboard.board.' + board_id, 1));
+
 		document.board = loadBoard(board_id);
 	}
 	updateBoardIndex();
