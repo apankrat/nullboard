@@ -2420,6 +2420,8 @@
 
 	$('.board .edit').live('keydown', function(ev){
 
+		var isNote = (this.tagName == 'TEXTAREA');
+
 		// esc
 		if (ev.keyCode == 27)
 		{
@@ -2434,7 +2436,16 @@
 			return false;
 		}
 
-		// enter
+		// done
+		if (ev.keyCode == 13 && ! isNote ||
+		    ev.keyCode == 13 && ev.altKey ||
+		    ev.keyCode == 13 && ev.shiftKey)
+		{
+			stopEditing($(this), false);
+			return false;
+		}
+
+		// done + (add after / add before)
 		if (ev.keyCode == 13 && ev.ctrlKey)
 		{
 			var $this = $(this);
@@ -2452,36 +2463,26 @@
 			return false;
 		}
 
-		if (ev.keyCode == 13 && this.tagName == 'INPUT' ||
-		    ev.keyCode == 13 && ev.altKey ||
-		    ev.keyCode == 13 && ev.shiftKey)
-		{
-			stopEditing($(this), false);
-			return false;
-		}
-
 		// done + collapse
-		if (ev.key == 'ArrowUp' && ev.altKey)
+		if (isNote && ev.altKey && ev.key == 'ArrowUp')
 		{
 			var $item = $(this).parent();
 			$item[0]._collapsed = true;
-
 			stopEditing($(this), false);
 			return false;
 		}
 
 		// done + expand
-		if (ev.key == 'ArrowDown' && ev.altKey)
+		if (isNote && ev.altKey && ev.key == 'ArrowDown')
 		{
 			var $item = $(this).parent();
 			$item[0]._collapsed = false;
-
 			stopEditing($(this), false);
 			return false;
 		}
 
 		// done + toggle 'raw'
-		if (ev.keyCode == 82 && ev.altKey)
+		if (isNote && ev.altKey && ev.keyCode == 82)
 		{
 			$(this).parent().toggleClass('raw');
 			stopEditing($(this), false);
@@ -2489,7 +2490,7 @@
 		}
 
 		// ctrl-shift-8
-		if (ev.key == '*' && ev.ctrlKey)
+		if (isNote && ev.key == '*' && ev.ctrlKey)
 		{
 			var have = this.value;
 			var pos  = this.selectionStart;
