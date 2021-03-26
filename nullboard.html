@@ -1213,7 +1213,7 @@
 <script type="text/javascript">
 
 	//
-	var nb_codeVersion = 20200429;
+	var nb_codeVersion = 20210326;
 	var nb_dataVersion = 20190412;
 
 	//
@@ -2460,7 +2460,35 @@
 			return false;
 		}
 
-		//
+		// done + collapse
+		if (ev.key == 'ArrowUp' && ev.altKey)
+		{
+			var $item = $(this).parent();
+			$item[0]._collapsed = true;
+
+			stopEditing($(this), false);
+			return false;
+		}
+
+		// done + expand
+		if (ev.key == 'ArrowDown' && ev.altKey)
+		{
+			var $item = $(this).parent();
+			$item[0]._collapsed = false;
+
+			stopEditing($(this), false);
+			return false;
+		}
+
+		// done + toggle 'raw'
+		if (ev.keyCode == 82 && ev.altKey)
+		{
+			$(this).parent().toggleClass('raw');
+			stopEditing($(this), false);
+			return false;
+		}
+
+		// ctrl-shift-8
 		if (ev.key == '*' && ev.ctrlKey)
 		{
 			var have = this.value;
