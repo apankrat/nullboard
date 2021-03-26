@@ -1213,7 +1213,7 @@
 <script type="text/javascript">
 
 	//
-	var nb_codeVersion = 20210326;
+	var nb_codeVersion = 20210327;
 	var nb_dataVersion = 20190412;
 
 	//
@@ -2439,7 +2439,7 @@
 		// done
 		if (ev.keyCode == 13 && ! isNote ||
 		    ev.keyCode == 13 && ev.altKey ||
-		    ev.keyCode == 13 && ev.shiftKey)
+		    ev.keyCode == 13 && ev.shiftKey && ! ev.ctrlKey)
 		{
 			stopEditing($(this), false);
 			return false;
