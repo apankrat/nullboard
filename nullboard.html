@@ -1208,8 +1208,8 @@
 
 </body>
 
-<script src="extras/jquery-1.8.3.min.js"></script>
-<script>window.jQuery || document.write('<script src="https://code.jquery.com/jquery-1.8.3.min.js">\x3C/script>')</script>
+<script src="extras/jquery-3.3.1.min.js"></script>
+<script>window.jQuery || document.write('<script src="https://code.jquery.com/jquery-3.3.1.min.js">\x3C/script>')</script>
 <script type="text/javascript">
 
 	//
@@ -2349,15 +2349,15 @@
 		else      $('body').removeClass('reveal');
 	}
 
-	$(window).live('blur', function(){
+	$(window).on('blur', function(){
 		$('body').removeClass('reveal');
 	});
 
-	$(document).live('keydown', function(ev){
+	$(document).on('keydown', function(ev){
 		setRevealState(ev);
 	});
 
-	$(document).live('keyup', function(ev){
+	$(document).on('keyup', function(ev){
 
 		var raw = ev.originalEvent;
 
@@ -2381,7 +2381,7 @@
 		}
 	});
 
-	$('.board .text').live('click', function(ev){
+	$('.wrap').on('click', '.board .text', function(ev){
 
 		if (this.was_dragged)
 		{
@@ -2395,7 +2395,7 @@
 		return false;
 	});
 
-	$('.board .note .text a').live('click', function(ev){
+	$('.wrap').on('click', '.board .note .text a', function(ev){
 
 		if (! $('body').hasClass('reveal'))
 			return true;
@@ -2418,7 +2418,7 @@
 		}
 	}
 
-	$('.board .edit').live('keydown', function(ev){
+	$('.wrap').on('keydown', '.board .edit', function(ev){
 
 		var isNote = (this.tagName == 'TEXTAREA');
 
@@ -2503,7 +2503,7 @@
 		return true;
 	});
 
-	$('.board .edit').live('keypress', function(ev){
+	$('.wrap').on('keypress', '.board .edit', function(ev){
 
 		// tab
 		if (ev.keyCode == 9)
@@ -2514,7 +2514,7 @@
 	});
 
 	//
-	$('.board .edit').live('blur', function(ev){
+	$('.wrap').on('blur', '.board .edit', function(ev){
 		if (document.activeElement != this)
 			stopEditing($(this));
 		else
@@ -2522,7 +2522,7 @@
 	});
 
 	//
-	$('.board .note .edit').live('input propertychange', function(){
+	$('.wrap').on('input propertychange', '.board .note .edit', function(){
 
 		var delta = $(this).outerHeight() - $(this).height();
 
@@ -2534,12 +2534,12 @@
 	});
 
 	//
-	$('.config .add-board').live('click', function(){
+	$('.config').on('click', '.add-board', function(){
 		addBoard();
 		return false;
 	});
 
-	$('.config .load-board').live('click', function(){
+	$('.config').on('click', '.load-board', function(){
 
 		var board_id = $(this)[0].board_id;
 		if ((document.board && document.board.id) == board_id)
@@ -2550,67 +2550,67 @@
 		return false;
 	});
 
-	$('.board .del-board').live('click', function(){
+	$('.wrap').on('click', '.board .del-board', function(){
 		deleteBoard();
 		return false;
 	});
 
-	$('.board .undo-board').live('click', function(){
+	$('.wrap').on('click', '.board .undo-board', function(){
 		undoBoard();
 		return false;
 	});
 
-	$('.board .redo-board').live('click', function(){
+	$('.wrap').on('click', '.board .redo-board', function(){
 		redoBoard();
 		return false;
 	});
 
 	//
-	$('.board .add-list').live('click', function(){
+	$('.wrap').on('click', '.board .add-list', function(){
 		addList();
 		return false;
 	});
 
-	$('.board .del-list').live('click', function(){
+	$('.wrap').on('click', '.board .del-list', function(){
 		deleteList( $(this).closest('.list') );
 		return false;
 	});
 
-	$('.board .mov-list-l').live('click', function(){
+	$('.wrap').on('click', '.board .mov-list-l', function(){
 		moveList( $(this).closest('.list'), true );
 		return false;
 	});
 
-	$('.board .mov-list-r').live('click', function(){
+	$('.wrap').on('click', '.board .mov-list-r', function(){
 		moveList( $(this).closest('.list'), false );
 		return false;
 	});
 
 	//
-	$('.board .add-note').live('click', function(){
+	$('.wrap').on('click', '.board .add-note', function(){
 		addNote( $(this).closest('.list') );
 		return false;
 	});
 
-	$('.board .del-note').live('click', function(){
+	$('.wrap').on('click', '.board .del-note', function(){
 		deleteNote( $(this).closest('.note') );
 		return false;
 	});
 
-	$('.board .raw-note').live('click', function(){
+	$('.wrap').on('click', '.board .raw-note', function(){
 		$(this).closest('.note').toggleClass('raw');
 		saveBoard();
 		return false;
 	});
 
-	$('.board .collapse').live('click', function(){
+	$('.wrap').on('click', '.board .collapse', function(){
 		$(this).closest('.note').toggleClass('collapsed');
 		saveBoard();
 		return false;
 	});
 
 	//
-	$('.board .note .text').live('mousedown', function(ev){
+	$('.wrap').on('mousedown', '.board .note .text', function(ev){
 		drag.prime(this, ev);
 	});
 
@@ -2624,12 +2624,12 @@
 	});
 
 	//
-	$('.config .imp-board').click(function(ev){
+	$('.config').on('click', '.imp-board', function(ev){
 		$('.config .imp-board-select').click();
 		return false;
 	});
 
-	$('.config .imp-board-select').change(function(){
+	$('.config').on('change', '.imp-board-select' , function(){
 		var files = this.files;
 		var reader = new FileReader();
 		reader.onload = function(ev){ importBoard(ev.target.result); };
@@ -2637,7 +2637,7 @@
 		return true;
 	});
 
-	$('.config .exp-board').click(function(){
+	$('.config').on('click', '.exp-board', function(){
 		var board = document.board;
 		var revision = localStorage.getItem('nullboard.board.' + board.id);
 		if (! revision)
@@ -2657,14 +2657,14 @@
 		return true;
 	});
 
-	$('.config .switch-theme').click(function() {
+	$('.config').on('click', '.switch-theme', function() {
 		var $body = $('body');
 		$body.toggleClass('dark');
 		localStorage.setItem('nullboard.theme', $body.hasClass('dark') ? 'dark' : '');
 		return false;
 	});
 
-	$('.config .switch-fsize').click(function(){
+	$('.config').on('click', '.switch-fsize', function(){
 		var $body = $('body');
 		$body.toggleClass('z1');
 		localStorage.setItem('nullboard.fsize', $body.hasClass('z1') ? 'z1' : '');
