@@ -2202,9 +2202,18 @@
 	/*
 	 *	this should *really* be in a separate file
 	 */
+	function noteLocation($item)
+	{
+		var loc = 0;
+		for (var $p = $item.closest('.note'); $p.length; $p = $p.prev(), loc += 1);
+		for (var $p = $item.closest('.list'); $p.length; $p = $p.prev(), loc += 10000);
+		return loc;
+	}
+
 	function Drag()
 	{
 		this.item    = null;                // .text of .note
+		this.org_log = 0;                   // original noteLocation();
 		this.priming = null;
 		this.primexy = { x: 0, y: 0 };
 		this.$drag   = null;
@@ -2252,6 +2261,8 @@
 			var $text = $(this.item);
 			var $note = $text.parent();
 			$note.addClass('dragging');
+
+			this.org_log = noteLocation($note);
 
 			$('body').append('<div class=dragster></div>');
 			var $drag = $('body .dragster').last();
@@ -2418,7 +2429,6 @@
 			$have.animate({ height: 0 }, 'fast', function(){
 				$have.remove();
 				$want.css({ marginTop: 5 });
-//				saveBoard();
 			});
 
 			$want.css({ display: 'block', height: 0, marginTop: 0 });
@@ -2451,7 +2461,11 @@
 
 		this.stopDragging = function()
 		{
-			$(this.item).parent().removeClass('dragging');
+			var $text = $(this.item);
+			var $note = $text.parent();
+			$note.addClass('dragging');
+
+			$note.removeClass('dragging');
 			$('body').removeClass('dragging');
 
 			if (this.$drag)
@@ -2462,6 +2476,9 @@
 				if (window.getSelection) { window.getSelection().removeAllRanges(); }
 				else if (document.selection) { document.selection.empty(); }
 			}
+
+			if (noteLocation($note) != this.org_log)
+				saveBoard();
 
 			this.item = null;
 		}
