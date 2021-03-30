@@ -1212,15 +1212,15 @@
 <script>window.jQuery || document.write('<script src="https://code.jquery.com/jquery-3.3.1.min.js">\x3C/script>')</script>
 <script type="text/javascript">
 
-	//
-	var nb_codeVersion = 20210327;
-	var nb_dataVersion = 20190412;
-
-	//
-	if (typeof(localStorage) === "undefined")
+	/*
+	 *	our stuff
+	 */
+	document.nb =
 	{
-		alert('Hmmm... no "localStorage" support');
-	}
+		codeVersion: 20210330,
+		dataVersion: 20190412,
+		board: null
+	};
 
 	/*
 	 *	poor man's error handling -- $fixme
@@ -1262,7 +1262,7 @@
 
 	function Board(title)
 	{
-		this.format   = nb_dataVersion;
+		this.format   = document.nb.dataVersion;
 		this.id       = +new Date();
 		this.revision = 1;
 		this.title    = title;
@@ -1276,7 +1276,9 @@
 		}
 	}
 
-	//
+	/*
+	 *	html ops
+	 */
 	function htmlEncode(raw)
 	{
 		return $('tt .encoder').text(raw).html();
@@ -1307,92 +1309,9 @@
 		return $note.attr('_text');
 	}
 
-	//
-	function updatePageTitle()
-	{
-		if (! document.board)
-		{
-			document.title = 'Nullboard';
-			return;
-		}
-
-		var $text = $('.wrap .board > .head .text');
-		var title = getText( $text );
-
-		document.board.title = title;
-		document.title = 'NB - ' + (title || '(unnamed board)');
-	}
-
-	function updateUndoRedo()
-	{
-		var $undo = $('.board .menu .undo-board');
-		var $redo = $('.board .menu .redo-board');
-
-		var undo = false;
-		var redo = false;
-
-		if (document.board)
-		{
-			var history = document.board.history;
-			var rev = document.board.revision;
-
-			undo = (rev != history[history.length-1]);
-			redo = (rev != history[0]);
-		}
-
-		if (undo) $undo.show(); else $undo.hide();
-		if (redo) $redo.show(); else $redo.hide();
-	}
-
-	//
-	function showBoard(quick)
-	{
-		var board = document.board;
-
-		var $wrap = $('.wrap');
-		var $bdiv = $('tt .board');
-		var $ldiv = $('tt .list');
-		var $ndiv = $('tt .note');
-
-		var $b = $bdiv.clone();
-		var $b_lists = $b.find('.lists');
-
-		$b[0].board_id = board.id;
-		setText( $b.find('.head .text'), board.title );
-
-		board.lists.forEach(function(list){
-
-			var $l = $ldiv.clone();
-			var $l_notes = $l.find('.notes');
-
-			setText( $l.find('.head .text'), list.title );
-
-			list.notes.forEach(function(n){
-				var $n = $ndiv.clone();
-				setText( $n.find('.text'), n.text );
-				if (n.raw) $n.addClass('raw');
-				if (n.min) $n.addClass('collapsed');
-				$l_notes.append($n);
-			});
-
-			$b_lists.append($l);
-		});
-
-		if (quick)
-			$wrap.html('').append($b);
-		else
-			$wrap.html('')
-			  .css({ opacity: 0 })
-			  .append($b)
-			  .animate({ opacity: 1 });
-
-		updatePageTitle();
-		updateUndoRedo();
-		updateBoardIndex();
-		setupListScrolling();
-	}
-
-	//
+	/*
+	 *	board ops - save/load/parse/peek/nuke/import
+	 */
 	function saveBoard()
 	{
 		var $board = $('.wrap .board');
@@ -1411,13 +1330,13 @@
 		});
 
 		//
-		var rev_new = document.board.history[0] + 1;
-		var rev_old = document.board.revision;
+		var rev_new = document.nb.board.history[0] + 1;
+		var rev_old = document.nb.board.revision;
 
-		document.board.revision = rev_new;
+		document.nb.board.revision = rev_new;
 
-		board.id       = document.board.id;
-		board.revision = document.board.revision;
+		board.id       = document.nb.board.id;
+		board.revision = document.nb.board.revision;
 
 		var blob_id = board.id + '.' + board.revision;
 
@@ -1452,9 +1371,9 @@
 			return false;
 		}
 
-		if (board.format != nb_dataVersion)
+		if (board.format != document.nb.dataVersion)
 		{
-			console.log('Board.format is wrong', board.format, nb_dataVersion);
+			console.log('Board.format is wrong', board.format, document.nb.dataVersion);
 			return false;
 		}
 
@@ -1467,17 +1386,23 @@
 		return $.extend(new Board, board);
 	}
 
-	function loadBoard(board_id)
+	function loadCurrentBoardBlob(board_id)
 	{
 		var revision;
-		var blob;
-		var board;
 
 		revision = localStorage.getItem('nullboard.board.' + board_id);
 		if (! revision)
 			return false;
 
-		blob = localStorage.getItem('nullboard.board.' + board_id + '.' + revision);
+		return localStorage.getItem('nullboard.board.' + board_id + '.' + revision);
+	}
+
+	function loadBoard(board_id)
+	{
+		var blob;
+		var board;
+
+		blob = loadCurrentBoardBlob(board_id);
 		if (! blob)
 			return false;
 
@@ -1489,10 +1414,10 @@
 			return false;
 		}
 
-		if (board.id != board_id || board.revision != revision)
+		if (board.id != board_id)
 		{
 			alert('Whoops. Malformed board.');
-			console.log('Whoops, there it is:', board.id, board_id, board.revision, revision);
+			console.log('Whoops, there it is:', board.id, board_id);
 			return false;
 		}
 
@@ -1519,9 +1444,9 @@
 
 	function trimBoardHistory(rev_old, rev_new, max_revs)
 	{
-		var hist_1 = document.board.history;
+		var hist_1 = document.nb.board.history;
 		var hist_2 = []
-		var k = 'nullboard.board.' + document.board.id + '.';
+		var k = 'nullboard.board.' + document.nb.board.id + '.';
 
 		for (var i=0; i<hist_1.length; i++)
 		{
@@ -1534,20 +1459,44 @@
 		for (var i=max_revs; i<hist_2.length; i++)
 			nukeBoardRevision( hist_2[i] );
 
-		document.board.history = loadBoardHistory(document.board.id);
+		document.nb.board.history = loadBoardHistory(document.nb.board.id);
+	}
+
+	//
+	function peekBoardTitleFromBlob(blob)
+	{
+		var head = blob.indexOf(',"lists":\[{"');
+		var peek = (head != -1) ? blob.substring(0, head) + '}' : blob;
+
+		try { peek = JSON.parse(peek); } catch(x) { return false; }
+
+		return peek && peek.title;
+	}
+
+	function peekBoardTitle(board_id)
+	{
+		var revision = localStorage.getItem('nullboard.board.' + board_id);
+		if (! revision)
+			return false;
+
+		var blob = localStorage.getItem('nullboard.board.' + board_id + '.' + revision);
+		if (! blob)
+			return false;
+
+		return peekBoardTitleFromBlob(blob);
 	}
 
 	//
 	function nukeBoardRevision(rev)
 	{
-		var k = 'nullboard.board.' + document.board.id + '.' + rev;
+		var k = 'nullboard.board.' + document.nb.board.id + '.' + rev;
 		localStorage.removeItem(k);
 		console.log("Removed " + k);
 	}
 
 	function nukeBoard()
 	{
-		var prefix = new RegExp('^nullboard\.board\.' + document.board.id);
+		var prefix = new RegExp('^nullboard\.board\.' + document.nb.board.id);
 
 		for (var i=0; i<localStorage.length; )
 		{
@@ -1619,7 +1568,7 @@
 			'in":false},{"text":"Boards","raw":true,"min":false},{"text":"\u2022   Check out   \u2261   at the top right.",' +
 			'"raw":false,"min":false},{"text":"\u2022   Try adding a new board.\\n\u2022   Try switching between the boards' +
 			'.","raw":false,"min":false},{"text":"\u2022   Try deleting a board. Unlike deleting a\\n     list this  _canno' +
-			't_  be undone.","raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' + 
+			't_  be undone.","raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' +
 			'\u2022   Import the board   (load from a save)","raw":false,"min":false}]}]}';
 
 		var demo = parseBoard(blob);
@@ -1641,64 +1590,6 @@
 	/*
 	 *
 	 */
-	function startEditing($text, ev)
-	{
-		var $note = $text.parent();
-		var $edit = $note.find('.edit');
-
-		$note[0]._collapsed = $note.hasClass('collapsed');
-		$note.removeClass('collapsed');
-
-		$edit.val( getText($text) );
-		$edit.width( $text.width() );
-		$edit.height( $text.height() );
-		$note.addClass('editing');
-
-		$edit.focus();
-	}
-
-	function stopEditing($edit, via_escape)
-	{
-		var $item = $edit.parent();
-		if (! $item.hasClass('editing'))
-			return;
-
-		$item.removeClass('editing');
-		if ($item[0]._collapsed)
-			$item.addClass('collapsed')
-
-		//
-		var $text = $item.find('.text');
-		var text_now = $edit.val().trimRight();
-		var text_was = getText( $text );
-
-		//
-		var brand_new = $item.hasClass('brand-new');
-		$item.removeClass('brand-new');
-
-		if (via_escape)
-		{
-			if (brand_new)
-			{
-				$item.closest('.note, .list, .board').remove();
-				return;
-			}
-		}
-		else
-		if (text_now != text_was || brand_new)
-		{
-			setText( $text, text_now );
-
-			saveBoard();
-			updatePageTitle();
-		}
-
-		//
-		if (brand_new && $item.hasClass('list'))
-			addNote($item);
-	}
-
-	//
 	function addNote($list, $after, $before)
 	{
 		var $note  = $('tt .note').clone();
@@ -1816,7 +1707,7 @@
 	{
 		closeBoard(true);
 
-		document.board = loadBoard(board_id);
+		document.nb.board = loadBoard(board_id);
 
 		localStorage.setItem('nullboard.last_board', board_id);
 
@@ -1825,7 +1716,7 @@
 
 	function reopenBoard(revision)
 	{
-		var board_id = document.board.id;
+		var board_id = document.nb.board.id;
 
 		var via_menu = $('.wrap .board > .head .menu .bulk').is(':visible');
 
@@ -1854,7 +1745,7 @@
 			 .animate({ opacity: 0 }, 'fast')
 			 .queue(function(){ $board.remove(); });
 
-		document.board = null;
+		document.nb.board = null;
 		localStorage.setItem('nullboard.last_board', null);
 
 		updateUndoRedo();
@@ -1864,10 +1755,10 @@
 	//
 	function addBoard()
 	{
-		document.board = new Board('');
-		document.board.history = [ 0 ];
+		document.nb.board = new Board('');
+		document.nb.board.history = [ 0 ];
 
-		localStorage.setItem('nullboard.last_board', document.board_id);
+		localStorage.setItem('nullboard.last_board', document.nb.board_id);
 
 		showBoard(false);
 
@@ -1889,11 +1780,11 @@
 	//
 	function undoBoard()
 	{
-		if (! document.board)
+		if (! document.nb.board)
 			return false;
 
-		var hist = document.board.history;
-		var have = document.board.revision;
+		var hist = document.nb.board.history;
+		var have = document.nb.board.revision;
 		var want = 0;
 
 		for (var i=0; i<hist.length-1 && ! want; i++)
@@ -1914,11 +1805,11 @@
 
 	function redoBoard()
 	{
-		if (! document.board)
+		if (! document.nb.board)
 			return false;
 
-		var hist = document.board.history;
-		var have = document.board.revision;
+		var hist = document.nb.board.history;
+		var have = document.nb.board.revision;
 		var want = 0;
 
 		for (var i=1; i<hist.length && ! want; i++)
@@ -1937,8 +1828,379 @@
 		return true;
 	}
 
+	//
+	function showBoard(quick)
+	{
+		var board = document.nb.board;
+
+		var $wrap = $('.wrap');
+		var $bdiv = $('tt .board');
+		var $ldiv = $('tt .list');
+		var $ndiv = $('tt .note');
+
+		var $b = $bdiv.clone();
+		var $b_lists = $b.find('.lists');
+
+		$b[0].board_id = board.id;
+		setText( $b.find('.head .text'), board.title );
+
+		board.lists.forEach(function(list){
+
+			var $l = $ldiv.clone();
+			var $l_notes = $l.find('.notes');
+
+			setText( $l.find('.head .text'), list.title );
+
+			list.notes.forEach(function(n){
+				var $n = $ndiv.clone();
+				setText( $n.find('.text'), n.text );
+				if (n.raw) $n.addClass('raw');
+				if (n.min) $n.addClass('collapsed');
+				$l_notes.append($n);
+			});
+
+			$b_lists.append($l);
+		});
+
+		if (quick)
+			$wrap.html('').append($b);
+		else
+			$wrap.html('')
+			  .css({ opacity: 0 })
+			  .append($b)
+			  .animate({ opacity: 1 });
+
+		updatePageTitle();
+		updateUndoRedo();
+		updateBoardIndex();
+		setupListScrolling();
+	}
+
 	/*
 	 *
+	 */
+	function updatePageTitle()
+	{
+		if (! document.nb.board)
+		{
+			document.title = 'Nullboard';
+			return;
+		}
+
+		var $text = $('.wrap .board > .head .text');
+		var title = getText( $text );
+
+		document.nb.board.title = title;
+		document.title = 'NB - ' + (title || '(unnamed board)');
+	}
+
+	function updateUndoRedo()
+	{
+		var $undo = $('.board .menu .undo-board');
+		var $redo = $('.board .menu .redo-board');
+
+		var undo = false;
+		var redo = false;
+
+		if (document.nb.board)
+		{
+			var history = document.nb.board.history;
+			var rev = document.nb.board.revision;
+
+			undo = (rev != history[history.length-1]);
+			redo = (rev != history[0]);
+		}
+
+		if (undo) $undo.show(); else $undo.hide();
+		if (redo) $redo.show(); else $redo.hide();
+	}
+
+	function updateBoardIndex()
+	{
+		var $index  = $('.config .boards');
+		var $export = $('.config .exp-board');
+		var $entry  = $('tt .load-board');
+
+		var $board = $('.wrap .board');
+		var id_now = document.nb.board && document.nb.board.id;
+		var empty = true;
+
+		$index.html('');
+		$index.hide();
+
+		for (var i=0; i<localStorage.length; i++)
+		{
+			var k = localStorage.key(i);
+			var m = k.match(/^nullboard\.board\.(\d+)$/);
+			if (! m)
+				continue;
+
+			var board_id = m[1];
+			var title = peekBoardTitle(board_id);
+			if (title === false)
+				continue;
+
+			var $e = $entry.clone();
+			$e[0].board_id = board_id;
+			$e.html( title || '(unnamed board)' );
+
+			if (board_id == id_now)
+				$e.addClass('active');
+
+			$index.append($e);
+			empty = false;
+		}
+
+		if (id_now) $export.show();
+		else        $export.hide();
+
+		if (! empty) $index.show();
+	}
+
+	/*
+	 *
+	 */
+	function startEditing($text, ev)
+	{
+		var $note = $text.parent();
+		var $edit = $note.find('.edit');
+
+		$note[0]._collapsed = $note.hasClass('collapsed');
+		$note.removeClass('collapsed');
+
+		$edit.val( getText($text) );
+		$edit.width( $text.width() );
+		$edit.height( $text.height() );
+		$note.addClass('editing');
+
+		$edit.focus();
+	}
+
+	function stopEditing($edit, via_escape)
+	{
+		var $item = $edit.parent();
+		if (! $item.hasClass('editing'))
+			return;
+
+		$item.removeClass('editing');
+		if ($item[0]._collapsed)
+			$item.addClass('collapsed')
+
+		//
+		var $text = $item.find('.text');
+		var text_now = $edit.val().trimRight();
+		var text_was = getText( $text );
+
+		//
+		var brand_new = $item.hasClass('brand-new');
+		$item.removeClass('brand-new');
+
+		if (via_escape)
+		{
+			if (brand_new)
+			{
+				$item.closest('.note, .list, .board').remove();
+				return;
+			}
+		}
+		else
+		if (text_now != text_was || brand_new)
+		{
+			setText( $text, text_now );
+
+			saveBoard();
+			updatePageTitle();
+		}
+
+		//
+		if (brand_new && $item.hasClass('list'))
+			addNote($item);
+	}
+
+	//
+	function showDing()
+	{
+		$('body')
+		.addClass('ding')
+		.delay(100)
+		.queue(function(){ $(this).removeClass('ding').dequeue(); });
+	}
+
+	//
+	function showOverlay($div)
+	{
+		$('.overlay')
+		.html('')
+		.append($div)
+		.css({ opacity: 0, display: 'block' })
+		.animate({ opacity: 1 });
+	}
+
+	function hideOverlay()
+	{
+		$('.overlay').animate({ opacity: 0 }, function(){
+			$(this).hide();
+		});
+	}
+
+	function haveOverlay()
+	{
+		return $('.overlay').css('display') != 'none';
+	}
+
+	//
+	function formatLicense()
+	{
+		var text = document.head.childNodes[1].nodeValue;
+		var pos = text.search('LICENSE');
+		var qos = text.search('Software:');
+		var bulk;
+
+		bulk = text.substr(pos, qos-pos);
+		bulk = bulk.replace(/([^\n])\n\t/g, '$1 ');
+		bulk = bulk.replace(/\n\n\t/g, '\n\n');
+		bulk = bulk.replace(/([A-Z ]{7,})/g, '<u>$1</u>');
+
+		//
+		var c1 = [];
+		var c2 = [];
+
+		text.substr(qos).trim().split('\n').forEach(function(line){
+			line = line.split(':');
+			c1.push( line[0].trim() + ':' );
+			c2.push( line[1].trim() );
+		});
+
+		bulk += '<span>' + c1.join('<br>') + '</span>';
+		bulk += '<span>' + c2.join('<br>') + '</span>';
+
+		//
+		var links =
+		[
+			{ text: '2-clause BSD license', href: 'https://opensource.org/licenses/BSD-2-Clause/' },
+			{ text: 'Commons Clause',       href: 'https://commonsclause.com/' }
+		];
+
+		links.forEach(function(l){
+			bulk = bulk.replace(l.text, '<a href="' + l.href + '" target=_blank>' + l.text + '</a>');
+		});
+
+		return bulk.trim();
+	}
+
+	//
+	function setRevealState(ev)
+	{
+		var raw = ev.originalEvent;
+		var caps = raw.getModifierState && raw.getModifierState( 'CapsLock' );
+
+		if (caps) $('body').addClass('reveal');
+		else      $('body').removeClass('reveal');
+	}
+
+	function handleTab(ev)
+	{
+		var $this = $(this);
+		var $note = $this.closest('.note');
+		var $sibl = ev.shiftKey ? $note.prev() : $note.next();
+
+		if ($sibl.length)
+		{
+			stopEditing($this, false);
+			$sibl.find('.text').click();
+		}
+	}
+
+	//
+	function adjustLayout()
+	{
+		var $body = $('body');
+		var $board = $('.board');
+
+		if (! $board.length)
+			return;
+
+		var lists = $board.find('.list').length;
+		var lists_w = (lists < 2) ? 250 : 260 * lists - 10;
+		var body_w = $body.width();
+
+		if (lists_w + 190 <= body_w)
+		{
+			$board.css('max-width', '');
+			$body.removeClass('crowded');
+		}
+		else
+		{
+			var max = Math.floor( (body_w - 40) / 260 );
+			max = (max < 2) ? 250 : 260 * max - 10;
+			$board.css('max-width', max + 'px');
+			$body.addClass('crowded');
+		}
+	}
+
+	//
+	function adjustListScroller()
+	{
+		var $board = $('.board');
+		if (! $board.length)
+			return;
+
+		var $lists    = $('.board .lists');
+		var $scroller = $('.board .lists-scroller');
+		var $inner    = $scroller.find('div');
+
+		var max  = $board.width();
+		var want = $lists[0].scrollWidth;
+		var have = $inner.width();
+
+		if (want <= max)
+		{
+			$scroller.hide();
+			return;
+		}
+
+		$scroller.show();
+		if (want == have)
+			return;
+
+		$inner.width(want);
+		cloneScrollPos($lists, $scroller);
+	}
+
+	//
+	function cloneScrollPos($src, $dst)
+	{
+		var src = $src[0];
+		var dst = $dst[0];
+
+		if (src._busyScrolling)
+		{
+			src._busyScrolling--;
+			return;
+		}
+
+		dst._busyScrolling++;
+		dst.scrollLeft = src.scrollLeft;
+	}
+
+	function setupListScrolling()
+	{
+		var $lists    = $('.board .lists');
+		var $scroller = $('.board .lists-scroller');
+
+		adjustListScroller();
+
+		$lists[0]._busyScrolling = 0;
+		$scroller[0]._busyScrolling = 0;
+
+		$scroller.on('scroll', function(){ cloneScrollPos($scroller, $lists); });
+		$lists   .on('scroll', function(){ cloneScrollPos($lists, $scroller); });
+
+		adjustLayout();
+	}
+
+	/*
+	 *	this should *really* be in a separate file
 	 */
 	function Drag()
 	{
@@ -2156,7 +2418,7 @@
 			$have.animate({ height: 0 }, 'fast', function(){
 				$have.remove();
 				$want.css({ marginTop: 5 });
-				saveBoard();
+//				saveBoard();
 			});
 
 			$want.css({ display: 'block', height: 0, marginTop: 0 });
@@ -2206,149 +2468,11 @@
 	}
 
 	/*
-	 *
+	 *	UI
 	 */
-	function peekBoardTitle(board_id)
-	{
-		var revision = localStorage.getItem('nullboard.board.' + board_id);
-		if (! revision)
-			return false;
-
-		var blob = localStorage.getItem('nullboard.board.' + board_id + '.' + revision);
-		if (! blob)
-			return false;
-
-		var head = blob.indexOf(',"lists":\[{"');
-		var peek = (head != -1) ? blob.substring(0, head) + '}' : blob;
-
-		try { peek = JSON.parse(peek); } catch(x) { return false; }
-
-		return peek && peek.title;
-	}
-
-	function updateBoardIndex()
-	{
-		var $index  = $('.config .boards');
-		var $export = $('.config .exp-board');
-		var $entry  = $('tt .load-board');
-
-		var $board = $('.wrap .board');
-		var id_now = document.board && document.board.id;
-		var empty = true;
-
-		$index.html('');
-		$index.hide();
-
-		for (var i=0; i<localStorage.length; i++)
-		{
-			var k = localStorage.key(i);
-			var m = k.match(/^nullboard\.board\.(\d+)$/);
-			if (! m)
-				continue;
-
-			var board_id = m[1];
-			var title = peekBoardTitle(board_id);
-			if (title === false)
-				continue;
-
-			var $e = $entry.clone();
-			$e[0].board_id = board_id;
-			$e.html( title || '(unnamed board)' );
-
-			if (board_id == id_now)
-				$e.addClass('active');
-
-			$index.append($e);
-			empty = false;
-		}
-
-		if (id_now) $export.show();
-		else        $export.hide();
-
-		if (! empty) $index.show();
-	}
+	document.nb.drag = new Drag(),
 
 	//
-	function showDing()
-	{
-		$('body')
-		.addClass('ding')
-		.delay(100)
-		.queue(function(){ $(this).removeClass('ding').dequeue(); });
-	}
-
-	//
-	function showOverlay($overlay, $div)
-	{
-		$overlay
-		.html('')
-		.append($div)
-		.css({ opacity: 0, display: 'block' })
-		.animate({ opacity: 1 });
-	}
-
-	function hideOverlay($overlay)
-	{
-		$overlay.animate({ opacity: 0 }, function(){
-			$overlay.hide();
-		});
-	}
-
-	//
-	function formatLicense()
-	{
-		var text = document.head.childNodes[1].nodeValue;
-		var pos = text.search('LICENSE');
-		var qos = text.search('Software:');
-		var bulk;
-
-		bulk = text.substr(pos, qos-pos);
-		bulk = bulk.replace(/([^\n])\n\t/g, '$1 ');
-		bulk = bulk.replace(/\n\n\t/g, '\n\n');
-		bulk = bulk.replace(/([A-Z ]{7,})/g, '<u>$1</u>');
-
-		//
-		var c1 = [];
-		var c2 = [];
-
-		text.substr(qos).trim().split('\n').forEach(function(line){
-			line = line.split(':');
-			c1.push( line[0].trim() + ':' );
-			c2.push( line[1].trim() );
-		});
-
-		bulk += '<span>' + c1.join('<br>') + '</span>';
-		bulk += '<span>' + c2.join('<br>') + '</span>';
-
-		//
-		var links =
-		[
-			{ text: '2-clause BSD license', href: 'https://opensource.org/licenses/BSD-2-Clause/' },
-			{ text: 'Commons Clause',       href: 'https://commonsclause.com/' }
-		];
-
-		links.forEach(function(l){
-			bulk = bulk.replace(l.text, '<a href="' + l.href + '" target=_blank>' + l.text + '</a>');
-		});
-
-		return bulk.trim();
-	}
-
-	/*
-	 *
-	 */
-	var drag = new Drag();
-
-	//
-	function setRevealState(ev)
-	{
-		var raw = ev.originalEvent;
-		var caps = raw.getModifierState && raw.getModifierState( 'CapsLock' );
-
-		if (caps) $('body').addClass('reveal');
-		else      $('body').removeClass('reveal');
-	}
-
 	$(window).on('blur', function(){
 		$('body').removeClass('reveal');
 	});
@@ -2389,7 +2513,7 @@
 			return false;
 		}
 
-		drag.cancelPriming();
+		document.nb.drag.cancelPriming();
 
 		startEditing($(this), ev);
 		return false;
@@ -2405,19 +2529,6 @@
 	});
 
 	//
-	function handleTab(ev)
-	{
-		var $this = $(this);
-		var $note = $this.closest('.note');
-		var $sibl = ev.shiftKey ? $note.prev() : $note.next();
-
-		if ($sibl.length)
-		{
-			stopEditing($this, false);
-			$sibl.find('.text').click();
-		}
-	}
-
 	$('.wrap').on('keydown', '.board .edit', function(ev){
 
 		var isNote = (this.tagName == 'TEXTAREA');
@@ -2542,7 +2653,8 @@
 	$('.config').on('click', '.load-board', function(){
 
 		var board_id = $(this)[0].board_id;
-		if ((document.board && document.board.id) == board_id)
+
+		if (document.nb.board && (document.nb.board.id == board_id))
 			closeBoard();
 		else
 			openBoard( $(this)[0].board_id );
@@ -2611,16 +2723,16 @@
 
 	//
 	$('.wrap').on('mousedown', '.board .note .text', function(ev){
-		drag.prime(this, ev);
+		document.nb.drag.prime(this, ev);
 	});
 
 	$(document).on('mouseup', function(ev){
-		drag.end();
+		document.nb.drag.end();
 	});
 
 	$(document).on('mousemove', function(ev){
 		setRevealState(ev);
-		drag.onMouseMove(ev);
+		document.nb.drag.onMouseMove(ev);
 	});
 
 	//
@@ -2638,7 +2750,7 @@
 	});
 
 	$('.config').on('click', '.exp-board', function(){
-		var board = document.board;
+		var board = document.nb.board;
 		var revision = localStorage.getItem('nullboard.board.' + board.id);
 		if (! revision)
 			return false;
@@ -2672,24 +2784,22 @@
 	});
 
 	//
-	var $overlay = $('.overlay');
-
-	$overlay.click(function(ev){
+	$('.overlay').click(function(ev){
 		if (ev.originalEvent.target != this)
 			return true;
-		hideOverlay($overlay);
+		hideOverlay();
 		return false;
 	});
 
 	$(window).keydown(function(ev){
-		if ($overlay.css('display') != 'none' && ev.keyCode == 27)
-			hideOverlay($overlay);
+		if (haveOverlay() && ev.keyCode == 27)
+			hideOverlay();
 	});
 
 	$('.view-about').click(function(){
 		var $div = $('tt .about').clone();
 		$div.find('div').html('Version ' + nb_codeVersion);
-		showOverlay($overlay, $div);
+		showOverlay($div);
 		return false;
 	});
 
@@ -2697,100 +2807,19 @@
 
 		var $div = $('tt .license').clone();
 		$div.html(formatLicense());
-		showOverlay($overlay, $div);
+		showOverlay($div);
 		return false;
 	});
 
 	//
-	function adjustLayout()
-	{
-		var $body = $('body');
-		var $board = $('.board');
-
-		if (! $board.length)
-			return;
-
-		var lists = $board.find('.list').length;
-		var lists_w = (lists < 2) ? 250 : 260 * lists - 10;
-		var body_w = $body.width();
-
-		if (lists_w + 190 <= body_w)
-		{
-			$board.css('max-width', '');
-			$body.removeClass('crowded');
-		}
-		else
-		{
-			var max = Math.floor( (body_w - 40) / 260 );
-			max = (max < 2) ? 250 : 260 * max - 10;
-			$board.css('max-width', max + 'px');
-			$body.addClass('crowded');
-		}
-	}
-
 	$(window).resize(adjustLayout);
 
-	adjustLayout();
-
-	//
-	function adjustListScroller()
+	/*
+	 *	the init()
+	 */
+	if (typeof(localStorage) === "undefined")
 	{
-		var $board = $('.board');
-		if (! $board.length)
-			return;
-
-		var $lists    = $('.board .lists');
-		var $scroller = $('.board .lists-scroller');
-		var $inner    = $scroller.find('div');
-
-		var max  = $board.width();
-		var want = $lists[0].scrollWidth;
-		var have = $inner.width();
-
-		if (want <= max)
-		{
-			$scroller.hide();
-			return;
-		}
-
-		$scroller.show();
-		if (want == have)
-			return;
-
-		$inner.width(want);
-		cloneScrollPos($lists, $scroller);
-	}
-
-	//
-	function cloneScrollPos($src, $dst)
-	{
-		var src = $src[0];
-		var dst = $dst[0];
-
-		if (src._busyScrolling)
-		{
-			src._busyScrolling--;
-			return;
-		}
-
-		dst._busyScrolling++;
-		dst.scrollLeft = src.scrollLeft;
-	}
-
-	function setupListScrolling()
-	{
-		var $lists    = $('.board .lists');
-		var $scroller = $('.board .lists-scroller');
-
-		adjustListScroller();
-
-		$lists[0]._busyScrolling = 0;
-		$scroller[0]._busyScrolling = 0;
-
-		$scroller.on('scroll', function(){ cloneScrollPos($scroller, $lists); });
-		$lists   .on('scroll', function(){ cloneScrollPos($lists, $scroller); });
-
-		adjustLayout();
+		alert('Hmmm... no "localStorage" support');
 	}
 
 	//
@@ -2804,18 +2833,21 @@
 	var board_id = localStorage.getItem('nullboard.last_board');
 
 	if (board_id)
-		document.board = loadBoard(board_id);
+		document.nb.board = loadBoard(board_id);
+
+	//
+	adjustLayout();
 
 	updateBoardIndex();
 
-	if (! document.board && ! $('.config .load-board').length)
+	if (! document.nb.board && ! $('.config .load-board').length)
 	{
 		var demo_id = createDemoBoard();
-		document.board = loadBoard(demo_id);
+		document.nb.board = loadBoard(demo_id);
 		updateBoardIndex();
 	}
 
-	if (document.board)
+	if (document.nb.board)
 	{
 		showBoard(true);
 	}
