@@ -1584,7 +1584,7 @@
 		localStorage.setItem('nullboard.board.' + demo.id, demo.revision);
 		localStorage.setItem('nullboard.last_board', demo.id);
 
-		return demo.id;
+		return demo;
 	}
 
 	/*
@@ -2484,12 +2484,11 @@
 		}
 	}
 
+	document.nb.drag = new Drag(),
+
 	/*
 	 *	UI
 	 */
-	document.nb.drag = new Drag(),
-
-	//
 	$(window).on('blur', function(){
 		$('body').removeClass('reveal');
 	});
@@ -2835,9 +2834,7 @@
 	 *	the init()
 	 */
 	if (typeof(localStorage) === "undefined")
-	{
 		alert('Hmmm... no "localStorage" support');
-	}
 
 	//
 	if (localStorage.getItem('nullboard.theme') == 'dark')
@@ -2858,16 +2855,11 @@
 	updateBoardIndex();
 
 	if (! document.nb.board && ! $('.config .load-board').length)
-	{
-		var demo_id = createDemoBoard();
-		document.nb.board = loadBoard(demo_id);
-		updateBoardIndex();
-	}
+		document.nb.board = createDemoBoard();
 
 	if (document.nb.board)
-	{
 		showBoard(true);
-	}
+
 
 	//
 	setInterval(adjustListScroller, 100);
