@@ -1388,7 +1388,7 @@
 			return Object.assign(new Board(), board);
 		}
 
-		nukeBoard(board_id, revision)
+		nukeBoard(board_id)
 		{
 			var meta = this.boardIndex.get(board_id);
 
@@ -1397,29 +1397,13 @@
 
 			var title = meta.title + '';
 
-			if (revision != null)
-			{
-				var i = meta.history.indexOf(revision);
-				if (i == -1)
-					return false;
+			for (var rev of meta.history)
+				this.delItem('board.' + board_id + '.' + rev);
 
+			this.delItem('board.' + board_id + '.meta');
+			this.boardIndex.delete(board_id);
 
-				meta.history.splice(i, 1);
-				this.setJson('board.' + board_id + '.meta', meta);
-				this.delItem('board.' + board_id + '.' + revision);
-
-				console.log( `Deleted revision ${revision} of ${board_id} (${title}) #` );
-			}
-			else
-			{
-				for (var rev of meta.history)
-					this.delItem('board.' + board_id + '.' + rev);
-
-				this.delItem('board.' + board_id + '.meta');
-				this.boardIndex.delete(board_id);
-
-				console.log( `Deleted board ${board_id} (${title})` );
-			}
+			console.log( `Deleted board ${board_id} (${title})` );
 		}
 
 		getBoardHistory(board_id)
@@ -1998,234 +1982,7 @@
 	});
 
 	/*
-	 *	html ops
-	 */
-	function htmlEncode(raw)
-	{
-		return $('tt .encoder').text(raw).html();
-	}
-
-//	function htmlDecode(enc)
-//	{
-//		return $('tt .encoder').html(enc).text();
-//	}
-
-	function setText($note, text)
-	{
-		$note.attr('_text', text);
-
-		text = htmlEncode(text);
-                hmmm = /\b(https?:\/\/[^\s]+)/mg;
-
-		text = text.replace(hmmm, function(url){
-			return '<a href="' + url + '" target=_blank>' + url + '</a>';
-		});
-
-		$note.html(text);
-	}
-
-	function getText($note)
-	{
-		return $note.attr('_text');
-	}
-
-	/*
-	 *	board ops - save/load/parse/peek/nuke/import
-	 */
-	function saveBoard()
-	{
-		var $board = $('.wrap .board');
-		var board = Object.assign({}, NB.board); // id, revision & title
-
-		board.lists = [];
-
-		$board.find('.list').each(function(){
-			var $list = $(this);
-			var l = board.addList( getText($list.find('.head .text')) );
-
-			$list.find('.note').each(function(){
-				var $note = $(this)
-				var n = l.addNote( getText($note.find('.text')) );
-				n.raw = $note.hasClass('raw');
-				n.min = $note.hasClass('collapsed');
-			});
-		});
-
-		NB.storage.saveBoard(board);
-		NB.board = board;
-
-		updateUndoRedo();
-		updateBoardIndex();
-	}
-
-	function nukeBoard()
-	{
-		NB.storage.nukeBoard(NB.board.id, null);
-	}
-
-	/*
-	 *	export / import
-	 */
-	function exportBoard()
-	{
-		var blob, file;
-
-		if (! NB.board)
-		{
-			var index = NB.storage.getBoardIndex();
-			var all = [];
-
-			boards.forEach(function(meta, board_id){
-				all.push( NB.storage.loadBoard(board_id, null) );
-			})
-
-			blob = JSON.stringify(all);
-			file = `Nullboard.nbx`;
-		}
-		else
-		{
-			var board = NB.board;
-			blob = JSON.stringify(board);
-			file = `Nullboard-${board.id}-${board.title}.nbx`;
-		}
-
-		blob = encodeURIComponent(blob);
-		blob = "data:application/octet-stream," + blob;
-
-		return { blob: blob, file: file };
-	}
-
-	function checkBoard(foo)
-	{
-		var props = [ 'format', 'id', 'revision', 'title', 'lists' ];
-
-		for (var i=0; i<props.length; i++)
-			if (! foo.hasOwnProperty(props[i]))
-				return "Required board properties are missing.";
-
-		if (! foo.id || ! foo.revision || ! Array.isArray(foo.lists))
-			return "Required board properties are empty.";
-
-		if (foo.format != NB.blobVersion)
-			return `Unsupported blob format "${board.format}", expecting "${NB.blobVersion}".`;
-
-		return null;
-	}
-
-	function importBoard(blob)
-	{
-		var data;
-
-		try
-		{
-			data = JSON.parse(blob);
-		}
-		catch (x)
-		{
-			alert('File is not in a valid JSON format.');
-			return false;
-		}
-
-		if (! Array.isArray(data))
-			data = [ data ];
-
-		var index = NB.storage.getBoardIndex();
-		var msg, one, all = '';
-
-		for (var i=0; i<data.length; i++)
-		{
-			var board = data[i];
-
-			var whoops = checkBoard(board);
-			if (whoops)
-			{
-				alert(whoops);
-				return false;
-			}
-
-			var title = board.title || '(untitled board)';
-			one =  `"${title}", ID ${board.id}, revision ${board.revision}`;
-			all += `    ID ${board.id}, revision ${board.revision} - "${title}"    \n`;
-		}
-
-		if (data.length == 1) msg = `Import a board called ${one} ?`;
-		else                  msg = `About to import the following boards:\n\n${all}\nProceed?`;
-
-		if (! confirm(msg))
-			return false;
-
-		for (var i=0; i<data.length; i++)
-		{
-			var board = data[i];
-
-			if (index.has(board.id))
-			{
-				console.log(`Import: board ${board.id} (${board.title}) will be assigned new ID`);
-				board.id = +new Date();
-			}
-
-			board.revision--; // save will ++ it back
-
-			if (! NB.storage.saveBoard(board)) // this updates 'index'
-			{
-				alert(`Failed to save board ${board.id}. Import failed.`);
-				return false;
-			}
-		}
-
-		openBoard(data[0].id);
-	}
-
-	//
-	function createDemoBoard()
-	{
-		var blob =
-			'{"format":20190412,"id":1555071015420,"revision":581,"title":"Welcome to Nullboard","lists":[{"title":"The Use' +
-			'r Manual","notes":[{"text":"This is a note.\\nA column of notes is a list.\\nA set of lists is a board.","raw"' +
-			':false,"min":false},{"text":"All data is saved locally.\\nThe whole thing works completely offline.","raw":fal' +
-			'se,"min":false},{"text":"Last 50 board revisions are retained.","raw":false,"min":false},{"text":"Ctrl-Z is Un' +
-			'do  -  goes one revision back.\\nCtrl-Y is Redo  -  goes one revision forward.","raw":false,"min":false},{"tex' +
-			't":"Caveats","raw":true,"min":false},{"text":"Desktop-oriented.\\nMobile support is basically untested.","raw"' +
-			':false,"min":false},{"text":"Works in Firefox, Chrome is supported.\\nShould work in Safari, may work in Edge.' +
-			'","raw":false,"min":false},{"text":"Still very much in beta. Caveat emptor.","raw":false,"min":false},{"text":' +
-			'"Issues and suggestions","raw":true,"min":false},{"text":"Post them on Github.\\nSee \\"Nullboard\\" at the to' +
-			'p left for the link.","raw":false,"min":false}]},{"title":"Things to try","notes":[{"text":"\u2022   Click on ' +
-			'a note to edit.","raw":false,"min":false},{"text":"\u2022   Click outside of it when done editing.\\n\u2022   ' +
-			'Alternatively, use Shift-Enter.","raw":false,"min":false},{"text":"\u2022   To discard changes press Escape.",' +
-			'"raw":false,"min":false},{"text":"\u2022   Try Ctrl-Enter, see what it does.\\n\u2022   Try Ctrl-Shift-Enter t' +
-			'oo.","raw":false,"min":false},{"text":"\u2022   Hover over a note to show its  \u2261  menu.\\n\u2022   Hover ' +
-			'over  \u2261  to reveal the options.","raw":false,"min":false},{"text":"\u2022   X  deletes the note.\\n\u2022' +
-			'   R changes how a note looks.\\n\u2022   _  collapses the note.","raw":false,"min":false},{"text":"This is a ' +
-			'raw note.","raw":true,"min":false},{"text":"This is a collapsed note. Only its first line is visible. Useful f' +
-			'or keeping lists compact.","raw":false,"min":true}, {"text":"Links","raw":true,"min":false}, {"text":"Links pu' +
-			'lse on hover and can be opened via the right-click menu  -  https://nullboard.io","raw":false,"min":false}, {"tex' +
-			't":"Pressing CapsLock highlights all links and makes them left-clickable.","raw":false,"min":false}]},{"title"' +
-			':"More things to try","notes":[{"text":"\u2022   Drag notes around to rearrange.\\n\u2022   Works between the ' +
-			'lists too.","raw":false,"min":false},{"text":"\u2022   Click on a list name to edit.\\n\u2022   Enter to save,' +
-			' Esc to cancel.","raw":false,"min":false},{"text":"\u2022   Try adding a new list.\\n\u2022   Try deleting one' +
-			'. This  _can_  be undone.","raw":false,"min":false},{"text":"\u2022   Same for the board name.","raw":false,"m' +
-			'in":false},{"text":"Boards","raw":true,"min":false},{"text":"\u2022   Check out   \u2261   at the top right.",' +
-			'"raw":false,"min":false},{"text":"\u2022   Try adding a new board.\\n\u2022   Try switching between the boards' +
-			'.","raw":false,"min":false},{"text":"\u2022   Try deleting a board. Unlike deleting a\\n     list this  _canno' +
-			't_  be undone.","raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' +
-			'\u2022   Import the board   (load from a save)","raw":false,"min":false}]}]}';
-
-		var demo = JSON.parse(blob);
-
-		if (! demo)
-			return false;
-
-		demo.id = +new Date();
-		demo.revision = 0;
-
-		NB.storage.saveBoard(demo);
-		NB.storage.setActiveBoard(demo.id);
-
-		return Object.assign(new Board(), demo);
-	}
-
-	/*
-	 *
+	 *	notes / lists / boards
 	 */
 	function addNote($list, $after, $before)
 	{
@@ -2264,6 +2021,14 @@
 			$note.remove();
 			saveBoard();
 		});
+	}
+
+	function noteLocation($item)
+	{
+		var loc = 0;
+		for (var $p = $item.closest('.note'); $p.length; $p = $p.prev(), loc += 1);
+		for (var $p = $item.closest('.list'); $p.length; $p = $p.prev(), loc += 10000);
+		return loc;
 	}
 
 	//
@@ -2402,6 +2167,32 @@
 		$('.wrap .board .head .text').click();
 	}
 
+	function saveBoard()
+	{
+		var $board = $('.wrap .board');
+		var board = Object.assign({}, NB.board); // id, revision & title
+
+		board.lists = [];
+
+		$board.find('.list').each(function(){
+			var $list = $(this);
+			var l = board.addList( getText($list.find('.head .text')) );
+
+			$list.find('.note').each(function(){
+				var $note = $(this)
+				var n = l.addNote( getText($note.find('.text')) );
+				n.raw = $note.hasClass('raw');
+				n.min = $note.hasClass('collapsed');
+			});
+		});
+
+		NB.storage.saveBoard(board);
+		NB.board = board;
+
+		updateUndoRedo();
+		updateBoardIndex();
+	}
+
 	function deleteBoard()
 	{
 		var $list = $('.wrap .board .list');
@@ -2409,7 +2200,8 @@
 		if ($list.length && ! confirm("PERMANENTLY delete this board, all its lists and their notes?"))
 			return;
 
-		nukeBoard();
+		NB.storage.nukeBoard(NB.board.id);
+
 		closeBoard();
 	}
 
@@ -2513,6 +2305,169 @@
 	}
 
 	/*
+	 *	demo board
+	 */
+	function createDemoBoard()
+	{
+		var blob =
+			'{"format":20190412,"id":1555071015420,"revision":581,"title":"Welcome to Nullboard","lists":[{"title":"The Use' +
+			'r Manual","notes":[{"text":"This is a note.\\nA column of notes is a list.\\nA set of lists is a board.","raw"' +
+			':false,"min":false},{"text":"All data is saved locally.\\nThe whole thing works completely offline.","raw":fal' +
+			'se,"min":false},{"text":"Last 50 board revisions are retained.","raw":false,"min":false},{"text":"Ctrl-Z is Un' +
+			'do  -  goes one revision back.\\nCtrl-Y is Redo  -  goes one revision forward.","raw":false,"min":false},{"tex' +
+			't":"Caveats","raw":true,"min":false},{"text":"Desktop-oriented.\\nMobile support is basically untested.","raw"' +
+			':false,"min":false},{"text":"Works in Firefox, Chrome is supported.\\nShould work in Safari, may work in Edge.' +
+			'","raw":false,"min":false},{"text":"Still very much in beta. Caveat emptor.","raw":false,"min":false},{"text":' +
+			'"Issues and suggestions","raw":true,"min":false},{"text":"Post them on Github.\\nSee \\"Nullboard\\" at the to' +
+			'p left for the link.","raw":false,"min":false}]},{"title":"Things to try","notes":[{"text":"\u2022   Click on ' +
+			'a note to edit.","raw":false,"min":false},{"text":"\u2022   Click outside of it when done editing.\\n\u2022   ' +
+			'Alternatively, use Shift-Enter.","raw":false,"min":false},{"text":"\u2022   To discard changes press Escape.",' +
+			'"raw":false,"min":false},{"text":"\u2022   Try Ctrl-Enter, see what it does.\\n\u2022   Try Ctrl-Shift-Enter t' +
+			'oo.","raw":false,"min":false},{"text":"\u2022   Hover over a note to show its  \u2261  menu.\\n\u2022   Hover ' +
+			'over  \u2261  to reveal the options.","raw":false,"min":false},{"text":"\u2022   X  deletes the note.\\n\u2022' +
+			'   R changes how a note looks.\\n\u2022   _  collapses the note.","raw":false,"min":false},{"text":"This is a ' +
+			'raw note.","raw":true,"min":false},{"text":"This is a collapsed note. Only its first line is visible. Useful f' +
+			'or keeping lists compact.","raw":false,"min":true}, {"text":"Links","raw":true,"min":false}, {"text":"Links pu' +
+			'lse on hover and can be opened via the right-click menu  -  https://nullboard.io","raw":false,"min":false}, {"tex' +
+			't":"Pressing CapsLock highlights all links and makes them left-clickable.","raw":false,"min":false}]},{"title"' +
+			':"More things to try","notes":[{"text":"\u2022   Drag notes around to rearrange.\\n\u2022   Works between the ' +
+			'lists too.","raw":false,"min":false},{"text":"\u2022   Click on a list name to edit.\\n\u2022   Enter to save,' +
+			' Esc to cancel.","raw":false,"min":false},{"text":"\u2022   Try adding a new list.\\n\u2022   Try deleting one' +
+			'. This  _can_  be undone.","raw":false,"min":false},{"text":"\u2022   Same for the board name.","raw":false,"m' +
+			'in":false},{"text":"Boards","raw":true,"min":false},{"text":"\u2022   Check out   \u2261   at the top right.",' +
+			'"raw":false,"min":false},{"text":"\u2022   Try adding a new board.\\n\u2022   Try switching between the boards' +
+			'.","raw":false,"min":false},{"text":"\u2022   Try deleting a board. Unlike deleting a\\n     list this  _canno' +
+			't_  be undone.","raw":false,"min":false},{"text":"\u2022   Export the board   (save to a file, as json)\\n' +
+			'\u2022   Import the board   (load from a save)","raw":false,"min":false}]}]}';
+
+		var demo = JSON.parse(blob);
+
+		if (! demo)
+			return false;
+
+		demo.id = +new Date();
+		demo.revision = 0;
+
+		NB.storage.saveBoard(demo);
+		NB.storage.setActiveBoard(demo.id);
+
+		return Object.assign(new Board(), demo);
+	}
+
+	/*
+	 *	board export / import
+	 */
+	function exportBoard()
+	{
+		var blob, file;
+
+		if (! NB.board)
+		{
+			var index = NB.storage.getBoardIndex();
+			var all = [];
+
+			boards.forEach(function(meta, board_id){
+				all.push( NB.storage.loadBoard(board_id, null) );
+			})
+
+			blob = JSON.stringify(all);
+			file = `Nullboard.nbx`;
+		}
+		else
+		{
+			var board = NB.board;
+			blob = JSON.stringify(board);
+			file = `Nullboard-${board.id}-${board.title}.nbx`;
+		}
+
+		blob = encodeURIComponent(blob);
+		blob = "data:application/octet-stream," + blob;
+
+		return { blob: blob, file: file };
+	}
+
+	function checkImport(foo)
+	{
+		var props = [ 'format', 'id', 'revision', 'title', 'lists' ];
+
+		for (var i=0; i<props.length; i++)
+			if (! foo.hasOwnProperty(props[i]))
+				return "Required board properties are missing.";
+
+		if (! foo.id || ! foo.revision || ! Array.isArray(foo.lists))
+			return "Required board properties are empty.";
+
+		if (foo.format != NB.blobVersion)
+			return `Unsupported blob format "${board.format}", expecting "${NB.blobVersion}".`;
+
+		return null;
+	}
+
+	function importBoard(blob)
+	{
+		var data;
+
+		try
+		{
+			data = JSON.parse(blob);
+		}
+		catch (x)
+		{
+			alert('File is not in a valid JSON format.');
+			return false;
+		}
+
+		if (! Array.isArray(data))
+			data = [ data ];
+
+		var index = NB.storage.getBoardIndex();
+		var msg, one, all = '';
+
+		for (var i=0; i<data.length; i++)
+		{
+			var board = data[i];
+
+			var whoops = checkImport(board);
+			if (whoops)
+			{
+				alert(whoops);
+				return false;
+			}
+
+			var title = board.title || '(untitled board)';
+			one =  `"${title}", ID ${board.id}, revision ${board.revision}`;
+			all += `    ID ${board.id}, revision ${board.revision} - "${title}"    \n`;
+		}
+
+		if (data.length == 1) msg = `Import a board called ${one} ?`;
+		else                  msg = `About to import the following boards:\n\n${all}\nProceed?`;
+
+		if (! confirm(msg))
+			return false;
+
+		for (var i=0; i<data.length; i++)
+		{
+			var board = data[i];
+
+			if (index.has(board.id))
+			{
+				console.log(`Import: board ${board.id} (${board.title}) will be assigned new ID`);
+				board.id = +new Date();
+			}
+
+			board.revision--; // save will ++ it back
+
+			if (! NB.storage.saveBoard(board)) // this updates 'index'
+			{
+				alert(`Failed to save board ${board.id}. Import failed.`);
+				return false;
+			}
+		}
+
+		openBoard(data[0].id);
+	}
+
+	/*
 	 *
 	 */
 	function updatePageTitle()
@@ -2591,7 +2546,34 @@
 	}
 
 	/*
-	 *
+	 *	generic utils
+	 */
+	function htmlEncode(raw)
+	{
+		return $('tt .encoder').text(raw).html();
+	}
+
+	function setText($note, text)
+	{
+		$note.attr('_text', text);
+
+		text = htmlEncode(text);
+                hmmm = /\b(https?:\/\/[^\s]+)/mg;
+
+		text = text.replace(hmmm, function(url){
+			return '<a href="' + url + '" target=_blank>' + url + '</a>';
+		});
+
+		$note.html(text);
+	}
+
+	function getText($note)
+	{
+		return $note.attr('_text');
+	}
+
+	/*
+	 *	inline editing
 	 */
 	function startEditing($text, ev)
 	{
@@ -2656,6 +2638,29 @@
 			addNote($item);
 	}
 
+	function handleTab(ev)
+	{
+		var $this = $(this);
+		var $note = $this.closest('.note');
+		var $sibl = ev.shiftKey ? $note.prev() : $note.next();
+
+		if ($sibl.length)
+		{
+			stopEditing($this, false, false);
+			$sibl.find('.text').click();
+		}
+	}
+
+	//
+	function setRevealState(ev)
+	{
+		var raw = ev.originalEvent;
+		var caps = raw.getModifierState && raw.getModifierState( 'CapsLock' );
+
+		if (caps) $('body').addClass('reveal');
+		else      $('body').removeClass('reveal');
+	}
+
 	//
 	function showDing()
 	{
@@ -2665,7 +2670,9 @@
 		.queue(function(){ $(this).removeClass('ding').dequeue(); });
 	}
 
-	//
+	/*
+	 *	overlay
+	 */
 	function showOverlay($div)
 	{
 		$('.overlay')
@@ -2687,7 +2694,9 @@
 		return $('.overlay').css('display') != 'none';
 	}
 
-	//
+	/*
+	 *	license popup
+	 */
 	function formatLicense()
 	{
 		var text = document.head.childNodes[1].nodeValue;
@@ -2727,30 +2736,9 @@
 		return bulk.trim();
 	}
 
-	//
-	function setRevealState(ev)
-	{
-		var raw = ev.originalEvent;
-		var caps = raw.getModifierState && raw.getModifierState( 'CapsLock' );
-
-		if (caps) $('body').addClass('reveal');
-		else      $('body').removeClass('reveal');
-	}
-
-	function handleTab(ev)
-	{
-		var $this = $(this);
-		var $note = $this.closest('.note');
-		var $sibl = ev.shiftKey ? $note.prev() : $note.next();
-
-		if ($sibl.length)
-		{
-			stopEditing($this, false, false);
-			$sibl.find('.text').click();
-		}
-	}
-
-	//
+	/*
+	 *	adjust this and that
+	 */
 	function adjustLayout()
 	{
 		var $body = $('body');
@@ -2806,7 +2794,6 @@
 		cloneScrollPos($lists, $scroller);
 	}
 
-	//
 	function cloneScrollPos($src, $dst)
 	{
 		var src = $src[0];
@@ -2839,18 +2826,7 @@
 	}
 
 	/*
-	 *	this should *really* be in a separate file
-	 */
-	function noteLocation($item)
-	{
-		var loc = 0;
-		for (var $p = $item.closest('.note'); $p.length; $p = $p.prev(), loc += 1);
-		for (var $p = $item.closest('.list'); $p.length; $p = $p.prev(), loc += 10000);
-		return loc;
-	}
-
-	/*
-	 *	our stuff
+	 *	some global variables, fiiinally
 	 */
 	var NB =
 	{
@@ -2863,7 +2839,7 @@
 	NB.drag = new Drag(),
 
 	/*
-	 *	UI
+	 *	event handlers
 	 */
 	$(window).on('blur', function(){
 		$('body').removeClass('reveal');
@@ -3190,23 +3166,20 @@
 		return false;
 	});
 
-	//
 	$(window).resize(adjustLayout);
 
 	/*
 	 *	the init()
 	 */
-
 	if (! NB.storage.open())
 	{
-		alert("Failed to load minimal required data from the storage");
 		easyMartina = true;
 		throw new Error();
 	}
 
 	var boards = NB.storage.getBoardIndex();
 
-	boards.forEach(function(meta, board_id){
+	boards.forEach( function(meta, board_id) {
 		var hist = meta.history.join(', ');
 		console.log( `Found board ${board_id} - "${meta.title}", revision ${meta.current}, history [${hist}]` );
 	});
@@ -3232,6 +3205,7 @@
 
 	updateBoardIndex();
 
+	//
 	if (! NB.board && ! $('.config .load-board').length)
 		NB.board = createDemoBoard();
 
