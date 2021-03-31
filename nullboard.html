@@ -1129,9 +1129,9 @@
 			<div class=boards>
 				<!-- here'll be boards -->
 			</div>
-			<a href=# class=imp-board>Import board...</a>
+			<a href=# class=exp-board>Export current board...</a>
+			<a href=# class=imp-board>Import...</a>
 				<input class=imp-board-select type="file" accept=".nbx">
-			<a href=# class=exp-board>Export board...</a>
 			<a href="#" class="switch-theme">Use <i>light</i><b>dark</b> theme</a>
 			<a href="#" class="switch-fsize">Use <i>smaller</i><b>larger</b> font</a>
 		</div>
@@ -1328,7 +1328,7 @@
 
 				for (var rev of meta.history)
 				{
-					if ( (rev_old < rev && rev < rev_new) || (keep.length >= this.conf.max_undo) )
+					if ( (rev_old < rev && rev < rev_new) || (rebuild.length >= this.conf.max_undo) )
 					{
 						this.delItem('board.' + board.id + '.' + rev);
 						console.log( `Deleted revision ${rev} of ${board.id} (${board.title})` );
@@ -2063,6 +2063,38 @@
 		NB.storage.nukeBoard(NB.board.id, null);
 	}
 
+	/*
+	 *	export / import
+	 */
+	function exportBoard()
+	{
+		var blob, file;
+
+		if (! NB.board)
+		{
+			var index = NB.storage.getBoardIndex();
+			var all = [];
+
+			boards.forEach(function(meta, board_id){
+				all.push( NB.storage.loadBoard(board_id, null) );
+			})
+
+			blob = JSON.stringify(all);
+			file = `Nullboard.nbx`;
+		}
+		else
+		{
+			var board = NB.board;
+			blob = JSON.stringify(board);
+			file = `Nullboard-${board.id}-${board.title}.nbx`;
+		}
+
+		blob = encodeURIComponent(blob);
+		blob = "data:application/octet-stream," + blob;
+
+		return { blob: blob, file: file };
+	}
+
 	function checkBoard(foo)
 	{
 		var props = [ 'format', 'id', 'revision', 'title', 'lists' ];
@@ -2545,8 +2577,15 @@
 			empty = false;
 		});
 
-		if (id_now) $export.show();
-		else        $export.hide();
+		if (! empty)
+		{
+			if (id_now) $export.html('Export this board...').show();
+			else        $export.html('Export all boards...').show();
+		}
+		else
+		{
+			$export.hide();
+		}
 
 		if (! empty) $index.show();
 	}
@@ -3103,15 +3142,9 @@
 	});
 
 	$('.config').on('click', '.exp-board', function(){
-		var board = NB.board;
-		var blob = JSON.stringify(board);
-		var file = `Nullboard-${board.id}-${board.title}.nbx`;
-
-		blob = encodeURIComponent(blob);
-		blob = "data:application/octet-stream," + blob;
-
-		$(this).attr('href', blob);
-		$(this).attr('download', file);
+		var pack = exportBoard();
+		$(this).attr('href', pack.blob);
+		$(this).attr('download', pack.file);
 		return true;
 	});
 
