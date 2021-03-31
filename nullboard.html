@@ -1901,16 +1901,19 @@
 
 			drag.in_swap = true;
 
-			$have.animate({ height: 0 }, 'fast', function(){
-				$have.remove();
-				$want.css({ marginTop: 5 });
-			});
-
 			$want.css({ display: 'block', height: 0, marginTop: 0 });
-			$want.animate({ height: h }, 'fast', function(){
-				$want.css({ opacity: '', height: '' });
-				drag.in_swap = false;
-				drag.adjustDrag();
+
+			$want.animate({ height: h }, {
+				duration: 'fast',
+				progress: function() {
+					$have.height( h - $(this).height() );
+				},
+				complete: function() {
+					$have.remove();
+					$want.css({ marginTop: 5, opacity: '', height: '' });
+					drag.in_swap = false;
+					drag.adjustDrag();
+				}
 			});
 		}
 
