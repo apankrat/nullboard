@@ -1222,18 +1222,18 @@
 
 	function AppConfig()
 	{
-		this.format   = NB.dataVersion;
-		this.max_undo = 50;   // board revisions to keep
-		this.theme    = null; // default or 'dark'
-		this.fsize    = null; // default or 'z1'
-		this.board    = null; // active board
+		this.format   = NB.confVersion;
+		this.max_undo = 50;               // board revisions to keep
+		this.theme    = null;             // default or 'dark'
+		this.fsize    = null;             // default or 'z1'
+		this.board    = null;             // active board
 	}
 
 	function BoardMeta()
 	{
 		this.title   = '';
-		this.current = 1;    // revision
-		this.history = [ ];  // revision IDs
+		this.current = 1;                 // revision
+		this.history = [ ];               // revision IDs
 	}
 
 	class Storage
@@ -1295,46 +1295,52 @@
 			var meta = this.boardIndex.get(board.id);
 			var ok_data, ok_meta;
 
+			delete board.history; // remove temporarily
+
 			if (! meta)
 			{
+				board.revision = 1;
+
+				ok_data = this.setJson('board.' + board.id + '.' + board.revision, board);
+
 				meta = new BoardMeta();
-				meta.history = [ 0 ];
-				meta.current = 0;
+				meta.title   = board.title || '(Untitled board)';
+				meta.current = board.revision;
+				meta.history = [ board.revision ];
 
 				this.boardIndex.set(board.id, meta);
 			}
-
-			var rev_old = board.revision;
-			var rev_new = meta.history[0] + 1;
-
-			board.revision = rev_new;
-			delete board.history; // remove temporarily
-
-			ok_data = this.setJson('board.' + board.id + '.' + board.revision, board);
-
-			// update meta
-
-			meta.title   = board.title || '(Untitled board)';
-			meta.current = board.revision;
-
-			// trim revisions skipped over with undo, also cap revision count
-
-			var keep = [ rev_new ];
-
-			for (var rev of meta.history)
+			else
 			{
-				if ( ! rev || (rev_old < rev && rev < rev_new) || (keep.length >= this.conf.max_undo) )
-				{
-					this.delItem('board.' + board.id + '.' + rev);
-					console.log( `Deleted revision ${rev} of ${board.id} (${board.title})` );
-				}
-				else
-				{
-					keep.push(rev);
-				}
-			}
+				var rev_old = board.revision;
+				var rev_new = meta.history[0] + 1;
 
-			meta.history = keep;
+				board.revision = rev_new;
+
+				ok_data = this.setJson('board.' + board.id + '.' + board.revision, board);
+
+				meta.title   = board.title || '(Untitled board)';
+				meta.current = board.revision;
+
+				// trim revisions skipped over with undo and cap the revision count
+
+				var rebuild = [ board.revision ];
+
+				for (var rev of meta.history)
+				{
+					if ( (rev_old < rev && rev < rev_new) || (keep.length >= this.conf.max_undo) )
+					{
+						this.delItem('board.' + board.id + '.' + rev);
+						console.log( `Deleted revision ${rev} of ${board.id} (${board.title})` );
+					}
+					else
+					{
+						rebuild.push(rev);
+					}
+				}
+
+				meta.history = rebuild;
+			}
 
 			ok_meta = this.setJson('board.' + board.id + '.meta', meta);
 
@@ -1361,10 +1367,10 @@
 			if (! board)
 				return false;
 
-			if (board.format != NB.dataVersion)
+			if (board.format != NB.blobVersion)
 			{
 				console.log('Board ' + board_id + '/' + revision + ' format is unsupported');
-				console.log('Have [' + board.format + '], need [' + NB.dataVersion);
+				console.log('Have [' + board.format + '], need [' + NB.blobVersion);
 				return false;
 			}
 
@@ -1481,6 +1487,8 @@
 
 	class Storage_Local extends Storage
 	{
+		type = 'LocalStorage';
+
 		getItem(name)
 		{
 			return localStorage.getItem('nullboard.' + name);
@@ -1504,15 +1512,16 @@
 
 			this.conf = new AppConfig();
 
+			if (conf && (conf.format != NB.confVersion))
+			{
+				if (! confirm('Preferences are stored in an unsupported format. Reset them?'))
+					return false;
+
+				conf = null;
+			}
+
 			if (conf)
 			{
-				if (conf.format != NB.dataVersion)
-				{
-					alert('Saved data is from a different version of NB');
-					this.conf = null;
-					return false;
-				}
-
 				this.conf = conf;
 			}
 			else
@@ -1587,8 +1596,6 @@
 
 			this.conf = new AppConfig();
 			this.boardIndex = new Map();
-
-			this.type = 'LocalStorage';
 		}
 
 		/*
@@ -1676,7 +1683,7 @@
 
 	function Board(title)
 	{
-		this.format   = NB.dataVersion;
+		this.format   = NB.blobVersion;
 		this.id       = +new Date();
 		this.revision = 0;
 		this.title    = title || '';
@@ -1976,15 +1983,17 @@
 	/*
 	 *	poor man's error handling -- $fixme
 	 */
+	var easyMartina = false;
+
 	window.onerror = function(message, file, line, col, e){
 		var cb1;
-		alert("Error occurred: " + e.message);
+		if (! easyMartina) alert("Error occurred: " + e.message);
 		return false;
 	};
 
 	window.addEventListener("error", function(e) {
 		var cb2;
-		alert("Error occurred: " + e.error.message);
+		if (! easyMartina) alert("Error occurred: " + e.error.message);
 		return false;
 	});
 
@@ -2054,56 +2063,85 @@
 		NB.storage.nukeBoard(NB.board.id, null);
 	}
 
+	function checkBoard(foo)
+	{
+		var props = [ 'format', 'id', 'revision', 'title', 'lists' ];
+
+		for (var i=0; i<props.length; i++)
+			if (! foo.hasOwnProperty(props[i]))
+				return "Required board properties are missing.";
+
+		if (! foo.id || ! foo.revision || ! Array.isArray(foo.lists))
+			return "Required board properties are empty.";
+
+		if (foo.format != NB.blobVersion)
+			return `Unsupported blob format "${board.format}", expecting "${NB.blobVersion}".`;
+
+		return null;
+	}
+
 	function importBoard(blob)
 	{
-		var board;
+		var data;
 
 		try
 		{
-			board = JSON.parse(blob);
+			data = JSON.parse(blob);
 		}
 		catch (x)
 		{
-			alert('The file appears to be malformed');
+			alert('File is not in a valid JSON format.');
 			return false;
 		}
 
-		if (typeof board.format   === 'undefined' || ! board.format ||
-		    typeof board.revision === 'undefined' || ! board.revision)
-		{
-			alert("The file doesn't appear to be a Nullboard export");
-			return false;
-		}
-
-		if (board.format != NB.dataVersion &&
-		    board.format != 20190412)
-		{
-			console.log( `Unsupported file format - ${board.format}` );
-			return false;
-		}
-
-		if (! confirm( `Import board called "${board.title}", ID ${board.id}, revision ${board.revision} ?`))
-			return false;
+		if (! Array.isArray(data))
+			data = [ data ];
 
 		var index = NB.storage.getBoardIndex();
+		var msg, one, all = '';
 
-		if (index.has(board.id))
+		for (var i=0; i<data.length; i++)
 		{
-			if (! confirm("There is an existing board with the same ID. Import under a new ID ?"))
+			var board = data[i];
+
+			var whoops = checkBoard(board);
+			if (whoops)
+			{
+				alert(whoops);
 				return false;
+			}
 
-			board.id = +new Date();
+			var title = board.title || '(untitled board)';
+			one =  `"${title}", ID ${board.id}, revision ${board.revision}`;
+			all += `    ID ${board.id}, revision ${board.revision} - "${title}"    \n`;
 		}
 
-		board.revision--; // save will ++ it back
+		if (data.length == 1) msg = `Import a board called ${one} ?`;
+		else                  msg = `About to import the following boards:\n\n${all}\nProceed?`;
 
-		if (! NB.storage.saveBoard(board))
-		{
-			alert("Failed to save the board. Import failed.");
+		if (! confirm(msg))
 			return false;
+
+		for (var i=0; i<data.length; i++)
+		{
+			var board = data[i];
+
+			if (index.has(board.id))
+			{
+				console.log(`Import: board ${board.id} (${board.title}) will be assigned new ID`);
+				board.id = +new Date();
+			}
+
+			board.revision--; // save will ++ it back
+
+			if (! NB.storage.saveBoard(board)) // this updates 'index'
+			{
+				alert(`Failed to save board ${board.id}. Import failed.`);
+				return false;
+			}
 		}
 
-		openBoard(board.id);
+		openBoard(data[0].id);
 	}
 
 	//
@@ -2452,7 +2490,7 @@
 		if (NB.board)
 		{
 			title = NB.board.title;
-			title = 'NB - ' + (title || '(unnamed board)');
+			title = 'NB - ' + (title || '(untitled board)');
 		}
 
 		document.title = title;
@@ -2778,8 +2816,8 @@
 	var NB =
 	{
 		codeVersion: 20210330,
-		dataVersion: 20190412,
-		board: null
+		blobVersion: 20190412, // blobs compatible
+		board: null,
 	};
 
 	NB.storage = new Storage_Local();
@@ -3125,10 +3163,12 @@
 	/*
 	 *	the init()
 	 */
+
 	if (! NB.storage.open())
 	{
-		alert( `Failed to open storage (of ${NB.storage.type} type)` );
-		exit;
+		alert("Failed to load minimal required data from the storage");
+		easyMartina = true;
+		throw new Error();
 	}
 
 	var boards = NB.storage.getBoardIndex();
