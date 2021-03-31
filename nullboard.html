@@ -778,7 +778,7 @@
 		position: absolute;
 		bottom: -30px;
 		width: 240px;
-		color: #888;
+		color: #eee;
 	}
 
 	.overlay .about div span {
@@ -1130,7 +1130,7 @@
 				<!-- here'll be boards -->
 			</div>
 			<a href=# class=exp-board>Export current board...</a>
-			<a href=# class=imp-board>Import...</a>
+			<a href=# class=imp-board>Import boards...</a>
 				<input class=imp-board-select type="file" accept=".nbx">
 			<a href="#" class="switch-theme">Use <i>light</i><b>dark</b> theme</a>
 			<a href="#" class="switch-fsize">Use <i>smaller</i><b>larger</b> font</a>
@@ -2833,7 +2833,7 @@
 	 */
 	var NB =
 	{
-		codeVersion: 20210330,
+		codeVersion: 20210331,
 		blobVersion: 20190412, // blobs compatible
 		board: null,
 	};
@@ -3156,7 +3156,7 @@
 
 	$('.view-about').click(function(){
 		var $div = $('tt .about').clone();
-		$div.find('div').html('Version ' + nb_codeVersion);
+		$div.find('div').html(`Version ${NB.codeVersion}`);
 		showOverlay($div);
 		return false;
 	});
