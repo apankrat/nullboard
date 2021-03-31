@@ -1235,10 +1235,10 @@
 		var cb2;
 		alert("Error occurred: " + e.error.message);
 		return false;
-	})
+	});
 
 	/*
-	 *
+	 *	data
 	 */
 	function Note(text)
 	{
@@ -1284,12 +1284,11 @@
 		return $('tt .encoder').text(raw).html();
 	}
 
-	function htmlDecode(enc)
-	{
-		return $('tt .encoder').html(enc).text();
-	}
+//	function htmlDecode(enc)
+//	{
+//		return $('tt .encoder').html(enc).text();
+//	}
 
-	//
 	function setText($note, text)
 	{
 		$note.attr('_text', text);
@@ -2865,6 +2864,320 @@
 	setInterval(adjustListScroller, 100);
 
 	setupListScrolling();
+
+</script>
+<script>
+
+	function AppConfig()
+	{
+		this.format   = null; // dataVersion
+		this.max_undo = 50;   // board revisions to keep
+		this.theme    = null; // default or 'dark'
+		this.fsize    = null; // default or 'z1'
+		this.board    = null; // active board
+	}
+
+	function BoardMeta()
+	{
+		this.title   = '';
+		this.current = 1;   // revision
+		this.history = [];  // revision IDs
+	}
+
+	class Storage
+	{
+		type = '?';
+
+		open()
+		{
+			return this.openInner();
+		}
+
+		wipe()
+		{
+			return this.wipeInner();
+		}
+
+		getConfig()
+		{
+			return this.conf;
+		}
+
+		setConfig(c)
+		{
+			this.conf = c;
+			return this.setJson('config', this.conf);
+		}
+
+		getBoardIndex()
+		{
+			return this.boardIndex;
+		}
+
+		saveBoard(board)
+		{
+			/*
+			 *	1. assign new revision (next unused)
+			 *	2. trim all in-between revisions bypassed by undos if any
+			 *	3. cap history as per config
+			 */
+			var meta = this.boardIndex.get(board.id);
+			var ok = true;
+
+			if (! meta)
+			{
+				meta = new BoardMeta();
+				meta.title = board.title || '(untitled board)';
+				meta.history = [ board.revision ];
+				meta.current = board.revision;
+
+				boardIndex.set(board.id, meta);
+			}
+
+			var rev_old = board.revision;
+			var rev_new = meta.history[0] + 1;
+
+			board.revision = rev_new;
+			ok &= this.setJson('board.' + board.id + '.' + board.revision, board);
+
+			// adjust history
+
+			var keep = [ rev_new ];
+
+			for (rev of meta.history)
+			{
+				if ( (rev_new < rev && rev < rev_old) || (keep.length >= this.conf.max_undo) )
+					this.delItem('board.' + board.id + '.' + rev);
+				else
+					keep.push(rev);
+			}
+
+			meta.current = board.revision;
+			meta.history = keep;
+
+			ok &= this.setJson('board.' + board.id + '.meta', meta);
+			return ok;
+		}
+
+		loadBoard(board_id, revision)
+		{
+			var meta = this.boardIndex.get(board_id);
+
+			if (! meta)
+				throw 'Invalid board_id in loadBoard(' + board.id + ', ' + revision + ')';
+
+			if (! meta.history.includes(revision))
+				throw 'Invalid revision in loadBoard(' + board.id + ', ' + revision + ')';
+
+			return this.getJson('board.' + board_id + '.' + revision);
+		}
+
+		nukeBoard(board_id, revision)
+		{
+			var meta = this.boardIndex.get(board_id);
+
+			if (! meta)
+				throw 'Invalid board_id in nukeBoard(' + board.id + ')';
+
+			if (revision != null)
+			{
+				var i = meta.history.indexOf(revision);
+				if (i == -1)
+					return false;
+
+				meta.history.splice(i, 1);
+				this.setJson('board.' + board_id + '.meta', meta);
+
+				this.delItem('board.' + board_id + '.' + revision);
+			}
+			else
+			{
+				for (rev of meta.history)
+					this.delItem('board.' + board_id + '.' + rev);
+
+				this.delItem('board.' + board_id + '.meta');
+				this.boardIndex.delete(board_id);
+			}
+		}
+
+		/*
+		 *	private
+		 */
+
+		conf = null;
+		boardIndex = new Map();
+
+		getItem(name) { throw 'implement-me'; }
+		setItem(name) { throw 'implement-me'; }
+		delItem(name) { throw 'implement-me'; }
+
+		openInner()   { throw 'implement-me'; }
+		wipeInner()   { throw 'implement-me'; }
+
+		getJson(name)
+		{
+			var foo = this.getItem(name);
+			if (! foo) return false;
+
+			try { foo = JSON.parse(foo); } catch (x) { return false; }
+			return foo;
+		}
+
+		setJson(name, val)
+		{
+			return this.setItem(name, JSON.stringify(val));
+		}
+	};
+
+	class Storage_Local extends Storage
+	{
+		getItem(name)
+		{
+			return localStorage.getItem('nullboard.' + name);
+		}
+
+		setItem(name, val)
+		{
+			localStorage.setItem('nullboard.' + name, val);
+			return true;
+		}
+
+		delItem(name)
+		{
+			localStorage.removeItem('nullboard.' + name);
+			return true;
+		}
+
+		openInner()
+		{
+			var conf = this.getJson('config');
+
+			if (conf)
+			{
+				if (conf.format != document.nb.dataVersion)
+				{
+					alert('Saved data is from a different version of NB');
+					return false;
+				}
+
+				this.conf = new AppConfig();
+				this.conf = Object.assign(this.conf, conf);
+			}
+			else
+			{
+				conf = new AppConfig();
+
+				conf.format = document.nb.dataVersion;
+				conf.theme = this.getItem('theme');
+				conf.fsize = this.getItem('fsize');
+				conf.board = this.getItem('last_board');
+
+				this.setConfig(conf); // set & save it
+			}
+
+			this.boardIndex = new Map();
+
+			for (var i=0; i<localStorage.length; i++)
+			{
+				var k = localStorage.key(i);
+				var m = k.match(/^nullboard\.board\.(\d+)$/);
+				if (! m)
+					continue;
+
+				var board_id = m[1];
+				var meta = this.getJson('board.' + board_id + '.meta');
+
+				meta = meta || this.rebuildMeta(board_id);
+
+				if (! meta)
+					continue;
+
+				meta = Object.assign(new BoardMeta(), meta);
+				this.boardIndex.set(board_id, meta);
+			}
+
+			this.type = 'LocalStorage';
+
+			return true;
+		}
+
+		wipeInner()
+		{
+			for (var i=0; i<localStorage.length; )
+			{
+				var k = localStorage.key(i);
+				var m = k.match(/^nullboard\./);
+
+				if (m) localStorage.removeItem(k);
+				else   i++;
+			}
+
+			this.conf = new AppConfig();
+			this.conf.format = document.nb.dataVersion;
+
+			this.boardIndex = new Map();
+
+			this.type = 'LocalStorage';
+		}
+
+		/*
+		 *	private
+		 */
+		rebuildMeta(board_id)
+		{
+			var meta = new BoardMeta();
+
+			// get current revision
+
+			meta.current = this.getItem('board.' + board_id);
+
+			// load history
+
+			var re = new RegExp('^nullboard\.board\.' + board_id + '\.(\\d+)$');
+			var revs = new Array();
+
+			for (var i=0; i<localStorage.length; i++)
+			{
+				var m = localStorage.key(i).match(re);
+				if (m) revs.push( parseInt(m[1]) );
+			}
+
+			if (! revs.length)
+				return false;
+
+			revs.sort(function(a,b){ return b-a; });
+			meta.history = revs;
+
+			// validate current revision
+
+			if (! meta.history.includes(meta.current))
+				meta.current = meta.history[meta.history.length-1];
+
+			// get board title
+
+			var board = this.getJson('board.' + board_id + '.' + meta.current)
+			meta.title = (board.title || '(untitled board)');
+
+			this.setJson('board.' + board_id + '.meta', meta);
+
+			return meta;
+		}
+	}
+
+	function _rollback()
+	{
+		localStorage.removeItem('nullboard.config');
+
+		var metas = [];
+
+		for (var i=0; i<localStorage.length; i++)
+		{
+			var m = localStorage.key(i).match(/^nullboard\.board\.(\d+)\.meta$/);
+			if (m) metas.push(m[0]);
+		}
+
+		for (k of metas) localStorage.removeItem(k);
+	}
 
 </script>
 
