@@ -1238,7 +1238,13 @@
 
 	class Storage
 	{
-		type = '?';
+		constructor()
+		{
+			this.type = '?';
+
+			this.conf = null;
+			this.boardIndex = new Map();
+		}
 
 		open()
 		{
@@ -1438,9 +1444,6 @@
 		 *	private
 		 */
 
-		conf = null;
-		boardIndex = new Map();
-
 		getItem(name) { throw 'implement-me'; }
 		setItem(name) { throw 'implement-me'; }
 		delItem(name) { throw 'implement-me'; }
@@ -1471,7 +1474,11 @@
 
 	class Storage_Local extends Storage
 	{
-		type = 'LocalStorage';
+		constructor()
+		{
+			super();
+			this.type = 'LocalStorage';
+		}
 
 		getItem(name)
 		{
