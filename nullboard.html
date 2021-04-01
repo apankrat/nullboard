@@ -555,6 +555,7 @@
 		overflow: hidden;
 		line-height: 22px;
 		padding-top: 0;
+		padding-bottom: 11px;
 	}
 
 	/***/
@@ -1055,7 +1056,7 @@
 	}
 
 	.fsize-z1 .dragster.collapsed {
-		line-height: 24px;
+		line-height: 25px;
 	}
 
 	.fsize-z1 .board .note .ops {
@@ -1242,7 +1243,7 @@
 		{
 			this.type = '?';
 
-			this.conf = null;
+			this.conf = new AppConfig();
 			this.boardIndex = new Map();
 		}
 
@@ -1501,8 +1502,6 @@
 		{
 			var conf = this.getJson('config');
 
-			this.conf = new AppConfig();
-
 			if (conf && (conf.format != NB.confVersion))
 			{
 				if (! confirm('Preferences are stored in an unsupported format. Reset them?'))
@@ -1633,21 +1632,6 @@
 		}
 	}
 
-	function _rollback()
-	{
-		localStorage.removeItem('nullboard.config');
-
-		var metas = [];
-
-		for (var i=0; i<localStorage.length; i++)
-		{
-			var m = localStorage.key(i).match(/^nullboard\.board\.(\d+)\.meta$/);
-			if (m) metas.push(m[0]);
-		}
-
-		for (var k of metas) localStorage.removeItem(k);
-	}
-
 </script>
 
 <script type="text/javascript">
@@ -1692,35 +1676,42 @@
 
 <script type="text/javascript">
 
-	function Drag()
+	function Drag2()
 	{
-		this.item    = null;                // .text of .note
-		this.org_loc = 0;                   // original noteLocation();
-		this.priming = null;
-		this.primexy = { x: 0, y: 0 };
-		this.$drag   = null;
-		this.mouse   = null;
-		this.delta   = { x: 0, y: 0 };
-		this.in_swap = false;
+		// config
+		this.listSel    = null;
+		this.itemSel    = null;
+		this.onDragging = function(started) { }
+		this.swapAnimMs = 200;
 
+		// state
+		this.item    = null;
+		this.priming = null;
+		this.primeXY = { x: 0, y: 0 };
+		this.$drag   = null;
+		this.mouseEv = null;
+		this.delta   = { x: 0, y: 0 };
+		this.inSwap  = 0;
+
+		// api
 		this.prime = function(item, ev)
 		{
 			var self = this;
+
 			this.item = item;
 			this.priming = setTimeout(function(){ self.onPrimed.call(self); }, ev.altKey ? 1 : 500);
-			this.primexy.x = ev.clientX;
-			this.primexy.y = ev.clientY;
-			this.mouse = ev;
+			this.primeXY = { x: ev.clientX, y: ev.clientY };
+			this.mouseEv = ev;
 		}
 
 		this.cancelPriming = function()
 		{
-			if (this.item && this.priming)
-			{
-				clearTimeout(this.priming);
-				this.priming = null;
-				this.item = null;
-			}
+			if (! this.item || ! this.priming)
+				return;
+
+			clearTimeout(this.priming);
+			this.priming = null;
+			this.item = null;
 		}
 
 		this.end = function()
@@ -1736,36 +1727,34 @@
 
 		this.onPrimed = function()
 		{
+			console.log('onPrimed');
+
 			clearTimeout(this.priming);
 			this.priming = null;
-			this.item.was_dragged = true;
 
-			var $text = $(this.item);
-			var $note = $text.parent();
-			$note.addClass('dragging');
+			removeTextSelection();
 
-			this.org_loc = noteLocation($note);
+			var $item = $(this.item);
+			$item.addClass('dragging');
 
 			$('body').append('<div class=dragster></div>');
 			var $drag = $('body .dragster').last();
 
-			if ($note.hasClass('collapsed'))
-				$drag.addClass('collapsed');
-
-			$drag.html( $text.html() );
-
-			$drag.innerWidth ( $note.innerWidth()  );
-			$drag.innerHeight( $note.innerHeight() );
+			$drag.innerWidth ( $item.innerWidth()  );
+			$drag.innerHeight( $item.innerHeight() );
 
 			this.$drag = $drag;
+
+			if (this.onDragging)
+				this.onDragging.call(this, true); // started
 
 			var $win = $(window);
 			var scroll_x = $win.scrollLeft();
 			var scroll_y = $win.scrollTop();
 
-			var pos = $note.offset();
-			this.delta.x = pos.left - this.mouse.clientX - scroll_x;
-			this.delta.y = pos.top  - this.mouse.clientY - scroll_y;
+			var pos = $item.offset();
+			this.delta.x = pos.left - this.mouseEv.clientX - scroll_x;
+			this.delta.y = pos.top  - this.mouseEv.clientY - scroll_y;
 			this.adjustDrag();
 
 			$drag.css({ opacity: 1 });
@@ -1778,163 +1767,194 @@
 			if (! this.$drag)
 				return;
 
+			var drag = this;
+			var $drag = this.$drag;
+
 			var $win = $(window);
 			var scroll_x = $win.scrollLeft();
 			var scroll_y = $win.scrollTop();
 
-			var drag_x = this.mouse.clientX + this.delta.x + scroll_x;
-			var drag_y = this.mouse.clientY + this.delta.y + scroll_y;
+			var drag_x = drag.mouseEv.clientX + drag.delta.x + scroll_x;
+			var drag_y = drag.mouseEv.clientY + drag.delta.y + scroll_y;
 
-			this.$drag.offset({ left: drag_x, top: drag_y });
+			$drag.offset({ left: drag_x, top: drag_y });
 
-			if (this.in_swap)
+			if (drag.inSwap)
 				return;
 
 			/*
 			 *	see if a swap is in order
 			 */
-			var pos = this.$drag.offset();
-			var x = pos.left + this.$drag.width()/2 - $win.scrollLeft();
-			var y = pos.top + this.$drag.height()/2 - $win.scrollTop();
+			var pos = $drag.offset();
+			var x = pos.left + $drag.width()/2 - $win.scrollLeft();
+			var y = pos.top + $drag.height()/2 - $win.scrollTop();
 
-			var drag = this;
-			var prepend = null;   // if dropping on the list header
 			var target = null;    // if over some item
 			var before = false;   // if should go before that item
 
-			$(".board .list").each(function(){
+			$(this.listSel).each(function(){
 
 				var list = this;
-				var rc = list.getBoundingClientRect();
-				var y_min = rc.bottom;
-				var n_min = null;
+				var rcList = list.getBoundingClientRect();
+				var yTop, itemTop = null;
+				var yBottom, itemBottom = null;
 
-				if (x <= rc.left || rc.right <= x || y <= rc.top || rc.bottom <= y)
+				if (x <= rcList.left || rcList.right <= x)
 					return;
 
-				var $list = $(list);
+				$(list).find(drag.itemSel).each(function(){
+					var rcItem = this.getBoundingClientRect();
 
-				$list.find('.note').each(function(){
-					var note = this;
-					var rc = note.getBoundingClientRect();
-
-					if (rc.top < y_min)
+					if (! itemTop || rcItem.top < yTop)
 					{
-						y_min = rc.top;
-						n_min = note;
+						itemTop = this;
+						yTop = rcItem.top;
 					}
 
-					if (y <= rc.top || rc.bottom <= y)
+					if (! itemBottom || yBottom < rcItem.bottom)
+					{
+						itemBottom = this;
+						yBottom = rcItem.bottom;
+					}
+
+					if (y <= rcItem.top || rcItem.bottom <= y)
 						return;
 
-					if (note == drag.item.parentNode)
+					if (this == drag.item)
 						return;
 
-					target = note;
-					before = (y < (rc.top + rc.bottom)/2);
+					target = this;
+					before = (y < (rcItem.top + rcItem.bottom)/2);
 				});
 
-				/*
-				 *	dropping on the list header
-				 */
-				if (! target && y < y_min)
+				if (y < rcList.top)
 				{
-					if (n_min) // non-empty list
-					{
-						target = n_min;
-						before = true;
-					}
-					else
-					{
-						prepend = list;
-					}
+					target = itemTop;
+					before = true;
 				}
+				else
+				if (y >= rcList.bottom)
+				{
+					target = itemBottom;
+					before = false;
+				}
+
 			});
 
-			if (! target && ! prepend)
+			if (! target)
 				return;
 
-			if (target)
-			{
-				if (target == drag.item.parentNode)
-					return;
+			if (target == drag.item)
+				return;
 
-				if (! before && target.nextSibling == drag.item.parentNode ||
-				      before && target.previousSibling == drag.item.parentNode)
-					return;
-			}
-			else
-			{
-				if (prepend.firstChild == drag.item.parentNode)
-					return;
-			}
+			if (! before && $(target).next()[0] == drag.item ||
+			      before && $(target).prev()[0] == drag.item)
+				return;
 
 			/*
 			 *	swap 'em
 			 */
-			var $have = $(this.item.parentNode);
+			var $target = $(target);
+
+			var have = drag.item;
+			var $have = $(have);
 			var $want = $have.clone();
 
 			$want.css({ display: 'none' });
 
-			if (target)
+			if (before)
 			{
-				var $target = $(target);
-
-				if (before)
-				{
-					$want.insertBefore($target);
-					$want = $target.prev();
-				}
-				else
-				{
-					$want.insertAfter($target);
-					$want = $target.next();
-				}
-
-				drag.item = $want.find('.text')[0];
+				$want.insertBefore($target);
+				$want = $target.prev();
 			}
 			else
 			{
-				var $notes = $(prepend).find('.notes');
-
-				$notes.prepend($want);
-
-				drag.item = $notes.find('.note .text')[0];
+				$want.insertAfter($target);
+				$want = $target.next();
 			}
 
-			//
-			var h = $have.height();
+			drag.item = $want[0];
 
-			drag.in_swap = true;
+			if (! drag.swapAnimMs)
+			{
+				$have.remove();
+				$want.show();
+				return;
+			}
 
-			$want.css({ display: 'block', height: 0, marginTop: 0 });
+			/*
+			 *	see if it's a same-list move
+			 */
+			if (target.parentNode == have.parentNode)
+			{
+				var delta = $have.offset().top - $target.offset().top;
 
-			$want.animate({ height: h }, {
-				duration: 'fast',
-				progress: function() {
-					$have.height( h - $(this).height() );
-				},
-				complete: function() {
+				var d_bulk = 0;
+				var d_have = 0;
+				var $bulk = $();
+
+				if (delta < 0) // item is moving down
+				{
+					for (var $i = $have.next(); $i.length && $i[0] != $want[0]; $i = $i.next())
+						$bulk = $bulk.add($i);
+				}
+				else
+				{
+					for (var $i = $want.next(); $i.length && $i[0] != $have[0]; $i = $i.next())
+						$bulk = $bulk.add($i);
+				}
+
+				d_bulk = $have.outerHeight(true);
+				d_have = $bulk.last().offset().top + $bulk.last().outerHeight(true) - $bulk.first().offset().top;
+
+				if (delta < 0) d_bulk = -d_bulk;
+				else           d_have = -d_have;
+
+				$have.parent().css({ position: 'relative' });
+				$have.css({ position: 'relative', 'z-index': 0 });
+				$bulk.css({ position: 'relative', 'z-index': 1 });
+
+				drag.inSwap = 1 + $bulk.length;
+
+				$have.animate({ top: d_have }, drag.swapAnimMs, function(){ if (! --drag.inSwap) swapCleanUp(); });
+				$bulk.animate({ top: d_bulk }, drag.swapAnimMs, function(){ if (! --drag.inSwap) swapCleanUp(); });
+
+				function swapCleanUp()
+				{
+					$have.parent().css({ position: '' });
+
 					$have.remove();
-					$want.css({ marginTop: 5, opacity: '', height: '' });
-					drag.in_swap = false;
+					$want.show();
+					$bulk.css({ position: '', 'z-index': '', top: '' });
+
 					drag.adjustDrag();
 				}
-			});
+			}
+			else
+			{
+				drag.inSwap = 1;
+
+				$want.slideDown(drag.swapAnimMs);
+
+				$have.slideUp(drag.swapAnimMs, function() {
+					$have.remove();
+					drag.inSwap = 0;
+					drag.adjustDrag();
+				});
+			}
 		}
 
 		this.onMouseMove = function(ev)
 		{
-			this.mouse = ev;
+			this.mouseEv = ev;
 
 			if (! this.item)
 				return;
 
 			if (this.priming)
 			{
-				var x = ev.clientX - this.primexy.x;
-				var y = ev.clientY - this.primexy.y;
+				var x = ev.clientX - this.primeXY.x;
+				var y = ev.clientY - this.primeXY.y;
 				if (x*x + y*y > 5*5)
 					this.onPrimed();
 			}
@@ -1946,11 +1966,9 @@
 
 		this.stopDragging = function()
 		{
-			var $text = $(this.item);
-			var $note = $text.parent();
-			$note.addClass('dragging');
+			var $item = $(this.item);
 
-			$note.removeClass('dragging');
+			$item.removeClass('dragging');
 			$('body').removeClass('dragging');
 
 			if (this.$drag)
@@ -1958,12 +1976,10 @@
 				this.$drag.remove();
 				this.$drag = null;
 
-				if (window.getSelection) { window.getSelection().removeAllRanges(); }
-				else if (document.selection) { document.selection.empty(); }
+				removeTextSelection();
 
-				var loc_now = noteLocation($note);
-				if (loc_now != this.org_loc)
-					saveBoard();
+				if (this.onDragging)
+					this.onDragging.call(this, false); // stopped
 			}
 
 			this.item = null;
@@ -2582,6 +2598,12 @@
 		return $note.attr('_text');
 	}
 
+	function removeTextSelection()
+	{
+		if (window.getSelection) { window.getSelection().removeAllRanges(); }
+		else if (document.selection) { document.selection.empty(); }
+	}
+
 	/*
 	 *	inline editing
 	 */
@@ -2846,7 +2868,34 @@
 	};
 
 	NB.storage = new Storage_Local();
-	NB.drag = new Drag(),
+	NB.drag = new Drag2();
+
+	NB.drag.listSel = '.board .list';
+	NB.drag.itemSel = '.note';
+	NB.drag.onDragging = function(started)
+	{
+		var drag = this;
+		var $note = $(drag.item);
+
+		if (started)
+		{
+			var $drag = drag.$drag;
+
+			if ($note.hasClass('collapsed'))
+				$drag.addClass('collapsed');
+
+			$drag.html( $note.find('.text').html() );
+
+			drag.org_loc = noteLocation($note);
+			if ($note.hasClass('collapsed'))
+				drag.$drag.addClass('collapsed');
+		}
+		else
+		{
+			if (drag.org_log != noteLocation($note))
+				saveBoard();
+		}
+	}
 
 	/*
 	 *	event handlers
@@ -3101,7 +3150,7 @@
 
 	//
 	$('.wrap').on('mousedown', '.board .note .text', function(ev){
-		NB.drag.prime(this, ev);
+		NB.drag.prime(this.parentNode, ev);
 	});
 
 	$(document).on('mouseup', function(ev){
