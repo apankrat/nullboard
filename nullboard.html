@@ -528,7 +528,7 @@
 	}
 
 	/***/
-	.dragster {
+	.note-dragster {
 		z-index: 2;
 		position: absolute;
 		opacity: 0;
@@ -547,15 +547,19 @@
 		            0px 1px 3px #00000030;
 	}
 
-	.dragster a {
+	.note-dragster a {
 		color: #000;
 	}
 
-	.dragster.collapsed {
+	.note-dragster.collapsed {
 		overflow: hidden;
 		line-height: 22px;
 		padding-top: 0;
 		padding-bottom: 11px;
+		box-shadow: 1px 2px 3px #00000050;
+		background: #fff;
+x-		white-space: pre-wrap;
+		cursor: move;
 	}
 
 	/***/
@@ -652,24 +656,51 @@
 		border-bottom: 1px solid #00000028;
 	}
 
-	.config .bulk div a {
+	.config .boards a.load-board {
 		display: block;
 		margin-right: 10px;
+		padding: 0 5px;
+		margin-left: -5px;
 	}
 
-	.config .bulk div a.active {
+	.config .boards a.load-board.active {
 		color: #1489db;
 	}
 
-	.config .bulk div a.active:before {
+	.config .boards a.load-board.active:before {
 		content: '\2022 ';
 		display: inline-block;
 		width: 13px;
 		margin-left: -13px;
 	}
 
-	.config .bulk div a.active:hover {
+	.config .boards a.load-board.active:hover {
 		color: #000;
+	}
+
+	.config .boards a.load-board.dragging {
+		background: #DDE1E5;
+		border-radius: 2px;
+		color: transparent;
+	}
+
+	.load-dragster {
+		z-index: 10;
+		position: absolute;
+		opacity: 0;
+		font-size: 11px;
+		line-height: 19px;
+		padding-left: 5px;
+		background: #fff;
+		color: #000;
+		border-radius: 2px;
+		cursor: move;
+
+		box-shadow: 0 +1px 0 #ACB4BC inset,
+		            0 -1px 0 #ACB4BC inset,
+		            +1px 0 0 #ACB4BC inset,
+		            -1px 0 0 #ACB4BC inset,
+		            0px 1px 3px #00000030;
 	}
 
 	.config .bulk a i,
@@ -907,6 +938,7 @@
 		color: #fc2;
 	}
 
+	/***/
 	.theme-dark .board .note.dragging,
 	.theme-dark .board .note.dragging.raw {
 		background: #15171A;
@@ -916,15 +948,14 @@
 		            -1px 0 0 #000 inset;
 	}
 
-	.theme-dark .dragster {
+	.theme-dark .note-dragster {
 		box-shadow: 0px 1px 4px #000000;
 		background: #2e3032;
 	}
 
-	.theme-dark .dragster a {
+	.theme-dark .note-dragster a {
 		color: #d6d6d6;
 	}
-
 
 	/***/
 	.theme-dark textarea,
@@ -960,8 +991,12 @@
 		border-bottom: 1px solid #fff2;
 	}
 
-	.theme-dark .config .bulk div a.active {
+	.theme-dark .config .boards a.load-board.active {
 		color: #fc2;
+	}
+
+	.theme-dark .config .boards a.load-board.active:hover {
+		color: #ddd;
 	}
 
 	.theme-dark .config .bulk a.switch-theme {
@@ -974,6 +1009,19 @@
 
 	.theme-dark .config a.switch-theme b {
 		display: none;
+	}
+
+	/***/
+	.theme-dark .config .bulk .boards .load-board.dragging {
+		background: #fff1;
+		color: transparent
+	}
+
+	.theme-dark .load-dragster {
+		background: rgb(230, 177, 2);
+		box-shadow: 0px 2px 4px #000;
+		outline 1px solid #fc2;
+		color: #111;
 	}
 
 	/***/
@@ -1038,7 +1086,7 @@
 
 	.fsize-z1 .board .note .text,
 	.fsize-z1 .board .note .edit,
-	.fsize-z1 .dragster {
+	.fsize-z1 .note-dragster {
 		font-size: 13px;
 	}
 
@@ -1055,7 +1103,7 @@
 		line-height: 25px;
 	}
 
-	.fsize-z1 .dragster.collapsed {
+	.fsize-z1 .note-dragster.collapsed {
 		line-height: 25px;
 	}
 
@@ -1074,13 +1122,14 @@
 	}
 
 	/***/
-	.fsize-z1 .config {
+	.fsize-z1 .config,
+	.fsize-z1 .load-dragster {
 		font-size: 13px;
 		line-height: 21px;
 	}
 
-	.fsize-z1 .config .bulk div a.active:before {
-		width: 15px;
+	.fsize-z1 .config .boards a.load-board.active:before {
+		width: 13px;
 	}
 
 	.fsize-z1 .config a.switch-fsize i {
@@ -1199,7 +1248,7 @@
 			<textarea class=edit spellcheck=false></textarea>
 		</div>
 
-		<a href=# class=load-board></a>
+		<a href=# class=load-board draggable=false></a>
 
 		<textarea class=encoder></textarea>
 
@@ -1234,6 +1283,7 @@
 	{
 		this.title   = '';
 		this.current = 1;                 // revision
+		this.ui_spot = 0;                 // 0 = not set
 		this.history = [ ];               // revision IDs
 	}
 
@@ -1437,6 +1487,18 @@
 				return true;
 
 			meta.current = revision;
+
+			return this.setJson('board.' + board_id + '.meta', meta);
+		}
+
+		setBoardUiSpot(board_id, ui_spot)
+		{
+			var meta = this.boardIndex.get(board_id);
+
+			if (! meta)
+				throw `Invalid board_id in setBoardRevision(${board_id}, ${revision})`;
+
+			meta.ui_spot = ui_spot;
 
 			return this.setJson('board.' + board_id + '.meta', meta);
 		}
@@ -1681,6 +1743,7 @@
 		// config
 		this.listSel    = null;
 		this.itemSel    = null;
+		this.dragster   = null;
 		this.onDragging = function(started) { }
 		this.swapAnimMs = 200;
 
@@ -1737,8 +1800,8 @@
 			var $item = $(this.item);
 			$item.addClass('dragging');
 
-			$('body').append('<div class=dragster></div>');
-			var $drag = $('body .dragster').last();
+			$('body').append('<div class=' + this.dragster + '></div>');
+			var $drag = $('body .' + this.dragster).last();
 
 			$drag.innerWidth ( $item.innerWidth()  );
 			$drag.innerHeight( $item.innerHeight() );
@@ -1755,6 +1818,7 @@
 			var pos = $item.offset();
 			this.delta.x = pos.left - this.mouseEv.clientX - scroll_x;
 			this.delta.y = pos.top  - this.mouseEv.clientY - scroll_y;
+
 			this.adjustDrag();
 
 			$drag.css({ opacity: 1 });
@@ -2496,6 +2560,20 @@
 	/*
 	 *
 	 */
+	function saveBoardOrder()
+	{
+		var $index = $('.config .load-board');
+		var spot = 1;
+
+		$index.each(function(){
+			var id = parseInt( $(this).attr('board_id') );
+			NB.storage.setBoardUiSpot(id, spot++);
+		});
+	}
+
+	/*
+	 *
+	 */
 	function updatePageTitle()
 	{
 		var title = 'Nullboard';
@@ -2544,14 +2622,19 @@
 		$index.hide();
 
 		var boards = NB.storage.getBoardIndex();
+		var index = [];
 
-		boards.forEach(function(meta, board_id){
+		boards.forEach(function(meta, id){ index.push({ id: id, meta: meta }); });
+
+		index.sort(function(a, b){ return b.meta.ui_spot && a.meta.ui_spot > b.meta.ui_spot; });
+
+		index.forEach(function(entry){
 
 			var $e = $entry.clone();
-			$e[0].board_id = board_id;
-			$e.html(meta.title);
+			$e.attr('board_id', entry.id);
+			$e.html(entry.meta.title);
 
-			if (board_id == id_now)
+			if (entry.id == id_now)
 				$e.addClass('active');
 
 			$index.append($e);
@@ -2868,11 +2951,12 @@
 	};
 
 	NB.storage = new Storage_Local();
-	NB.drag = new Drag2();
 
-	NB.drag.listSel = '.board .list';
-	NB.drag.itemSel = '.note';
-	NB.drag.onDragging = function(started)
+	NB.noteDrag = new Drag2();
+	NB.noteDrag.listSel = '.board .list';
+	NB.noteDrag.itemSel = '.note';
+	NB.noteDrag.dragster = 'note-dragster';
+	NB.noteDrag.onDragging = function(started)
 	{
 		var drag = this;
 		var $note = $(drag.item);
@@ -2894,6 +2978,33 @@
 		{
 			if (drag.org_log != noteLocation($note))
 				saveBoard();
+		}
+	}
+
+	NB.loadDrag = new Drag2();
+	NB.loadDrag.listSel = '.config .boards';
+	NB.loadDrag.itemSel = 'a.load-board';
+	NB.loadDrag.dragster = 'load-dragster';
+	NB.loadDrag.onDragging = function(started)
+	{
+		var drag = this;
+
+		if (started)
+		{
+			var $drag = drag.$drag;
+
+			$('.config .teaser').css({ display: 'none' });
+			$('.config .bulk').css({ display: 'block', opacity: 1 });
+			$drag.html( $(this.item).html() );
+		}
+		else
+		{
+			$('.config .teaser').css({ display: '' });
+			$('.config .bulk')
+				.show()
+				.delay(250)
+				.queue(function(){ $(this).css({ display: '', opacity: '' }).dequeue(); });
+			saveBoardOrder();
 		}
 	}
 
@@ -2940,7 +3051,7 @@
 			return false;
 		}
 
-		NB.drag.cancelPriming();
+		NB.noteDrag.cancelPriming();
 
 		startEditing($(this), ev);
 		return false;
@@ -3079,12 +3190,14 @@
 
 	$('.config').on('click', '.load-board', function(){
 
-		var board_id = $(this)[0].board_id;
+		var board_id = parseInt( $(this).attr('board_id') );
+
+		NB.loadDrag.cancelPriming();
 
 		if (NB.board && (NB.board.id == board_id))
 			closeBoard();
 		else
-			openBoard( $(this)[0].board_id );
+			openBoard(board_id);
 
 		return false;
 	});
@@ -3150,16 +3263,23 @@
 
 	//
 	$('.wrap').on('mousedown', '.board .note .text', function(ev){
-		NB.drag.prime(this.parentNode, ev);
+		NB.noteDrag.prime(this.parentNode, ev);
+	});
+
+	$('.config').on('mousedown', 'a.load-board', function(ev){
+		if ($('.config a.load-board').length > 1)
+			NB.loadDrag.prime(this, ev);
 	});
 
 	$(document).on('mouseup', function(ev){
-		NB.drag.end();
+		NB.noteDrag.end();
+		NB.loadDrag.end();
 	});
 
 	$(document).on('mousemove', function(ev){
 		setRevealState(ev);
-		NB.drag.onMouseMove(ev);
+		NB.noteDrag.onMouseMove(ev);
+		NB.loadDrag.onMouseMove(ev);
 	});
 
 	//
