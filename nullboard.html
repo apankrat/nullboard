@@ -1399,7 +1399,8 @@ x-		white-space: pre-wrap;
 				meta.history = rebuild;
 			}
 
-			ok_meta = this.setJson('board.' + board.id + '.meta', meta);
+			ok_meta = this.setJson('board.' + board.id + '.meta', meta) &&
+			          this.setJson('board.' + board.id, meta.revision); // for older versions
 
 			board.history = meta.history; // restore
 
@@ -1488,7 +1489,8 @@ x-		white-space: pre-wrap;
 
 			meta.current = revision;
 
-			return this.setJson('board.' + board_id + '.meta', meta);
+			return this.setJson('board.' + board_id + '.meta', meta) &&
+			       this.setJson('board.' + board_id, revision); // for older versions
 		}
 
 		setBoardUiSpot(board_id, ui_spot)
