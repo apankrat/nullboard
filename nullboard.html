@@ -215,7 +215,8 @@
 		background: #f8f9fb;
 	}
 
-	body.dragging {
+	body.dragging,
+	.no-user-select {
 		user-select: none;
 		-webkit-user-select: none;
 		-ms-user-select: none;
@@ -784,9 +785,6 @@
 
 	.config .bulk .boards a.load-board {
 		display: block;
-		margin-right: 10px;
-		padding: 0 5px;
-		margin-left: -5px;
 	}
 
 	.config .bulk .boards a.load-board.active {
@@ -847,8 +845,8 @@
 	}
 
 	.config .bulk .break {
-		padding-top: 6px;
-		margin-top: 6px;
+		padding: 6px 2px 0;
+		margin: 6px -2px 0;
 		border-top: 1px solid #00000028;
 	}
 
@@ -871,6 +869,45 @@
 		opacity: 0;
 		transition: opacity 250ms;
 		padding-bottom: 16px;
+		padding-right: 8px;
+		margin-right: -8px;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs {
+		padding: 0;
+		margin: 0;
+		border-collapse: collapse;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs td {
+		margin: 0;
+		padding: 0 0 0 5px;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs td.name {
+		width: 100%;
+		white-space: pre;
+		padding-left: 0;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs td.val {
+		text-align: center;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs a {
+		display: inline-block;
+		padding: 0 2px;
+		transition: padding 250ms;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs a.less:hover {
+		padding: 0 4px 0 0;
+		transition: padding 250ms;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs a.more:hover {
+		padding: 0 0 0 4px;
+		transition: padding 250ms;
 	}
 
 	.config .bulk .ui-prefs:hover .ui-prefs-more {
@@ -1265,6 +1302,13 @@
 					<a href="#" class="switch-font"        font="open-sans">Use Open Sans</a>
 					<a href="#" class="switch-font"        font="segoe-ui">Use Segoe UI</a>
 					<a href="#" class="switch-font"        font="maven-pro">Use Maven Pro</a>
+
+					<div class=break>
+						<table class='f-prefs no-user-select'>
+						<tr class='ui-fs'><td class=name>Font size:</td>  <td><a href=# class=less>&lt;</a></td><td class=val>13</td><td><a href=# class=more>&gt;</a></td></tr>
+						<tr class='ui-lh'><td class=name>Line height:</td><td><a href=# class=less>&lt;</a></td><td class=val>1.2</td><td><a href=# class=more>&gt;</a></td></tr>
+						</table>
+					</div>
 
 					<a href="#" class="switch-theme break">Use <i>light</i><b>dark</b> theme</a>
 					<a href="#" class="switch-fsize      ">Use <i>smaller</i><b>larger</b> font</a>
@@ -3461,12 +3505,61 @@
 		return false;
 	});
 
-	$('.config').on('click', '.switch-font', function() {
+	$('.config').on('click', '.switch-font', function(){
 		var font = $(this).attr('font');
 		selectFont(font);
 		NB.storage.setFname(font);
 		return false;
 	});
+
+	$('.config').on('click', '.f-prefs .ui-fs .less', function(){
+		var $html = $('html');
+		var fs = parseInt( 2*$html.css('--fs') );
+		if (--fs <= 2*6)
+			return;
+		fs /= 2.;
+		$html.css('--fs', fs +'');
+		$(this).closest('tr').find('.val').html( fs.toFixed(1) );
+	});
+
+	$('.config').on('click', '.f-prefs .ui-fs .more', function(){
+		var $html = $('html');
+		var fs = parseInt( 2*$html.css('--fs') );
+		var lh = parseInt( 2*$html.css('--lh') );
+		if (++fs >= 2*24)
+			return;
+		fs /= 2.;
+		if (fs > lh/2.)
+		{
+			$html.css('--lh', fs +'');
+			$('.config .f-prefs .ui-lh .val').html( fs.toFixed(1) );
+		}
+		$html.css('--fs', fs +'');
+		$(this).closest('tr').find('.val').html( fs.toFixed(1) );
+	});
+
+	$('.config').on('click', '.f-prefs .ui-lh .less', function(){
+		var $html = $('html');
+		var fs = parseInt( 2*$html.css('--fs') );
+		var lh = parseInt( 2*$html.css('--lh') );
+		if (--lh < fs)
+			return;
+		lh /= 2.;
+		$html.css('--lh', lh +'');
+		$(this).closest('tr').find('.val').html( lh.toFixed(1) );
+	});
+
+	$('.config').on('click', '.f-prefs .ui-lh .more', function(){
+		var $html = $('html');
+		var fs = parseInt( 2*$html.css('--fs') );
+		var lh = parseInt( 2*$html.css('--lh') );
+		if (++lh > 3*fs)
+			return;
+		lh /= 2.;
+		$html.css('--lh', lh +'');
+		$(this).closest('tr').find('.val').html(lh.toFixed(1) );
+	});
+
 
 	//
 	$('.overlay').click(function(ev){
@@ -3557,6 +3650,13 @@
 			f.load();
 		}
 	});
+
+	//
+	var fs = parseInt(2 * $('html').css('--fs')) / 2.;
+	var lh = parseInt(2 * $('html').css('--lh')) / 2.;
+
+	$('.config .f-prefs .ui-fs .val').html( fs.toFixed(1) );
+	$('.config .f-prefs .ui-lh .val').html( lh.toFixed(1)  );
 
 	//
 	if (conf.theme)
