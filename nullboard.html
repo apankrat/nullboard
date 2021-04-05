@@ -51,28 +51,163 @@
 
 	/***/
 	@font-face {
-		font-family: 'Nullboard';
+		font-family: 'f-barlow';
 		font-weight: 400;
 		font-style: normal;
 		src: url('extras/Barlow-Regular.woff') format('woff');
 	}
 
 	@font-face {
-		font-family: 'Nullboard';
+		font-family: 'f-barlow';
 		font-weight: 500;
 		font-style: normal;
 		src: url('extras/Barlow-Medium.woff') format('woff');
 	}
 
 	/***/
+	@font-face {
+		font-family: 'f-ibm-plex';
+		font-weight: 400;
+		font-style: normal;
+		src: url('extras/IBMPlexSans-Regular.woff') format('woff');
+	}
+
+	@font-face {
+		font-family: 'f-ibm-plex';
+		font-weight: 500;
+		font-style: normal;
+		src: url('extras/IBMPlexSans-Medium.woff') format('woff');
+	}
+
+	/***/
+	@font-face {
+		font-family: 'f-source-sans';
+		font-weight: 400;
+		font-style: normal;
+		src: url('extras/SourceSans3-Regular.woff') format('woff');
+	}
+
+	@font-face {
+		font-family: 'f-source-sans';
+		font-weight: 500;
+		font-style: normal;
+		src: url('extras/SourceSans3-SemiBold.woff') format('woff');
+	}
+
+	/***/
+	@font-face {
+		font-family: 'f-open-sans';
+		font-weight: 400;
+		font-style: normal;
+		src: url('extras/OpenSans-Regular.woff') format('woff');
+	}
+
+	@font-face {
+		font-family: 'f-open-sans';
+		font-weight: 500;
+		font-style: normal;
+		src: url('extras/OpenSans-600.woff') format('woff');
+	}
+
+	/***/
+	@font-face {
+		font-family: 'f-segoe-ui';
+		font-weight: 400;
+		font-style: normal;
+		src: local('Segoe UI');
+	}
+
+	@font-face {
+		font-family: 'f-segoe-ui';
+		font-weight: 500;
+		font-style: normal;
+		src: local('Segoe UI Semibold');
+	}
+
+	/***/
+	@font-face {
+		font-family: 'f-maven-pro';
+		font-weight: 400;
+		font-style: normal;
+		src: url('extras/MavenPro-Regular.woff') format('woff');
+	}
+
+	@font-face {
+		font-family: 'f-maven-pro';
+		font-weight: 500;
+		font-style: normal;
+		src: url('extras/MavenPro-500.woff') format('woff');
+	}
+
+	/***/
+	html {
+		--ff: f-barlow, sans-serif;
+
+		--fs: 11; /* font-size   */
+		--lh: 15; /* line-height */
+
+		--fs-head: 13.6;                 /* font-size of board heading */
+		--fs-nops: 9;                    /* font-size of the note ops */
+		--lw: calc(20 * var(--fs) + 30); /* .list width */
+	}
+
+	html, body, input, textarea {
+		font-family: var(--ff);
+		font-size: calc( var(--fs) * 1px );
+		line-height: calc( var(--lh) * 1px );
+	}
+
+	/***/
+	html.f-ibm-plex {
+		--ff: f-ibm-plex, sans-serif;
+		--fs: 11;
+		--fs-head: 12.5;
+		--lw: calc(20 * var(--fs) + 40);  /* .list width */
+	}
+
+	/***/
+	html.f-maven-pro {
+		--ff: f-maven-pro, sans-serif;
+		--fs: 12;
+		--fs-head: 13;
+		--lw: calc(20 * var(--fs) + 47);  /* .list width */
+	}
+
+	/***/
+	html.f-open-sans {
+		--ff: f-open-sans, sans-serif;
+		--fs: 11;
+		--fs-head: 12.5;
+		--lw: calc(20 * var(--fs) + 50);  /* .list width */
+	}
+
+	/***/
+	html.f-source-sans {
+		--ff: f-source-sans, sans-serif;
+		--fs: 12;
+		--fs-head: 13;
+		--lw: calc(20 * var(--fs) + 25);  /* .list width */
+	}
+
+	/***/
+	html.f-segoe-ui {
+		--ff: f-segoe-ui, sans-serif;
+		--fs: 11;
+		--fs-head: 13;
+		--fs-nops: 8;
+		--lw: calc(20 * var(--fs) + 52);  /* .list width */
+	}
+
+	/***/
+	html.fsize-z1 {
+		--fs: 13;
+		--lh: 17;
+	}
+
+	/***/
 	html, body, h1, textarea, input {
 		padding: 0;
 		margin: 0;
-	}
-
-	body, input, textarea {
-		font-family: Nullboard, sans-serif;
-		font-size: 13px;
 	}
 
 	body {
@@ -151,8 +286,8 @@
 		content: '\00D7';
 		position: relative;
 		top: 2px;
-		font-size: 17px;
-		line-height: 10px;
+		font-size: calc(16rem / 11);
+		line-height: calc(10 / 17);
 		font-weight: 400;
 	}
 
@@ -166,8 +301,8 @@
 	.board .head .text,
 	.board .head .edit {
 		font-weight: 500;
-		font-size: 13.5px;
-		line-height: 20px;
+		font-size: calc( var(--fs-head) / 11 * 1rem );
+		line-height: calc( 20 / var(--fs-head) );
 		padding: 0 5px 2px;
 		border: none;
 	}
@@ -184,8 +319,8 @@
 
 	.board .head .edit::placeholder {
 		font-weight: 400;
-		font-size: 10px;
-		line-height: 22px;
+		font-size: calc(10rem / 11);
+		line-height: calc(22 / 10);
 		text-transform: uppercase;
 		color: #1489db;
 		opacity: 0.8;
@@ -207,8 +342,7 @@
 		height: 20px;
 		padding: 5px 6px 7px 30px;
 		background: linear-gradient(to right, #EAEDF000, #EAEDF0 10px);
-		font-size: 11px;
-		line-height: 20px;
+		line-height: calc(20 / 11);
 	}
 
 	.board .menu a,
@@ -274,7 +408,7 @@
 	.board .list {
 		display: inline-block;
 		vertical-align: top;
-		width: 250px;
+		width: calc( var(--lw) * 1px );
 		margin: 0 5px 10px;
 		background: linear-gradient(#EAEDF0 30px, #DDE1E5 90px);
 		border-radius: 2px;
@@ -354,10 +488,10 @@
 	.board .note.dragging,
 	.board .note.dragging.raw {
 		background: #CED4DA;
-		box-shadow: 0 +1px 0 #00000010 inset,
-		            0 -1px 0 #00000010 inset,
-		            +1px 0 0 #00000010 inset,
-		            -1px 0 0 #00000010 inset;
+		box-shadow: 0 +1px 0 #0001 inset,
+		            0 -1px 0 #0001 inset,
+		            +1px 0 0 #0001 inset,
+		            -1px 0 0 #0001 inset;
 	}
 
 	.board .note.dragging * {
@@ -369,17 +503,21 @@
 		margin-bottom: 5px;
 	}
 
+	.board .note {
+		padding-bottom: 6px;
+	}
+
 	.board .note .text,
 	.board .note .edit {
-		padding: 5px 10px;
+		padding: 5px 10px 0;
 		margin-right: 15px;
-		font-size: 11px;
+		min-height: 100%;
 	}
 
 	.board .note .text {
-		min-height: 13px;
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
+		min-height: calc( var(--lh) * 1px );
 	}
 
 	/***/
@@ -441,7 +579,7 @@
 		opacity: 0;
 		transition: opacity 400ms;
 		cursor: default;
-		font-size: 9px;
+		font-size: calc(9rem / 11);
 	}
 
 	.board .note.editing .ops {
@@ -467,7 +605,8 @@
 		display: none;
 		background: #fff;
 		border-left: none;
-		padding: 0 0 1px 5px;
+		padding: 1px 0 2px 5px;
+		font-size: calc( var(--fs-nops) * 1px );
 		font-weight: 500;
 		border-left: 1px solid #ddd;
 		border-bottom: 1px solid #ddd;
@@ -499,15 +638,16 @@
 	.board .note.raw .text {
 	}
 
+	/***/
 	.board .note.collapsed {
-		height: 23px;
+		padding-bottom: 6px;
 	}
 
-	.board .note.collapsed .text {
-		height: 13px;
+	.board .note.collapsed .text,
+	.note-dragster.collapsed .text {
+		max-height: calc( var(--lh) * 1px );
 		overflow: hidden;
-		line-height: 22px;
-		padding-top: 0;
+		padding-bottom: 0;
 	}
 
 	.board .note.collapsed .ops {
@@ -532,13 +672,11 @@
 		z-index: 2;
 		position: absolute;
 		opacity: 0;
-		box-shadow: 1px 2px 3px #00000050;
 		background: #fff;
 		white-space: pre-wrap;
 		cursor: move;
 
-		padding: 5px 25px 5px 10px;
-		font-size: 11px;
+		padding: 5px 25px 6px 10px;
 
 		box-shadow: 0 +1px 0 #ACB4BC inset,
 		            0 -1px 0 #ACB4BC inset,
@@ -551,24 +689,12 @@
 		color: #000;
 	}
 
-	.note-dragster.collapsed {
-		overflow: hidden;
-		line-height: 22px;
-		padding-top: 0;
-		padding-bottom: 11px;
-		box-shadow: 1px 2px 3px #00000050;
-		background: #fff;
-x-		white-space: pre-wrap;
-		cursor: move;
-	}
-
 	/***/
 	.logo {
 		position: absolute;
 		top: 9px;
 		left: 9px;
-		font-size: 11px;
-		line-height: 19px;
+		line-height: calc(19 / 11);
 		padding: 6px 12px;
 		opacity: 0.6;
 		z-index: 3;
@@ -589,6 +715,7 @@ x-		white-space: pre-wrap;
 		height: 0;
 		opacity: 0;
 		transition: opacity 400ms;
+		padding-top: 1px;
 	}
 
 	.logo:hover .bulk {
@@ -616,8 +743,7 @@ x-		white-space: pre-wrap;
 		position: absolute;
 		top: 10px;
 		right: 21px;
-		font-size: 11px;
-		line-height: 19px;
+		line-height: calc(19 / 11);
 		z-index: 3;
 		background: #f8f9fb;
 	}
@@ -644,11 +770,11 @@ x-		white-space: pre-wrap;
 
 	.config .bulk {
 		margin-right: 20px;
-		padding: 5px 0 10px 22px;
+		padding: 5px 0 0 22px;
 		transition: opacity 400ms;
 	}
 
-	.config .bulk div {
+	.config .bulk .boards {
 		display: none;
 		padding: 6px 2px;
 		margin: 6px -2px;
@@ -656,40 +782,40 @@ x-		white-space: pre-wrap;
 		border-bottom: 1px solid #00000028;
 	}
 
-	.config .boards a.load-board {
+	.config .bulk .boards a.load-board {
 		display: block;
 		margin-right: 10px;
 		padding: 0 5px;
 		margin-left: -5px;
 	}
 
-	.config .boards a.load-board.active {
+	.config .bulk .boards a.load-board.active {
 		color: #1489db;
 	}
 
-	.config .boards a.load-board.active:before {
+	.config .bulk .boards a.load-board.active:before {
 		content: '\2022 ';
 		display: inline-block;
 		width: 13px;
 		margin-left: -13px;
 	}
 
-	.config .boards a.load-board.active:hover {
+	.config .bulk .boards a.load-board.active:hover {
 		color: #000;
 	}
 
-	.config .boards a.load-board.dragging {
+	.config .bulk .boards a.load-board.dragging {
 		background: #DDE1E5;
 		border-radius: 2px;
 		color: transparent;
+		box-shadow: 0 0 1px #0002 inset;
 	}
 
 	.load-dragster {
 		z-index: 10;
 		position: absolute;
 		opacity: 0;
-		font-size: 11px;
-		line-height: 19px;
+		line-height: calc(19 / 11);
 		padding-left: 5px;
 		background: #fff;
 		color: #000;
@@ -720,10 +846,63 @@ x-		white-space: pre-wrap;
 		visibility: hidden;
 	}
 
-	.config .bulk a.switch-theme {
+	.config .bulk .break {
 		padding-top: 6px;
 		margin-top: 6px;
 		border-top: 1px solid #00000028;
+	}
+
+	/***/
+	.config .bulk .ui-prefs .ui-prefs-more {
+		text-align: center;
+		cursor: default;
+		width: 0;
+		display: inline-block;
+		white-space: pre;
+		transition: width 400ms, color 800ms;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-more i {
+		font-style: normal;
+		display: inline;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk {
+		opacity: 0;
+		transition: opacity 250ms;
+		padding-bottom: 16px;
+	}
+
+	.config .bulk .ui-prefs:hover .ui-prefs-more {
+		width: 100%;
+		font-weight: 500;
+		transition: width 400ms, color 800ms;
+	}
+
+	.config .bulk .ui-prefs:hover .ui-prefs-more i {
+		display: none;
+	}
+
+	.config .bulk .ui-prefs:hover .ui-prefs-bulk {
+		opacity: 1;
+		transition: opacity 250ms;
+	}
+
+	/***/
+	.fsize-z1 .config a.switch-fsize i {
+		display: inline;
+	}
+
+	.fsize-z1 .config a.switch-fsize b {
+		display: none;
+	}
+
+	/***/
+	.config a.switch-font.active:before {
+		content: '\2022 ';
+		display: inline-block;
+		width: 13px;
+		margin-left: -13px;
 	}
 
 	/***/
@@ -756,8 +935,8 @@ x-		white-space: pre-wrap;
 
 	/***/
 	.overlay .license {
-		font-size: 12px;
-		line-height: 16px;
+		font-size: calc(12rem / 11);
+		line-height: calc(16 / 12);
 		white-space: pre-wrap;
 		width: 384px;
 		height: auto;
@@ -769,6 +948,8 @@ x-		white-space: pre-wrap;
 		top: 100px;
 		left: 50%;
 		margin-left: -192px;
+
+		width: calc( (var(--fs) * 36 + 6) * 1px ); /* 402px, 476px */
 	}
 
 	.overlay .license a {
@@ -782,10 +963,9 @@ x-		white-space: pre-wrap;
 
 	/***/
 	.overlay .about {
-		font-size: 12px;
-		line-height: 16px;
+		font-size: calc(12rem / 11);
+		line-height: calc(16 / 12);
 		text-align: center;
-		width: 240px;
 		height: auto;
 		padding: 50px 25px;
 		background: #fff;
@@ -795,8 +975,13 @@ x-		white-space: pre-wrap;
 		margin-left: -145px;
 	}
 
+	.overlay .about,
+	.overlay .about div {
+		width: calc( (var(--fs) * 18 + 39) * 1px ); /* 240px, 277px */
+	}
+
 	.overlay .about h1 {
-		font-size: 15px;
+		font-size: calc(15rem / 11);
 		font-weight: 500;
 		margin-bottom: 10px;
 	}
@@ -809,7 +994,6 @@ x-		white-space: pre-wrap;
 	.overlay .about div {
 		position: absolute;
 		bottom: -30px;
-		width: 240px;
 		color: #eee;
 	}
 
@@ -842,7 +1026,7 @@ x-		white-space: pre-wrap;
 	/*
 	 *	Dark mode
 	 */
-	body.theme-dark {
+	html.theme-dark body {
 		background-color: #15171A;
 		color: #d6d6d6;
 	}
@@ -867,6 +1051,7 @@ x-		white-space: pre-wrap;
 	.theme-dark .board .menu a.warn:hover,
 	.theme-dark .board .ops  a.warn:hover {
 		color: #fc5555 !important;
+		text-shadow: 0 0 1px #fc555544;
 	}
 
 	.theme-dark .board .head {
@@ -974,7 +1159,8 @@ x-		white-space: pre-wrap;
 	}
 
 	/***/
-	.theme-dark .config, .theme-dark.crowded .config:hover {
+	.theme-dark .config,
+	.theme-dark.crowded .config:hover {
 		background-color: #15171A;
 	}
 
@@ -986,20 +1172,20 @@ x-		white-space: pre-wrap;
 		color: #fc2;
 	}
 
-	.theme-dark .config .bulk div {
+	.theme-dark .config .bulk .boards {
 		border-top: 1px solid #fff2;
 		border-bottom: 1px solid #fff2;
 	}
 
-	.theme-dark .config .boards a.load-board.active {
+	.theme-dark .config .bulk .boards a.load-board.active {
 		color: #fc2;
 	}
 
-	.theme-dark .config .boards a.load-board.active:hover {
+	.theme-dark .config .bulk .boards a.load-board.active:hover {
 		color: #ddd;
 	}
 
-	.theme-dark .config .bulk a.switch-theme {
+	.theme-dark .config .bulk .break {
 		border-top: 1px solid #fff2;
 	}
 
@@ -1020,7 +1206,7 @@ x-		white-space: pre-wrap;
 	.theme-dark .load-dragster {
 		background: rgb(230, 177, 2);
 		box-shadow: 0px 2px 4px #000;
-		outline 1px solid #fc2;
+		outline: 1px solid #fc2;
 		color: #111;
 	}
 
@@ -1029,7 +1215,8 @@ x-		white-space: pre-wrap;
 		color: #ccc;
 	}
 
-	.theme-dark .logo, .theme-dark.crowded .logo:hover {
+	.theme-dark .logo,
+	.theme-dark.crowded .logo:hover {
 		background: #15171A;
 	}
 
@@ -1041,122 +1228,6 @@ x-		white-space: pre-wrap;
 		color: #fff;
 	}
 
-	/*
-	 *	Larger font
-	 */
-	body.fsize-z1,
-	body.fsize-z1 input,
-	body.fsize-z1 textarea {
-		font-size: 15px;
-	}
-
-	.fsize-z1 .board {
-		min-width: 290px;
-	}
-
-	.fsize-z1 .board u:before {
-		font-size: 19px;
-		line-height: 12px;
-	}
-
-	.fsize-z1 .board .head .text {
-		min-height: 22px;
-	}
-
-	.fsize-z1 .board .head .text,
-	.fsize-z1 .board .head .edit {
-		font-size: 15px;
-		line-height: 22px;
-	}
-
-	.fsize-z1 .board .head .edit::placeholder {
-		font-size: 10px;
-		line-height: 23px;
-	}
-
-	.fsize-z1 .board .menu {
-		height: 22px;
-		font-size: 13px;
-		line-height: 22px;
-	}
-
-	.fsize-z1 .board .list {
-		width: 290px;
-	}
-
-	.fsize-z1 .board .note .text,
-	.fsize-z1 .board .note .edit,
-	.fsize-z1 .note-dragster {
-		font-size: 13px;
-	}
-
-	.fsize-z1 .board .note .text {
-		min-height: 16px;
-	}
-
-	.fsize-z1 .board .note.collapsed {
-		height: 26px;
-	}
-
-	.fsize-z1 .board .note.collapsed .text {
-		height: 17px;
-		line-height: 25px;
-	}
-
-	.fsize-z1 .note-dragster.collapsed {
-		line-height: 25px;
-	}
-
-	.fsize-z1 .board .note .ops {
-		font-size: 10px;
-	}
-
-	/***/
-	.fsize-z1 .logo {
-		font-size: 13px;
-		line-height: 21px;
-	}
-
-	.fsize-z1 .logo .bulk a:before {
-		width: 13px;
-	}
-
-	/***/
-	.fsize-z1 .config,
-	.fsize-z1 .load-dragster {
-		font-size: 13px;
-		line-height: 21px;
-	}
-
-	.fsize-z1 .config .boards a.load-board.active:before {
-		width: 13px;
-	}
-
-	.fsize-z1 .config a.switch-fsize i {
-		display: inline;
-	}
-
-	.fsize-z1 .config a.switch-fsize b {
-		display: none;
-	}
-
-	/***/
-	.fsize-z1 .overlay .license {
-		font-size: 14px;
-		line-height: 18px;
-		width: 443px;
-	}
-
-	.fsize-z1 .overlay .about {
-		font-size: 12px;
-		line-height: 18px;
-		width: 277px;
-	}
-
-	.fsize-z1 .overlay .about h1 {
-		font-size: 17px;
-		width: 277px;
-	}
 
 </style>
 
@@ -1176,14 +1247,29 @@ x-		white-space: pre-wrap;
 		<a href=# class=teaser>&equiv;</a>
 		<div class=bulk>
 			<a href=# class=add-board>Add new board...</a>
+
 			<div class=boards>
 				<!-- here'll be boards -->
 			</div>
+
 			<a href=# class=exp-board>Export current board...</a>
 			<a href=# class=imp-board>Import boards...</a>
 				<input class=imp-board-select type="file" accept=".nbx">
-			<a href="#" class="switch-theme">Use <i>light</i><b>dark</b> theme</a>
-			<a href="#" class="switch-fsize">Use <i>smaller</i><b>larger</b> font</a>
+
+			<div class="ui-prefs break">
+				<div class=ui-prefs-more>UI preferences<i>...</i></div>
+				<div class=ui-prefs-bulk>
+					<a href="#" class="switch-font active break" font="barlow">Use Barlow</a>
+					<a href="#" class="switch-font"        font="ibm-plex">Use IBM Plex Sans</a>
+					<a href="#" class="switch-font"        font="source-sans">Use Source Sans</a>
+					<a href="#" class="switch-font"        font="open-sans">Use Open Sans</a>
+					<a href="#" class="switch-font"        font="segoe-ui">Use Segoe UI</a>
+					<a href="#" class="switch-font"        font="maven-pro">Use Maven Pro</a>
+
+					<a href="#" class="switch-theme break">Use <i>light</i><b>dark</b> theme</a>
+					<a href="#" class="switch-fsize      ">Use <i>smaller</i><b>larger</b> font</a>
+				</div>
+			</div>
 		</div>
 	</div>
 	</div>
@@ -1238,13 +1324,12 @@ x-		white-space: pre-wrap;
 			<div class=ops>
 				<a href=# class=teaser></a>
 				<div class=bulk>
-					<a href=# class='del-note warn'><u></u></a>
+					<a href=# class='del-note warn'>X</a>
 					<a href=# class='raw-note'>R</a>
 					<a href=# class='collapse'>_</a>
 				</div>
 			</div>
-			<div class=text>
-			</div>
+			<div class=text> </div>
 			<textarea class=edit spellcheck=false></textarea>
 		</div>
 
@@ -1276,6 +1361,7 @@ x-		white-space: pre-wrap;
 		this.max_undo = 50;               // board revisions to keep
 		this.theme    = null;             // default or 'dark'
 		this.fsize    = null;             // default or 'z1'
+		this.fname    = null;             // font name
 		this.board    = null;             // active board
 	}
 
@@ -1332,6 +1418,12 @@ x-		white-space: pre-wrap;
 		setFsize(fsize)
 		{
 			this.conf.fsize = fsize;
+			return this.setJson('config', this.conf);
+		}
+
+		setFname(fname)
+		{
+			this.conf.fname = fname;
 			return this.setJson('config', this.conf);
 		}
 
@@ -1400,7 +1492,7 @@ x-		white-space: pre-wrap;
 			}
 
 			ok_meta = this.setJson('board.' + board.id + '.meta', meta) &&
-			          this.setJson('board.' + board.id, meta.revision); // for older versions
+			          this.setJson('board.' + board.id, meta.current); // for older versions
 
 			board.history = meta.history; // restore
 
@@ -1593,40 +1685,60 @@ x-		white-space: pre-wrap;
 
 			this.boardIndex = new Map();
 
+			// new format
+
 			for (var i=0; i<localStorage.length; i++)
 			{
 				var k = localStorage.key(i);
 				var m = k.match(/^nullboard\.board\.(\d+).meta$/);
-				var meta;
 
-				if (m)
+				if (! m)
+					continue;
+
+				var board_id = parseInt(m[1]);
+				var meta = this.getJson('board.' + board_id + '.meta');
+
+				if (! meta.hasOwnProperty('history'))
 				{
-					// new format
-					meta = this.getJson('board.' + m[1] + '.meta');
+					console.log( `Invalid meta for board ${board_id}` );
+					continue;
+				}
 
-					if (meta)
+				for (var rev of meta.history)
+					if (! this.getJson('board.' + board_id + '.' + rev))
 					{
-						for (var x of meta.history)
-							if (! this.getJson('board.' + m[1] + '.' + x))
-							{
-								console.log( `bad meta for ${m[1]}` );
-								meta = this.rebuildMeta(m[1]);
-								break;
-							}
+						console.log( `Invalid revision ${rev} in history of ${board_id}` );
+						meta = this.rebuildMeta(board_id);
+						break;
 					}
-				}
-				else
-				{
-					// old format
-					m = k.match(/^nullboard\.board\.(\d+)$/);
-					meta = m ? this.rebuildMeta(m[1]) : null;
-				}
 
 				if (! meta)
 					continue;
 
 				meta = Object.assign(new BoardMeta(), meta);
-				this.boardIndex.set( parseInt(m[1]), meta );
+				this.boardIndex.set(board_id, meta);
+			}
+
+			// old format
+
+			for (var i=0; i<localStorage.length; i++)
+			{
+				var k = localStorage.key(i);
+				var m = k.match(/^nullboard\.board\.(\d+)$/);
+
+				if (! m)
+					continue;
+
+				var board_id = parseInt(m[1]);
+				if (this.boardIndex.has(board_id))
+					continue;
+
+				var meta = this.rebuildMeta(board_id);
+				if (! meta)
+					continue;
+
+				meta = Object.assign(new BoardMeta(), meta);
+				this.boardIndex.set(board_id, meta);
 			}
 
 			if (this.conf.board && ! this.boardIndex.has(this.conf.board))
@@ -1659,6 +1771,8 @@ x-		white-space: pre-wrap;
 		{
 			var meta = new BoardMeta();
 
+			console.log( `Rebuilding meta for ${board_id} ...` );
+
 			// get current revision
 
 			meta.current = this.getItem('board.' + board_id); // may be null
@@ -1675,7 +1789,11 @@ x-		white-space: pre-wrap;
 			}
 
 			if (! revs.length)
+			{
+				console.log('* No revisions found');
+				this.delItem('board.' + board_id);
 				return false;
+			}
 
 			revs.sort(function(a,b){ return b-a; });
 			meta.history = revs;
@@ -1805,8 +1923,8 @@ x-		white-space: pre-wrap;
 			$('body').append('<div class=' + this.dragster + '></div>');
 			var $drag = $('body .' + this.dragster).last();
 
-			$drag.innerWidth ( $item.innerWidth()  );
-			$drag.innerHeight( $item.innerHeight() );
+			$drag.outerWidth ( $item.outerWidth()  );
+			$drag.outerHeight( $item.outerHeight() );
 
 			this.$drag = $drag;
 
@@ -2669,13 +2787,13 @@ x-		white-space: pre-wrap;
 		$note.attr('_text', text);
 
 		text = htmlEncode(text);
-                hmmm = /\b(https?:\/\/[^\s]+)/mg;
+                var hmmm = /\b(https?:\/\/[^\s]+)/mg;
 
 		text = text.replace(hmmm, function(url){
 			return '<a href="' + url + '" target=_blank>' + url + '</a>';
 		});
 
-		$note.html(text);
+		$note.html(text); // ? text : ' ');
 	}
 
 	function getText($note)
@@ -2702,6 +2820,7 @@ x-		white-space: pre-wrap;
 
 		$edit.val( getText($text) );
 		$edit.width( $text.width() );
+
 		$edit.height( $text.height() );
 		$note.addClass('editing');
 
@@ -2727,9 +2846,10 @@ x-		white-space: pre-wrap;
 		var brand_new = $item.hasClass('brand-new');
 		$item.removeClass('brand-new');
 
-		if (via_escape && brand_new)
+		if (via_escape)
 		{
-			$item.closest('.note, .list, .board').remove();
+			if (brand_new)
+				$item.closest('.note, .list, .board').remove();
 			return;
 		}
 
@@ -2943,6 +3063,28 @@ x-		white-space: pre-wrap;
 	}
 
 	/*
+	 *	cosmetics
+	 */
+	 function selectFont(font)
+	 {
+		var html = document.body.parentNode;
+		html.className = html.className.replace(/\bf-[a-z-]+ ?/g, '');
+		html.classList.add( 'f-' + font );
+
+		var $list = $('.config .switch-font');
+		$list.removeClass('active');
+		$list.filter('[font="' + font + '"]').addClass('active');
+	}
+
+	function isFontSupported(font)
+	{
+		if (! font)
+			return true; // default
+
+		return $('.config .switch-font[font="' + font + '"]').length > 0;
+	}
+
+	/*
 	 *	some global variables, fiiinally
 	 */
 	var NB =
@@ -2970,7 +3112,8 @@ x-		white-space: pre-wrap;
 			if ($note.hasClass('collapsed'))
 				$drag.addClass('collapsed');
 
-			$drag.html( $note.find('.text').html() );
+			$drag.html('<div class=text></div>');
+			$drag.find('.text').html( $note.find('.text').html() );
 
 			drag.org_loc = noteLocation($note);
 			if ($note.hasClass('collapsed'))
@@ -3180,8 +3323,7 @@ x-		white-space: pre-wrap;
 		$(this).height(10);
 
 		if (this.scrollHeight > this.clientHeight)
-			$(this).height(this.scrollHeight-delta);
-
+			$(this).height(this.scrollHeight - delta);
 	});
 
 	//
@@ -3306,16 +3448,23 @@ x-		white-space: pre-wrap;
 	});
 
 	$('.config').on('click', '.switch-theme', function() {
-		var $body = $('body');
-		$body.toggleClass('theme-dark');
-		NB.storage.setTheme($body.hasClass('theme-dark') ? 'dark' : '');
+		var $html = $('html');
+		$html.toggleClass('theme-dark');
+		NB.storage.setTheme($html.hasClass('theme-dark') ? 'dark' : '');
 		return false;
 	});
 
 	$('.config').on('click', '.switch-fsize', function(){
-		var $body = $('body');
-		$body.toggleClass('fsize-z1');
-		NB.storage.setFsize($body.hasClass('fsize-z1') ? 'z1' : '');
+		var $html = $('html');
+		$html.toggleClass('fsize-z1');
+		NB.storage.setFsize($html.hasClass('fsize-z1') ? 'z1' : '');
+		return false;
+	});
+
+	$('.config').on('click', '.switch-font', function() {
+		var font = $(this).attr('font');
+		selectFont(font);
+		NB.storage.setFname(font);
 		return false;
 	});
 
@@ -3370,18 +3519,58 @@ x-		white-space: pre-wrap;
 
 	console.log( `Active: [${conf.board}]` );
 	console.log( `Theme:  [${conf.theme}]` );
-	console.log( `Fsize:  [${conf.fsize}]` );
+	console.log( `FSize:  [${conf.fsize}]` );
+	console.log( `FNize:  [${conf.fname}]` );
 
+	//
+	var fonts_togo = 0;
+
+	function onFontLoaded(f, ok)
+	{
+		console.log( `Font: ${f.family} ${f.weight} - ${ok}` );
+		if (! ok)
+		{
+			var font = f.family.substr(3,f.family.length-4);
+			$('.config .switch-font[font=' + font + ']').remove();
+		}
+		fonts_togo--;
+
+		if (fonts_togo == 0 && ! isFontSupported(conf.fname))
+			NB.storage.setFname(null);
+	}
+
+	document.fonts.onloadingdone = function(ev)
+	{
+		ev.fontfaces.forEach(function(f){ onFontLoaded(f, true); });
+	}
+
+	document.fonts.onloadingerror = function(ev)
+	{
+		ev.fontfaces.forEach(function(f){ onFontLoaded(f, false); });
+	}
+
+	document.fonts.forEach(function(f){
+		if (f.status != 'loaded')
+		{
+			console.log( `Font: ${f.family} ${f.weight} loading...` );
+			fonts_togo++;
+			f.load();
+		}
+	});
+
+	//
 	if (conf.theme)
-		$('body').addClass('theme-' + conf.theme);
+		$('html').addClass('theme-' + conf.theme);
 
 	if (conf.fsize)
-		$('body').addClass('fsize-' + conf.fsize);
+		$('html').addClass('fsize-' + conf.fsize);
+
+	if (conf.fname)
+		selectFont(conf.fname);
 
 	if (conf.board)
 		openBoard(conf.board)
 
-	//
 	adjustLayout();
 
 	updateBoardIndex();
