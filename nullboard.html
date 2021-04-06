@@ -846,16 +846,14 @@
 	/***/
 	.config .bulk .section .title {
 		text-align: center;
-		cursor: default;
 		width: 0;
 		display: inline-block;
 		white-space: pre;
-		cursor: pointer;
 		transition: width 250ms, padding 250ms;
 	}
 
-	.config .bulk .section .title i {
-		font-style: normal;
+	.config .bulk .section .title u {
+		text-decoration: none;
 		transition: opacity 100ms;
 	}
 
@@ -884,7 +882,7 @@
 		transition: width 250ms, padding 250ms;
 	}
 
-	.config .bulk .section.open .title i {
+	.config .bulk .section.open .title u {
 		opacity: 0;
 		transition: opacity 100ms;
 	}
@@ -1309,7 +1307,7 @@
 				<input class=imp-board-select type="file" accept=".nbx">
 
 			<div class="section ui-prefs break">
-				<div class=title>UI preferences<i>...</i></div>
+				<a href=# class=title>UI preferences<u>...</u></a>
 				<div class=details>
 					<a href="#" class="switch-font active break" font="barlow">Use Barlow</a>
 					<a href="#" class="switch-font" font="ibm-plex">Use IBM Plex Sans</a>
