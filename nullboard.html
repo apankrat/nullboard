@@ -195,7 +195,7 @@
 		--fs: 11;
 		--fs-head: 13;
 		--fs-nops: 8;
-		--lw: calc(20 * var(--fs) + 52);  /* .list width */
+		--lw: calc(22 * var(--fs) + 40);  /* .list width */
 	}
 
 	/***/
@@ -744,7 +744,7 @@
 		position: absolute;
 		top: 10px;
 		right: 21px;
-		line-height: calc(19 / 11);
+		line-height: calc(19rem / 11);
 		z-index: 3;
 		background: #f8f9fb;
 	}
@@ -873,43 +873,7 @@
 		margin-right: -8px;
 	}
 
-	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs {
-		padding: 0;
-		margin: 0;
-		border-collapse: collapse;
-	}
-
-	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs td {
-		margin: 0;
-		padding: 0 0 0 5px;
-	}
-
-	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs td.name {
-		width: 100%;
-		white-space: pre;
-		padding-left: 0;
-	}
-
-	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs td.val {
-		text-align: center;
-	}
-
-	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs a {
-		display: inline-block;
-		padding: 0 2px;
-		transition: padding 250ms;
-	}
-
-	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs a.less:hover {
-		padding: 0 4px 0 0;
-		transition: padding 250ms;
-	}
-
-	.config .bulk .ui-prefs .ui-prefs-bulk div .f-prefs a.more:hover {
-		padding: 0 0 0 4px;
-		transition: padding 250ms;
-	}
-
+	/***/
 	.config .bulk .ui-prefs:hover .ui-prefs-more {
 		width: 100%;
 		font-weight: 500;
@@ -923,6 +887,49 @@
 	.config .bulk .ui-prefs:hover .ui-prefs-bulk {
 		opacity: 1;
 		transition: opacity 250ms;
+	}
+
+	/***/
+	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs table {
+		padding: 0;
+		margin: 0;
+		border-collapse: collapse;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs td {
+		margin: 0;
+		padding: 0 0 0 5px;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs td.name {
+		width: 100%;
+		white-space: pre;
+		padding-left: 0;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs tr td.val {
+		text-align: center;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs tr.custom td.val {
+		color: #1489db;
+		cursor: pointer;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs a {
+		display: inline-block;
+		padding: 0 2px;
+		transition: padding 250ms;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs a.less:hover {
+		padding: 0 4px 0 0;
+		transition: padding 250ms;
+	}
+
+	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs a.more:hover {
+		padding: 0 0 0 4px;
+		transition: padding 250ms;
 	}
 
 	/***/
@@ -1297,21 +1304,21 @@
 				<div class=ui-prefs-more>UI preferences<i>...</i></div>
 				<div class=ui-prefs-bulk>
 					<a href="#" class="switch-font active break" font="barlow">Use Barlow</a>
-					<a href="#" class="switch-font"        font="ibm-plex">Use IBM Plex Sans</a>
-					<a href="#" class="switch-font"        font="source-sans">Use Source Sans</a>
-					<a href="#" class="switch-font"        font="open-sans">Use Open Sans</a>
-					<a href="#" class="switch-font"        font="segoe-ui">Use Segoe UI</a>
-					<a href="#" class="switch-font"        font="maven-pro">Use Maven Pro</a>
+					<a href="#" class="switch-font" font="ibm-plex">Use IBM Plex Sans</a>
+					<a href="#" class="switch-font" font="source-sans">Use Source Sans</a>
+					<a href="#" class="switch-font" font="open-sans">Use Open Sans</a>
+					<a href="#" class="switch-font" font="segoe-ui">Use Segoe UI</a>
+					<a href="#" class="switch-font" font="maven-pro">Use Maven Pro</a>
 
-					<div class=break>
-						<table class='f-prefs no-user-select'>
+					<div class='f-prefs break no-user-select'>
+						<table>
 						<tr class='ui-fs'><td class=name>Font size:</td>  <td><a href=# class=less>&lt;</a></td><td class=val>13</td><td><a href=# class=more>&gt;</a></td></tr>
 						<tr class='ui-lh'><td class=name>Line height:</td><td><a href=# class=less>&lt;</a></td><td class=val>1.2</td><td><a href=# class=more>&gt;</a></td></tr>
 						</table>
 					</div>
 
 					<a href="#" class="switch-theme break">Use <i>light</i><b>dark</b> theme</a>
-					<a href="#" class="switch-fsize      ">Use <i>smaller</i><b>larger</b> font</a>
+					<!-- a href="#" class="switch-fsize      ">Use <i>smaller</i><b>larger</b> font</a -->
 				</div>
 			</div>
 		</div>
@@ -3107,94 +3114,267 @@
 	}
 
 	/*
-	 *	cosmetics
+	 *	dragsters
 	 */
-	 function selectFont(font)
+	function initDragAndDrop()
+	{
+		NB.noteDrag = new Drag2();
+		NB.noteDrag.listSel = '.board .list';
+		NB.noteDrag.itemSel = '.note';
+		NB.noteDrag.dragster = 'note-dragster';
+		NB.noteDrag.onDragging = function(started)
+		{
+			var drag = this;
+			var $note = $(drag.item);
+
+			if (started)
+			{
+				var $drag = drag.$drag;
+
+				if ($note.hasClass('collapsed'))
+					$drag.addClass('collapsed');
+
+				$drag.html('<div class=text></div>');
+				$drag.find('.text').html( $note.find('.text').html() );
+
+				drag.org_loc = noteLocation($note);
+				if ($note.hasClass('collapsed'))
+					drag.$drag.addClass('collapsed');
+			}
+			else
+			{
+				if (drag.org_log != noteLocation($note))
+					saveBoard();
+			}
+		}
+
+		NB.loadDrag = new Drag2();
+		NB.loadDrag.listSel = '.config .boards';
+		NB.loadDrag.itemSel = 'a.load-board';
+		NB.loadDrag.dragster = 'load-dragster';
+		NB.loadDrag.onDragging = function(started)
+		{
+			var drag = this;
+
+			if (started)
+			{
+				var $drag = drag.$drag;
+
+				$('.config .teaser').css({ display: 'none' });
+				$('.config .bulk').css({ display: 'block', opacity: 1 });
+				$drag.html( $(this.item).html() );
+			}
+			else
+			{
+				$('.config .teaser').css({ display: '' });
+				$('.config .bulk')
+					.show()
+					.delay(250)
+					.queue(function(){ $(this).css({ display: '', opacity: '' }).dequeue(); });
+				saveBoardOrder();
+			}
+		}
+	}
+
+	/*
+	 *	fonts
+	 */
+	function initFonts()
+	{
+		var fonts_togo = 0;
+		var fv_defs;
+
+		function getFontVars(selector)
+		{
+			var cssRules = document.styleSheets[0].rules;
+			var ret = { fs: null, lh: null };
+
+			for (var i=0; i<cssRules.length; i++)
+				if (cssRules[i].selectorText == selector)
+				{
+					ret.fs = parseFloat( cssRules[i].style.getPropertyValue('--fs') );
+					ret.lh = parseFloat( cssRules[i].style.getPropertyValue('--lh') );
+					break;
+				}
+
+			return ret;
+		}
+
+		NB.fonts = { };
+		NB.font = null; // current font
+
+		fv_defs = getFontVars('html');
+
+		//
+		function onFontsLoaded()
+		{
+			var conf = NB.storage.getConfig();
+
+			if (conf.fname && ! NB.fonts.hasOwnProperty(conf.fname))
+			{
+				NB.storage.setFname(null);
+				selectFont(null);
+			}
+
+			selectFont(conf.fname || 'barlow');
+
+			updateFontSize();
+			updateLineHeight();
+		}
+
+		function onFontLoaded(f, ok)
+		{
+			var f_name = f.family.substr(3,f.family.length-4);
+
+			if (! ok)
+			{
+				$('.config .switch-font[font=' + f_name + ']').remove();
+				console.log( `Font: ${f.family} ${f.weight} - not loaded` );
+			}
+			else
+			{
+				var fv = getFontVars( 'html.f-' + f_name );
+
+				fv.fs = fv.fs || fv_defs.fs;
+				fv.lh = fv.lh || fv_defs.lh;
+
+				fv.fs_cust = null;
+				fv.lh_cust = null;
+
+				NB.fonts[f_name] = fv;
+			}
+
+			fonts_togo--;
+
+			if (fonts_togo == 0)
+				onFontsLoaded();
+		}
+
+		document.fonts.onloadingdone = function(ev)
+		{
+			ev.fontfaces.forEach(function(f){ onFontLoaded(f, true); });
+		}
+
+		document.fonts.onloadingerror = function(ev)
+		{
+			ev.fontfaces.forEach(function(f){ onFontLoaded(f, false); });
+		}
+
+		document.fonts.forEach(function(f){
+			if (f.status == 'loaded')
+				return;
+
+			console.log( `Loading ${f.family} ${f.weight} ...` );
+			fonts_togo++;
+			f.load();
+		});
+	}
+
+	function selectFont(font)
 	 {
-		var html = document.body.parentNode;
-		html.className = html.className.replace(/\bf-[a-z-]+ ?/g, '');
-		html.classList.add( 'f-' + font );
+		$('html').removeClass('f-' + NB.font).addClass('f-' + font);
+		NB.font = font;
 
 		var $list = $('.config .switch-font');
 		$list.removeClass('active');
 		$list.filter('[font="' + font + '"]').addClass('active');
+
+		var f = NB.fonts[NB.font];
+
+		$('html').css('--fs', (f.fs_cust || '') + '' );
+		$('html').css('--lh', (f.lh_cust || '') + '' );
+
+		updateFontSize();
+		updateLineHeight();
 	}
 
-	function isFontSupported(font)
+	//
+	function getFontSize()
 	{
-		if (! font)
-			return true; // default
-
-		return $('.config .switch-font[font="' + font + '"]').length > 0;
+		return parseFloat( $('html').css('--fs') );
 	}
 
-	/*
-	 *	some global variables, fiiinally
-	 */
-	var NB =
+	function getFontSize_def()
 	{
-		codeVersion: 20210402,
-		blobVersion: 20190412, // board blobs in storage
-		board: null,
-	};
-
-	NB.storage = new Storage_Local();
-
-	NB.noteDrag = new Drag2();
-	NB.noteDrag.listSel = '.board .list';
-	NB.noteDrag.itemSel = '.note';
-	NB.noteDrag.dragster = 'note-dragster';
-	NB.noteDrag.onDragging = function(started)
-	{
-		var drag = this;
-		var $note = $(drag.item);
-
-		if (started)
-		{
-			var $drag = drag.$drag;
-
-			if ($note.hasClass('collapsed'))
-				$drag.addClass('collapsed');
-
-			$drag.html('<div class=text></div>');
-			$drag.find('.text').html( $note.find('.text').html() );
-
-			drag.org_loc = noteLocation($note);
-			if ($note.hasClass('collapsed'))
-				drag.$drag.addClass('collapsed');
-		}
-		else
-		{
-			if (drag.org_log != noteLocation($note))
-				saveBoard();
-		}
+		return NB.fonts[NB.font].fs;
 	}
 
-	NB.loadDrag = new Drag2();
-	NB.loadDrag.listSel = '.config .boards';
-	NB.loadDrag.itemSel = 'a.load-board';
-	NB.loadDrag.dragster = 'load-dragster';
-	NB.loadDrag.onDragging = function(started)
+	function getLineHeight()
 	{
-		var drag = this;
+		return parseFloat( $('html').css('--lh') );
+	}
 
-		if (started)
-		{
-			var $drag = drag.$drag;
+	function getLineHeight_def()
+	{
+		return NB.fonts[NB.font].lh;
+	}
 
-			$('.config .teaser').css({ display: 'none' });
-			$('.config .bulk').css({ display: 'block', opacity: 1 });
-			$drag.html( $(this.item).html() );
-		}
-		else
-		{
-			$('.config .teaser').css({ display: '' });
-			$('.config .bulk')
-				.show()
-				.delay(250)
-				.queue(function(){ $(this).css({ display: '', opacity: '' }).dequeue(); });
-			saveBoardOrder();
-		}
+	//
+	function updateFontSize()
+	{
+		var $val = $('.config .f-prefs .ui-fs .val');
+		var def = getFontSize_def();
+		var val = getFontSize();
+
+		$val.html( val.toFixed(1) );
+		if (val == def) $val.parent().removeClass('custom');
+		else            $val.parent().addClass('custom');
+	}
+
+	function updateLineHeight()
+	{
+		var $val = $('.config .f-prefs .ui-lh .val');
+		var def = getLineHeight_def();
+		var val = getLineHeight();
+
+		$val.html( val.toFixed(1) );
+		if (val == def) $val.parent().removeClass('custom');
+		else            $val.parent().addClass('custom');
+	}
+
+	//
+	function setFontSize(fs)
+	{
+		if (fs < 9 || fs > 24)
+			return;
+
+		$('html').css('--fs', fs + '');
+		NB.fonts[NB.font].fs_cust = fs;
+
+		updateFontSize();
+
+		if (getLineHeight() < fs)
+			setLineHeight(fs);
+	}
+
+	function setLineHeight(lh)
+	{
+		var fs = getFontSize();
+
+		if (lh < fs || lh >= 3*fs)
+			return;
+
+		$('html').css('--lh', lh + '');
+		NB.fonts[NB.font].lh_cust = lh;
+
+		updateLineHeight();
+	}
+
+	//
+	function resetFontSize()
+	{
+		$('html').css('--fs', '');
+		NB.fonts[NB.font].fs_cust = null;
+		updateFontSize();
+		return getFontSize();
+	}
+
+	function resetLineHeight()
+	{
+		$('html').css('--lh', '');
+		NB.fonts[NB.font].lh_cust = null;
+		updateLineHeight();
+		return getLineHeight();
 	}
 
 	/*
@@ -3512,54 +3692,40 @@
 		return false;
 	});
 
-	$('.config').on('click', '.f-prefs .ui-fs .less', function(){
-		var $html = $('html');
-		var fs = parseInt( 2*$html.css('--fs') );
-		if (--fs <= 2*6)
-			return;
-		fs /= 2.;
-		$html.css('--fs', fs +'');
-		$(this).closest('tr').find('.val').html( fs.toFixed(1) );
+	//
+	$('.config .f-prefs .ui-fs .less').on('click', function(){
+		setFontSize( getFontSize() - 0.5 );
+		return false;
 	});
 
-	$('.config').on('click', '.f-prefs .ui-fs .more', function(){
-		var $html = $('html');
-		var fs = parseInt( 2*$html.css('--fs') );
-		var lh = parseInt( 2*$html.css('--lh') );
-		if (++fs >= 2*24)
-			return;
-		fs /= 2.;
-		if (fs > lh/2.)
-		{
-			$html.css('--lh', fs +'');
-			$('.config .f-prefs .ui-lh .val').html( fs.toFixed(1) );
-		}
-		$html.css('--fs', fs +'');
-		$(this).closest('tr').find('.val').html( fs.toFixed(1) );
+	$('.config .f-prefs .ui-fs .val').on('click', function(){
+		var fs = resetFontSize();
+		if (getLineHeight() < fs)
+			setLineHeight(fs);
+		return false;
 	});
 
-	$('.config').on('click', '.f-prefs .ui-lh .less', function(){
-		var $html = $('html');
-		var fs = parseInt( 2*$html.css('--fs') );
-		var lh = parseInt( 2*$html.css('--lh') );
-		if (--lh < fs)
-			return;
-		lh /= 2.;
-		$html.css('--lh', lh +'');
-		$(this).closest('tr').find('.val').html( lh.toFixed(1) );
+	$('.config .f-prefs .ui-fs .more').on('click', function(){
+		setFontSize( getFontSize() + 0.5 );
+		return false;
 	});
 
-	$('.config').on('click', '.f-prefs .ui-lh .more', function(){
-		var $html = $('html');
-		var fs = parseInt( 2*$html.css('--fs') );
-		var lh = parseInt( 2*$html.css('--lh') );
-		if (++lh > 3*fs)
-			return;
-		lh /= 2.;
-		$html.css('--lh', lh +'');
-		$(this).closest('tr').find('.val').html(lh.toFixed(1) );
+	$('.config .f-prefs .ui-lh .less').on('click', function(){
+		setLineHeight( getLineHeight() - 0.5 );
+		return false;
 	});
 
+	$('.config .f-prefs .ui-lh .val').on('click', function(){
+		var lh = resetLineHeight();
+		if (lh < getFontSize())
+			setFontSize(lh);
+		return false;
+	});
+
+	$('.config .f-prefs .ui-lh .more').on('click', function(){
+		setLineHeight( getLineHeight() + 0.5 );
+		return false;
+	});
 
 	//
 	$('.overlay').click(function(ev){
@@ -3594,6 +3760,15 @@
 	/*
 	 *	the init()
 	 */
+	var NB =
+	{
+		codeVersion: 20210402,
+		blobVersion: 20190412, // board blobs in storage
+		board: null,
+	};
+
+	NB.storage = new Storage_Local();
+
 	if (! NB.storage.open())
 	{
 		easyMartina = true;
@@ -3613,50 +3788,12 @@
 	console.log( `Active: [${conf.board}]` );
 	console.log( `Theme:  [${conf.theme}]` );
 	console.log( `FSize:  [${conf.fsize}]` );
-	console.log( `FNize:  [${conf.fname}]` );
+	console.log( `FName:  [${conf.fname}]` );
 
 	//
-	var fonts_togo = 0;
+	initFonts();
 
-	function onFontLoaded(f, ok)
-	{
-		console.log( `Font: ${f.family} ${f.weight} - ${ok}` );
-		if (! ok)
-		{
-			var font = f.family.substr(3,f.family.length-4);
-			$('.config .switch-font[font=' + font + ']').remove();
-		}
-		fonts_togo--;
-
-		if (fonts_togo == 0 && ! isFontSupported(conf.fname))
-			NB.storage.setFname(null);
-	}
-
-	document.fonts.onloadingdone = function(ev)
-	{
-		ev.fontfaces.forEach(function(f){ onFontLoaded(f, true); });
-	}
-
-	document.fonts.onloadingerror = function(ev)
-	{
-		ev.fontfaces.forEach(function(f){ onFontLoaded(f, false); });
-	}
-
-	document.fonts.forEach(function(f){
-		if (f.status != 'loaded')
-		{
-			console.log( `Font: ${f.family} ${f.weight} loading...` );
-			fonts_togo++;
-			f.load();
-		}
-	});
-
-	//
-	var fs = parseInt(2 * $('html').css('--fs')) / 2.;
-	var lh = parseInt(2 * $('html').css('--lh')) / 2.;
-
-	$('.config .f-prefs .ui-fs .val').html( fs.toFixed(1) );
-	$('.config .f-prefs .ui-lh .val').html( lh.toFixed(1)  );
+	initDragAndDrop();
 
 	//
 	if (conf.theme)
@@ -3664,9 +3801,6 @@
 
 	if (conf.fsize)
 		$('html').addClass('fsize-' + conf.fsize);
-
-	if (conf.fname)
-		selectFont(conf.fname);
 
 	if (conf.board)
 		openBoard(conf.board)
