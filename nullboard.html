@@ -215,11 +215,6 @@
 		100% { margin-left:  0px; }
 	}
 
-	body.ding {
-		animation-name: shake;
-		animation-duration: 200ms;
-	}
-
 	a {
 		text-decoration: none;
 		transition: color 200ms;
@@ -233,6 +228,20 @@
 		display: none;
 	}
 
+	.ding {
+		animation-name: shake;
+		animation-duration: 200ms;
+	}
+
+	.no-user-select {
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		-khtml-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+	}
+}
 	/***/
 	.clearfix:after,
 	.board:after,
@@ -905,7 +914,8 @@
 	}
 
 	.fs-set .config .bulk .ui-prefs .f-prefs tr.ui-fs td.val,
-	.lh-set .config .bulk .ui-prefs .f-prefs tr.ui-lh td.val {
+	.lh-set .config .bulk .ui-prefs .f-prefs tr.ui-lh td.val,
+	.lw-set .config .bulk .ui-prefs .f-prefs tr.ui-lw td.val {
 		color: #1489db;
 		cursor: pointer;
 	}
@@ -1306,8 +1316,9 @@
 
 					<div class='f-prefs break'>
 						<table>
-						<tr class='ui-fs'><td class=name>Font size:</td>  <td><a href=# class=less>&lt;</a></td><td class=val>13</td><td><a href=# class=more>&gt;</a></td></tr>
-						<tr class='ui-lh'><td class=name>Line height:</td><td><a href=# class=less>&lt;</a></td><td class=val>1.2</td><td><a href=# class=more>&gt;</a></td></tr>
+						<tr class='ui-fs'><td class=name>Font size:</td>  <td><a href=# class=less>&lt;</a></td><td class=val></td><td><a href=# class=more>&gt;</a></td></tr>
+						<tr class='ui-lh'><td class=name>Line height:</td><td><a href=# class=less>&lt;</a></td><td class=val></td><td><a href=# class=more>&gt;</a></td></tr>
+						<tr class='ui-lw'><td class=name>List width:</td> <td><a href=# class=less>&lt;</a></td><td class=val></td><td><a href=# class=more>&gt;</a></td></tr>
 						</table>
 					</div>
 
@@ -1406,6 +1417,7 @@
 		this.fontName   = null;             // font-family
 		this.fontSize   = null;             // font-size
 		this.lineHeight = null;             // line-height
+		this.listWidth  = null;             // list-width
 		this.theme      = null;             // default or 'dark'
 		this.board      = null;             // active board
 	}
@@ -1475,6 +1487,12 @@
 		setLineHeight(lh)
 		{
 			this.conf.lineHeight = lh;
+			return this.setJson('config', this.conf);
+		}
+
+		setListWidth(lw)
+		{
+			this.conf.listWidth = lw;
 			return this.setJson('config', this.conf);
 		}
 
@@ -3268,6 +3286,7 @@
 
 		updateFontSize();
 		updateLineHeight();
+		updateListWidth();
 	}
 
 	//
@@ -3279,6 +3298,15 @@
 	function getLineHeight()
 	{
 		return parseFloat( $('html').css('--lh') );
+	}
+
+	function getListWidth()
+	{
+		var lw = $('html').css('--lw');
+		var m = lw.match(/^\s*calc\((.*)\)$/);
+		if (m) lw = eval(m[1]);
+console.log('getListWidth -> ', lw)
+		return parseInt( lw );
 	}
 
 	//
@@ -3293,6 +3321,13 @@
 	{
 		var val = getLineHeight();
 		$('.config .f-prefs .ui-lh .val').html( val.toFixed(1) );
+		return val;
+	}
+
+	function updateListWidth()
+	{
+		var val = getListWidth();
+		$('.config .f-prefs .ui-lw .val').html( val.toFixed(0) );
 		return val;
 	}
 
@@ -3321,6 +3356,16 @@
 		return getLineHeight();
 	}
 
+	function setListWidth(lw)
+	{
+		if (200 <= lw && lw <= 400)
+		{
+			$('html').css('--lw', lw + '').addClass('lw-set');
+			updateListWidth();
+		}
+		return getListWidth();
+	}
+
 	//
 	function resetFontSize()
 	{
@@ -3332,6 +3377,12 @@
 	{
 		$('html').css('--lh', '').removeClass('lh-set');
 		return updateLineHeight();
+	}
+
+	function resetListWidth()
+	{
+		$('html').css('--lw', '').removeClass('lw-set');
+		return updateListWidth();
 	}
 
 	/*
@@ -3680,6 +3731,25 @@
 	$('.config .f-prefs .ui-lh .more').on('click', function(){
 		var lh = setLineHeight( getLineHeight() + 0.5 );
 		NB.storage.setLineHeight(lh);
+		return false;
+	});
+
+	//
+	$('.config .f-prefs .ui-lw .less').on('click', function(){
+		var lw = setListWidth( getListWidth() - 5 );
+		NB.storage.setListWidth(lw);
+		return false;
+	});
+
+	$('.config .f-prefs .ui-lw .val').on('click', function(){
+		resetListWidth();
+		NB.storage.setListWidth(null);
+		return false;
+	});
+
+	$('.config .f-prefs .ui-lw .more').on('click', function(){
+		var lw = setListWidth( getListWidth() + 5 );
+		NB.storage.setListWidth(lw);
 		return false;
 	});
 
