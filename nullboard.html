@@ -256,7 +256,7 @@
 
 	/***/
 	.board {
-		min-width: 250px;
+		min-width: calc( var(--lw) * 1px );
 
 		width: -moz-max-content;    /* firefox */
 		width: -webkit-max-content; /* chrome  */
@@ -742,7 +742,7 @@
 		background: #f8f9fb;
 	}
 
-	body.crowded .config:hover {
+	.crowded .config:hover {
 		background: #fff;
 		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 	}
@@ -871,6 +871,10 @@
 	.config .bulk .section.open {
 		padding-bottom: 8px;
 		border-bottom: 1px solid #00000028;
+	}
+
+	.crowded .config .bulk .section.open {
+		border-bottom: none;
 	}
 
 	.config .bulk .section.open .title {
@@ -1205,7 +1209,7 @@
 	/***/
 	.theme-dark .config,
 	.theme-dark.crowded .config:hover {
-		background-color: #15171A;
+		background: #15171A !important;
 	}
 
 	.theme-dark .config a {
@@ -3058,8 +3062,10 @@
 		if (! $board.length)
 			return;
 
+		var list_w = getListWidth();
+
 		var lists = $board.find('.list').length;
-		var lists_w = (lists < 2) ? 250 : 260 * lists - 10;
+		var lists_w = (lists < 2) ? list_w : (list_w + 10) * lists - 10;
 		var body_w = $body.width();
 
 		if (lists_w + 190 <= body_w)
@@ -3069,8 +3075,8 @@
 		}
 		else
 		{
-			var max = Math.floor( (body_w - 40) / 260 );
-			max = (max < 2) ? 250 : 260 * max - 10;
+			var max = Math.floor( (body_w - 40) / (list_w + 10) );
+			max = (max < 2) ? list_w : (list_w + 10) * max - 10;
 			$board.css('max-width', max + 'px');
 			$body.addClass('crowded');
 		}
@@ -3287,6 +3293,7 @@
 		updateFontSize();
 		updateLineHeight();
 		updateListWidth();
+		adjustLayout();
 	}
 
 	//
@@ -3361,6 +3368,7 @@ console.log('getListWidth -> ', lw)
 		if (200 <= lw && lw <= 400)
 		{
 			$('html').css('--lw', lw + '').addClass('lw-set');
+			adjustLayout();
 			updateListWidth();
 		}
 		return getListWidth();
@@ -3382,6 +3390,7 @@ console.log('getListWidth -> ', lw)
 	function resetListWidth()
 	{
 		$('html').css('--lw', '').removeClass('lw-set');
+		adjustLayout();
 		return updateListWidth();
 	}
 
