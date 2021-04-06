@@ -1401,14 +1401,13 @@
 
 	function AppConfig()
 	{
-		this.format   = NB.confVersion;
-		this.max_undo = 50;               // board revisions to keep
-		this.fname    = null;             // font name
-		this.fs       = null;             // font-size
-		this.lh       = null;             // line-height
-		this.theme    = null;             // default or 'dark'
-		this.fsize    = null;             // default or 'z1'  -- deprecated
-		this.board    = null;             // active board
+		this.format     = NB.confVersion;
+		this.maxUndo    = 50;               // board revisions to keep
+		this.fontName   = null;             // font-family
+		this.fontSize   = null;             // font-size
+		this.lineHeight = null;             // line-height
+		this.theme      = null;             // default or 'dark'
+		this.board      = null;             // active board
 	}
 
 	function BoardMeta()
@@ -1463,19 +1462,19 @@
 
 		setFontName(fname)
 		{
-			this.conf.fname = fname;
+			this.conf.fontName = fname;
 			return this.setJson('config', this.conf);
 		}
 
 		setFontSize(fs)
 		{
-			this.conf.fs = fs;
+			this.conf.fontSize = fs;
 			return this.setJson('config', this.conf);
 		}
 
 		setLineHeight(lh)
 		{
-			this.conf.lh = lh;
+			this.conf.lineHeight = lh;
 			return this.setJson('config', this.conf);
 		}
 
@@ -1529,7 +1528,7 @@
 
 				for (var rev of meta.history)
 				{
-					if ( (rev_old < rev && rev < rev_new) || (rebuild.length >= this.conf.max_undo) )
+					if ( (rev_old < rev && rev < rev_new) || (rebuild.length >= this.conf.maxUndo) )
 					{
 						this.delItem('board.' + board.id + '.' + rev);
 						console.log( `Deleted revision ${rev} of ${board.id} (${board.title})` );
@@ -1729,8 +1728,8 @@
 
 				if (this.getItem('fsize') == 'z1')
 				{
-					this.conf.fs = 13;
-					this.conf.lh = 17;
+					this.conf.fontSize   = 13;
+					this.conf.lineHeight = 17;
 				}
 
 				if (! this.setJson('config', this.conf))
@@ -3187,48 +3186,40 @@
 	 */
 	function initFonts()
 	{
-		var fonts_togo = 0;
-		var fv_defs;
+		var toGo = 0;
+		var loaded = [];
+		var failed = [];
 
-		function getFontVars(selector)
-		{
-			var cssRules = document.styleSheets[0].rules;
-			var ret = { fs: null, lh: null };
-
-			for (var i=0; i<cssRules.length; i++)
-				if (cssRules[i].selectorText == selector)
-				{
-					ret.fs = parseFloat( cssRules[i].style.getPropertyValue('--fs') );
-					ret.lh = parseFloat( cssRules[i].style.getPropertyValue('--lh') );
-					break;
-				}
-
-			return ret;
-		}
-
-		NB.fonts = { };
 		NB.font = null; // current font
 
-		fv_defs = getFontVars('html');
-
 		//
+		function isUsable(f)
+		{
+			return ! failed.includes(f) && loaded.includes(f);
+		}
+
 		function onFontsLoaded()
 		{
 			var conf = NB.storage.getConfig();
 
-			if (conf.fname && ! NB.fonts.hasOwnProperty(conf.fname))
+			$('.config .switch-font').each(function(){
+				if (! isUsable($(this).attr('font')))
+					$(this).remove();
+			});
+
+			if (conf.fontName && ! isUsable(conf.fontName))
 			{
 				NB.storage.setFontName(null);
 				selectFont(null);
 			}
 
-			selectFont(conf.fname || 'barlow');
+			selectFont(conf.fontName || 'barlow');
 
-			if (conf.fs)
-				setFontSize(conf.fs);
+			if (conf.fontSize)
+				setFontSize(conf.fontSize);
 
-			if (conf.lh)
-				setLineHeight(conf.lh);
+			if (conf.lineHeight)
+				setLineHeight(conf.lineHeight);
 
 			updateFontSize();
 			updateLineHeight();
@@ -3240,42 +3231,28 @@
 
 			if (! ok)
 			{
-				$('.config .switch-font[font=' + f_name + ']').remove();
-				console.log( `Font: ${f.family} ${f.weight} - not loaded` );
+				console.log( `! Failed to load ${f.family} ${f.weight}` );
+				failed.push(f_name);
 			}
 			else
 			{
-				var fv = getFontVars( 'html.f-' + f_name );
-
-				fv.fs = fv.fs || fv_defs.fs;
-				fv.lh = fv.lh || fv_defs.lh;
-
-				NB.fonts[f_name] = fv;
+				loaded.push(f_name);
 			}
 
-			fonts_togo--;
-
-			if (fonts_togo == 0)
+			if (! --toGo)
 				onFontsLoaded();
 		}
 
-		document.fonts.onloadingdone = function(ev)
-		{
-			ev.fontfaces.forEach(function(f){ onFontLoaded(f, true); });
-		}
-
-		document.fonts.onloadingerror = function(ev)
-		{
-			ev.fontfaces.forEach(function(f){ onFontLoaded(f, false); });
-		}
-
 		document.fonts.forEach(function(f){
+
 			if (f.status == 'loaded')
 				return;
 
 			console.log( `Loading ${f.family} ${f.weight} ...` );
-			fonts_togo++;
-			f.load();
+			toGo++;
+			f.load()
+			 .then(function(){ onFontLoaded(f, true); })
+			 .catch(function(){ onFontLoaded(f, false); });
 		});
 	}
 
@@ -3774,7 +3751,7 @@
 
 	console.log( `Active: [${conf.board}]` );
 	console.log( `Theme:  [${conf.theme}]` );
-	console.log( `Font:   [${conf.fname}], size [${conf.fs || '-'}], line-height [${conf.lh || '-'}]` );
+	console.log( `Font:   [${conf.fontName}], size [${conf.fontSize || '-'}], line-height [${conf.lineHeight || '-'}]` );
 
 	//
 	initFonts();
