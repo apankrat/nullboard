@@ -199,12 +199,6 @@
 	}
 
 	/***/
-	html.fsize-z1 {
-		--fs: 13;
-		--lh: 17;
-	}
-
-	/***/
 	html, body, h1, textarea, input {
 		padding: 0;
 		margin: 0;
@@ -933,15 +927,6 @@
 	}
 
 	/***/
-	.fsize-z1 .config a.switch-fsize i {
-		display: inline;
-	}
-
-	.fsize-z1 .config a.switch-fsize b {
-		display: none;
-	}
-
-	/***/
 	.config a.switch-font.active:before {
 		content: '\2022 ';
 		display: inline-block;
@@ -1410,9 +1395,11 @@
 	{
 		this.format   = NB.confVersion;
 		this.max_undo = 50;               // board revisions to keep
-		this.theme    = null;             // default or 'dark'
-		this.fsize    = null;             // default or 'z1'
 		this.fname    = null;             // font name
+		this.fs       = null;             // font-size
+		this.lh       = null;             // line-height
+		this.theme    = null;             // default or 'dark'
+		this.fsize    = null;             // default or 'z1'  -- deprecated
 		this.board    = null;             // active board
 	}
 
@@ -1466,15 +1453,15 @@
 			return this.setJson('config', this.conf);
 		}
 
-		setFsize(fsize)
+		setFontName(fname)
 		{
-			this.conf.fsize = fsize;
+			this.conf.fname = fname;
 			return this.setJson('config', this.conf);
 		}
 
-		setFname(fname)
+		setFontSize(fs)
 		{
-			this.conf.fname = fname;
+			this.conf.fs = fs;
 			return this.setJson('config', this.conf);
 		}
 
@@ -1724,8 +1711,13 @@
 			else
 			{
 				this.conf.theme = this.getItem('theme');
-				this.conf.fsize = this.getItem('fsize');
 				this.conf.board = this.getItem('last_board');
+
+				if (this.getItem('fsize') == 'z1')
+				{
+					this.conf.fs = 13;
+					this.conf.lh = 17;
+				}
 
 				if (! this.setJson('config', this.conf))
 				{
@@ -3212,11 +3204,17 @@
 
 			if (conf.fname && ! NB.fonts.hasOwnProperty(conf.fname))
 			{
-				NB.storage.setFname(null);
+				NB.storage.setFontName(null);
 				selectFont(null);
 			}
 
 			selectFont(conf.fname || 'barlow');
+
+			if (conf.fs)
+				setFontSize(conf.fs);
+
+			if (conf.lh)
+				setLineHeight(conf.lh);
 
 			updateFontSize();
 			updateLineHeight();
@@ -3237,9 +3235,6 @@
 
 				fv.fs = fv.fs || fv_defs.fs;
 				fv.lh = fv.lh || fv_defs.lh;
-
-				fv.fs_cust = null;
-				fv.lh_cust = null;
 
 				NB.fonts[f_name] = fv;
 			}
@@ -3281,9 +3276,6 @@
 
 		var f = NB.fonts[NB.font];
 
-		$('html').css('--fs', (f.fs_cust || '') + '' );
-		$('html').css('--lh', (f.lh_cust || '') + '' );
-
 		updateFontSize();
 		updateLineHeight();
 	}
@@ -3319,6 +3311,8 @@
 		$val.html( val.toFixed(1) );
 		if (val == def) $val.parent().removeClass('custom');
 		else            $val.parent().addClass('custom');
+
+		return val;
 	}
 
 	function updateLineHeight()
@@ -3330,51 +3324,46 @@
 		$val.html( val.toFixed(1) );
 		if (val == def) $val.parent().removeClass('custom');
 		else            $val.parent().addClass('custom');
+
+		return val;
 	}
 
 	//
 	function setFontSize(fs)
 	{
-		if (fs < 9 || fs > 24)
-			return;
+		if (9 <= fs && fs <= 24)
+		{
+			$('html').css('--fs', fs + '');
+			updateFontSize();
 
-		$('html').css('--fs', fs + '');
-		NB.fonts[NB.font].fs_cust = fs;
-
-		updateFontSize();
-
-		if (getLineHeight() < fs)
-			setLineHeight(fs);
+			if (getLineHeight() < fs)
+				setLineHeight(fs);
+		}
+		return getFontSize();
 	}
 
 	function setLineHeight(lh)
 	{
 		var fs = getFontSize();
-
-		if (lh < fs || lh >= 3*fs)
-			return;
-
-		$('html').css('--lh', lh + '');
-		NB.fonts[NB.font].lh_cust = lh;
-
-		updateLineHeight();
+		if (fs <= lh && lh <= 3*fs)
+		{
+			$('html').css('--lh', lh + '');
+			updateLineHeight();
+		}
+		return getLineHeight();
 	}
 
 	//
 	function resetFontSize()
 	{
 		$('html').css('--fs', '');
-		NB.fonts[NB.font].fs_cust = null;
-		updateFontSize();
-		return getFontSize();
+		return updateFontSize();
 	}
 
 	function resetLineHeight()
 	{
 		$('html').css('--lh', '');
-		NB.fonts[NB.font].lh_cust = null;
-		updateLineHeight();
-		return getLineHeight();
+		return updateLineHeight();
 	}
 
 	/*
@@ -3678,23 +3667,17 @@
 		return false;
 	});
 
-	$('.config').on('click', '.switch-fsize', function(){
-		var $html = $('html');
-		$html.toggleClass('fsize-z1');
-		NB.storage.setFsize($html.hasClass('fsize-z1') ? 'z1' : '');
-		return false;
-	});
-
 	$('.config').on('click', '.switch-font', function(){
 		var font = $(this).attr('font');
 		selectFont(font);
-		NB.storage.setFname(font);
+		NB.storage.setFontName(font);
 		return false;
 	});
 
 	//
 	$('.config .f-prefs .ui-fs .less').on('click', function(){
-		setFontSize( getFontSize() - 0.5 );
+		var fs = setFontSize( getFontSize() - 0.5 );
+		NB.storage.setFontSize(fs);
 		return false;
 	});
 
@@ -3702,16 +3685,20 @@
 		var fs = resetFontSize();
 		if (getLineHeight() < fs)
 			setLineHeight(fs);
+		NB.storage.setFontSize(null);
 		return false;
 	});
 
 	$('.config .f-prefs .ui-fs .more').on('click', function(){
-		setFontSize( getFontSize() + 0.5 );
+		var fs = setFontSize( getFontSize() + 0.5 );
+		NB.storage.setFontSize(fs);
 		return false;
 	});
 
+	//
 	$('.config .f-prefs .ui-lh .less').on('click', function(){
-		setLineHeight( getLineHeight() - 0.5 );
+		var lh = setLineHeight( getLineHeight() - 0.5 );
+		NB.storage.setLineHeight(lh);
 		return false;
 	});
 
@@ -3719,11 +3706,13 @@
 		var lh = resetLineHeight();
 		if (lh < getFontSize())
 			setFontSize(lh);
+		NB.storage.setLineHeight(null);
 		return false;
 	});
 
 	$('.config .f-prefs .ui-lh .more').on('click', function(){
-		setLineHeight( getLineHeight() + 0.5 );
+		var lh = setLineHeight( getLineHeight() + 0.5 );
+		NB.storage.setLineHeight(lh);
 		return false;
 	});
 
@@ -3787,8 +3776,7 @@
 
 	console.log( `Active: [${conf.board}]` );
 	console.log( `Theme:  [${conf.theme}]` );
-	console.log( `FSize:  [${conf.fsize}]` );
-	console.log( `FName:  [${conf.fname}]` );
+	console.log( `Font:   [${conf.fname}], size [${conf.fs || '-'}], line-height [${conf.lh || '-'}]` );
 
 	//
 	initFonts();
@@ -3798,9 +3786,6 @@
 	//
 	if (conf.theme)
 		$('html').addClass('theme-' + conf.theme);
-
-	if (conf.fsize)
-		$('html').addClass('fsize-' + conf.fsize);
 
 	if (conf.board)
 		openBoard(conf.board)
