@@ -209,16 +209,6 @@
 		background: #f8f9fb;
 	}
 
-	body.dragging,
-	.no-user-select {
-		user-select: none;
-		-webkit-user-select: none;
-		-ms-user-select: none;
-		-webkit-touch-callout: none;
-		-o-user-select: none;
-		-moz-user-select: none;
-	}
-
 	@keyframes shake {
 		33%  { margin-left: -5px; }
 		66%  { margin-left:  5px; }
@@ -845,89 +835,103 @@
 	}
 
 	/***/
-	.config .bulk .ui-prefs .ui-prefs-more {
+	.config .bulk .section .title {
 		text-align: center;
 		cursor: default;
 		width: 0;
 		display: inline-block;
 		white-space: pre;
-		transition: width 400ms, color 800ms;
+		cursor: pointer;
+		transition: width 250ms, padding 250ms;
 	}
 
-	.config .bulk .ui-prefs .ui-prefs-more i {
+	.config .bulk .section .title i {
 		font-style: normal;
-		display: inline;
+		transition: opacity 100ms;
 	}
 
-	.config .bulk .ui-prefs .ui-prefs-bulk {
+	.config .bulk .section .details {
+		height: 0;
 		opacity: 0;
 		transition: opacity 250ms;
-		padding-bottom: 16px;
 		padding-right: 8px;
 		margin-right: -8px;
 	}
 
 	/***/
-	.config .bulk .ui-prefs:hover .ui-prefs-more {
+	.config .bulk .section.open {
+		padding-bottom: 8px;
+		border-bottom: 1px solid #00000028;
+	}
+
+	.config .bulk .section.open .title {
 		width: 100%;
 		font-weight: 500;
-		transition: width 400ms, color 800ms;
+		padding-left: 5px;
+		transition: width 250ms, padding 250ms;
 	}
 
-	.config .bulk .ui-prefs:hover .ui-prefs-more i {
-		display: none;
+	.config .bulk .section.open .title i {
+		opacity: 0;
+		transition: opacity 100ms;
 	}
 
-	.config .bulk .ui-prefs:hover .ui-prefs-bulk {
+	.config .bulk .section.open .details {
+		height: 100%;
 		opacity: 1;
 		transition: opacity 250ms;
 	}
 
 	/***/
-	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs table {
+	.config .bulk .ui-prefs .f-prefs table {
 		padding: 0;
 		margin: 0;
 		border-collapse: collapse;
 	}
 
-	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs td {
+	.config .bulk .ui-prefs .f-prefs td {
 		margin: 0;
 		padding: 0 0 0 5px;
 	}
 
-	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs td.name {
+	.config .bulk .ui-prefs .f-prefs td.name {
 		width: 100%;
 		white-space: pre;
 		padding-left: 0;
 	}
 
-	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs tr td.val {
+	.config .bulk .ui-prefs .f-prefs tr td.val {
 		text-align: center;
 	}
 
-	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs tr.custom td.val {
+	.config .bulk .ui-prefs .f-prefs tr.custom td.val {
 		color: #1489db;
 		cursor: pointer;
 	}
 
-	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs a {
+	.config .bulk .ui-prefs .f-prefs a {
 		display: inline-block;
 		padding: 0 2px;
 		transition: padding 250ms;
 	}
 
-	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs a.less:hover {
+	.config .bulk .ui-prefs .f-prefs a.less:hover {
 		padding: 0 4px 0 0;
 		transition: padding 250ms;
 	}
 
-	.config .bulk .ui-prefs .ui-prefs-bulk .f-prefs a.more:hover {
+	.config .bulk .ui-prefs .f-prefs a.more:hover {
+		padding: 0 0 0 4px;
+		transition: padding 250ms;
+	}
+
+	.config .bulk .ui-prefs .f-prefs a.more:hover {
 		padding: 0 0 0 4px;
 		transition: padding 250ms;
 	}
 
 	/***/
-	.config a.switch-font.active:before {
+	.config .bulk .ui-prefs .switch-font.active:before {
 		content: '\2022 ';
 		display: inline-block;
 		width: 13px;
@@ -1218,6 +1222,10 @@
 		border-top: 1px solid #fff2;
 	}
 
+	.theme-dark .config .bulk .ui-prefs .f-prefs tr.custom td.val {
+		color: #fc2;
+	}
+
 	.theme-dark .config a.switch-theme i {
 		display: inline;
 	}
@@ -1272,7 +1280,7 @@
 		</div>
 	</div>
 
-	<div class=config>
+	<div class='config no-user-select'>
 		<a href=# class=teaser>&equiv;</a>
 		<div class=bulk>
 			<a href=# class=add-board>Add new board...</a>
@@ -1285,9 +1293,9 @@
 			<a href=# class=imp-board>Import boards...</a>
 				<input class=imp-board-select type="file" accept=".nbx">
 
-			<div class="ui-prefs break">
-				<div class=ui-prefs-more>UI preferences<i>...</i></div>
-				<div class=ui-prefs-bulk>
+			<div class="section ui-prefs break">
+				<div class=title>UI preferences<i>...</i></div>
+				<div class=details>
 					<a href="#" class="switch-font active break" font="barlow">Use Barlow</a>
 					<a href="#" class="switch-font" font="ibm-plex">Use IBM Plex Sans</a>
 					<a href="#" class="switch-font" font="source-sans">Use Source Sans</a>
@@ -1295,7 +1303,7 @@
 					<a href="#" class="switch-font" font="segoe-ui">Use Segoe UI</a>
 					<a href="#" class="switch-font" font="maven-pro">Use Maven Pro</a>
 
-					<div class='f-prefs break no-user-select'>
+					<div class='f-prefs break'>
 						<table>
 						<tr class='ui-fs'><td class=name>Font size:</td>  <td><a href=# class=less>&lt;</a></td><td class=val>13</td><td><a href=# class=more>&gt;</a></td></tr>
 						<tr class='ui-lh'><td class=name>Line height:</td><td><a href=# class=less>&lt;</a></td><td class=val>1.2</td><td><a href=# class=more>&gt;</a></td></tr>
@@ -1303,7 +1311,6 @@
 					</div>
 
 					<a href="#" class="switch-theme break">Use <i>light</i><b>dark</b> theme</a>
-					<!-- a href="#" class="switch-fsize      ">Use <i>smaller</i><b>larger</b> font</a -->
 				</div>
 			</div>
 		</div>
@@ -1462,6 +1469,12 @@
 		setFontSize(fs)
 		{
 			this.conf.fs = fs;
+			return this.setJson('config', this.conf);
+		}
+
+		setLineHeight(lh)
+		{
+			this.conf.lh = lh;
 			return this.setJson('config', this.conf);
 		}
 
@@ -3660,10 +3673,9 @@
 		return true;
 	});
 
-	$('.config').on('click', '.switch-theme', function() {
-		var $html = $('html');
-		$html.toggleClass('theme-dark');
-		NB.storage.setTheme($html.hasClass('theme-dark') ? 'dark' : '');
+	//
+	$('.config .section .title').on('click', function(){
+		$(this).closest('.section').toggleClass('open');
 		return false;
 	});
 
@@ -3713,6 +3725,14 @@
 	$('.config .f-prefs .ui-lh .more').on('click', function(){
 		var lh = setLineHeight( getLineHeight() + 0.5 );
 		NB.storage.setLineHeight(lh);
+		return false;
+	});
+
+	//
+	$('.config').on('click', '.switch-theme', function() {
+		var $html = $('html');
+		$html.toggleClass('theme-dark');
+		NB.storage.setTheme($html.hasClass('theme-dark') ? 'dark' : '');
 		return false;
 	});
 
