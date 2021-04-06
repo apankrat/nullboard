@@ -904,7 +904,8 @@
 		text-align: center;
 	}
 
-	.config .bulk .ui-prefs .f-prefs tr.custom td.val {
+	.fs-set .config .bulk .ui-prefs .f-prefs tr.ui-fs td.val,
+	.lh-set .config .bulk .ui-prefs .f-prefs tr.ui-lh td.val {
 		color: #1489db;
 		cursor: pointer;
 	}
@@ -3280,14 +3281,13 @@
 
 	function selectFont(font)
 	 {
-		$('html').removeClass('f-' + NB.font).addClass('f-' + font);
+		var $html = $('html');
+		$html.removeClass('f-' + NB.font).addClass('f-' + font);
 		NB.font = font;
 
 		var $list = $('.config .switch-font');
 		$list.removeClass('active');
 		$list.filter('[font="' + font + '"]').addClass('active');
-
-		var f = NB.fonts[NB.font];
 
 		updateFontSize();
 		updateLineHeight();
@@ -3299,45 +3299,23 @@
 		return parseFloat( $('html').css('--fs') );
 	}
 
-	function getFontSize_def()
-	{
-		return NB.fonts[NB.font].fs;
-	}
-
 	function getLineHeight()
 	{
 		return parseFloat( $('html').css('--lh') );
 	}
 
-	function getLineHeight_def()
-	{
-		return NB.fonts[NB.font].lh;
-	}
-
 	//
 	function updateFontSize()
 	{
-		var $val = $('.config .f-prefs .ui-fs .val');
-		var def = getFontSize_def();
 		var val = getFontSize();
-
-		$val.html( val.toFixed(1) );
-		if (val == def) $val.parent().removeClass('custom');
-		else            $val.parent().addClass('custom');
-
+		$('.config .f-prefs .ui-fs .val').html( val.toFixed(1) );
 		return val;
 	}
 
 	function updateLineHeight()
 	{
-		var $val = $('.config .f-prefs .ui-lh .val');
-		var def = getLineHeight_def();
 		var val = getLineHeight();
-
-		$val.html( val.toFixed(1) );
-		if (val == def) $val.parent().removeClass('custom');
-		else            $val.parent().addClass('custom');
-
+		$('.config .f-prefs .ui-lh .val').html( val.toFixed(1) );
 		return val;
 	}
 
@@ -3346,7 +3324,7 @@
 	{
 		if (9 <= fs && fs <= 24)
 		{
-			$('html').css('--fs', fs + '');
+			$('html').css('--fs', fs + '').addClass('fs-set');
 			updateFontSize();
 
 			if (getLineHeight() < fs)
@@ -3360,7 +3338,7 @@
 		var fs = getFontSize();
 		if (fs <= lh && lh <= 3*fs)
 		{
-			$('html').css('--lh', lh + '');
+			$('html').css('--lh', lh + '').addClass('lh-set');
 			updateLineHeight();
 		}
 		return getLineHeight();
@@ -3369,13 +3347,13 @@
 	//
 	function resetFontSize()
 	{
-		$('html').css('--fs', '');
+		$('html').css('--fs', '').removeClass('fs-set');
 		return updateFontSize();
 	}
 
 	function resetLineHeight()
 	{
-		$('html').css('--lh', '');
+		$('html').css('--lh', '').removeClass('lh-set');
 		return updateLineHeight();
 	}
 
