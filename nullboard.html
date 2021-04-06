@@ -209,6 +209,7 @@
 		background: #f8f9fb;
 	}
 
+	/***/
 	@keyframes shake {
 		33%  { margin-left: -5px; }
 		66%  { margin-left:  5px; }
@@ -228,6 +229,7 @@
 		display: none;
 	}
 
+	/***/
 	.ding {
 		animation-name: shake;
 		animation-duration: 200ms;
@@ -288,7 +290,7 @@
 	/***/
 	.board .head {
 		padding: 5px 0;
-		margin: 0 5px;
+		margin: 1px 5px 0;
 		position: relative;
 	}
 
@@ -737,7 +739,7 @@
 		position: absolute;
 		top: 10px;
 		right: 21px;
-		line-height: calc(19rem / 11);
+		line-height: calc(19 / 11);
 		z-index: 3;
 		background: #f8f9fb;
 	}
@@ -778,6 +780,9 @@
 
 	.config .bulk .boards a.load-board {
 		display: block;
+		padding-left: 5px;
+		margin-left: -5px;
+		transition: none;
 	}
 
 	.config .bulk .boards a.load-board.active {
@@ -799,7 +804,12 @@
 		background: #DDE1E5;
 		border-radius: 2px;
 		color: transparent;
+		transition: none;
 		box-shadow: 0 0 1px #0002 inset;
+	}
+
+	.config .bulk .boards a.load-board.dragging.active:before {
+		content: '';
 	}
 
 	.load-dragster {
@@ -812,12 +822,8 @@
 		color: #000;
 		border-radius: 2px;
 		cursor: move;
-
-		box-shadow: 0 +1px 0 #ACB4BC inset,
-		            0 -1px 0 #ACB4BC inset,
-		            +1px 0 0 #ACB4BC inset,
-		            -1px 0 0 #ACB4BC inset,
-		            0px 1px 3px #00000030;
+		outline: 1px solid #ACB4BC;
+		box-shadow: 0px 1px 3px #00000030;
 	}
 
 	.config .bulk a i,
@@ -1072,18 +1078,18 @@
 	/*
 	 *	Dark mode
 	 */
-	html.theme-dark body {
-		background-color: #15171A;
+	.theme-dark body {
+		background: #09090A;
 		color: #d6d6d6;
 	}
 
 	.theme-dark .board .head {
-		background: #202224;
+		background: #17171a;
 	}
 
 	/***/
 	.theme-dark .board .menu {
-		background: linear-gradient(to right, #20222400, #202224 10px);
+		background: linear-gradient(to right, #17171a00, #17171a 10px);
 	}
 
 	.theme-dark .board .menu a {
@@ -1108,20 +1114,24 @@
 		color: #bf9d21;
 	}
 
+	.theme-dark .board > .head {
+		box-shadow: 0 0 2px #fff1 inset;
+	}
+
 	/***/
 	.theme-dark .board .list {
-		background: #202224;
+		background: #17171a;
+		box-shadow: 0 0 2px #fff1 inset;
 	}
 
 	.theme-dark .board .note {
-		background: #2B2C2F;
-		background: linear-gradient(#2B2C2F, #27282B);
-		box-shadow: 0 1px 3px #0005;
+		background: linear-gradient(#242426, #202022);
+		box-shadow: 0 1px 3px #000a;
 		text-shadow: 0 0 4px #0008;
 	}
 
-	.theme-dark.reveal .board .head .text a,
-	.theme-dark.reveal .board .note .text a {
+	.theme-dark .reveal .board .head .text a,
+	.theme-dark .reveal .board .note .text a {
 		color: #fc0;
 	}
 
@@ -1152,7 +1162,7 @@
 	}
 
 	.theme-dark .board .note .ops .bulk {
-		background: #202224;
+		background: #202022;
 		border-left: 1px solid #111;
 		border-bottom: 1px solid #111;
 	}
@@ -1172,16 +1182,14 @@
 	/***/
 	.theme-dark .board .note.dragging,
 	.theme-dark .board .note.dragging.raw {
-		background: #15171A;
-		box-shadow: 0 +1px 0 #000 inset,
-		            0 -1px 0 #000 inset,
-		            +1px 0 0 #000 inset,
-		            -1px 0 0 #000 inset;
+	    background: #09090A;
+	    outline: 1px solid #fff2;
 	}
 
 	.theme-dark .note-dragster {
-		box-shadow: 0px 1px 4px #000000;
-		background: #2e3032;
+		box-shadow: 0px 1px 4px #000;
+		background: linear-gradient(#242426, #202022);
+		outline: 1px solid #fc28;
 	}
 
 	.theme-dark .note-dragster a {
@@ -1205,9 +1213,27 @@
 	}
 
 	/***/
+	.theme-dark .logo a {
+		color: #ccc;
+	}
+
+	.theme-dark .logo,
+	.theme-dark.crowded .logo:hover {
+		background: #09090A;
+	}
+
+	.theme-dark .logo a:hover {
+		color: #fc2;
+	}
+
+	.theme-dark .logo > a:hover {
+		color: #fff;
+	}
+
+	/***/
 	.theme-dark .config,
 	.theme-dark.crowded .config:hover {
-		background: #15171A !important;
+		background: #09090A !important;
 	}
 
 	.theme-dark .config a {
@@ -1235,7 +1261,9 @@
 		border-top: 1px solid #fff2;
 	}
 
-	.theme-dark .config .bulk .ui-prefs .f-prefs tr.custom td.val {
+	.theme-dark.fs-set .config .bulk .ui-prefs .f-prefs tr.ui-fs td.val,
+	.theme-dark.lh-set .config .bulk .ui-prefs .f-prefs tr.ui-lh td.val,
+	.theme-dark.lw-set .config .bulk .ui-prefs .f-prefs tr.ui-lw td.val {
 		color: #fc2;
 	}
 
@@ -1248,36 +1276,18 @@
 	}
 
 	/***/
-	.theme-dark .config .bulk .boards .load-board.dragging {
-		background: #fff1;
-		color: transparent
+	.theme-dark .config .bulk .boards .load-board.dragging,
+	.theme-dark .config .bulk .boards .load-board.active.dragging {
+		background: #fff2;
+		color: transparent;
 	}
 
 	.theme-dark .load-dragster {
-		background: rgb(230, 177, 2);
+		background: #09090A; 
 		box-shadow: 0px 2px 4px #000;
-		outline: 1px solid #fc2;
-		color: #111;
+		outline: 1px solid #fc2a;
+		color: #ddd;
 	}
-
-	/***/
-	.theme-dark .logo a {
-		color: #ccc;
-	}
-
-	.theme-dark .logo,
-	.theme-dark.crowded .logo:hover {
-		background: #15171A;
-	}
-
-	.theme-dark .logo a:hover {
-		color: #fc2;
-	}
-
-	.theme-dark .logo > a:hover {
-		color: #fff;
-	}
-
 
 </style>
 
@@ -1298,7 +1308,7 @@
 		<div class=bulk>
 			<a href=# class=add-board>Add new board...</a>
 
-			<div class=boards>
+			<div class=boards draggable=false>
 				<!-- here'll be boards -->
 			</div>
 
@@ -1390,7 +1400,7 @@
 			<textarea class=edit spellcheck=false></textarea>
 		</div>
 
-		<a href=# class=load-board draggable=false></a>
+		<a href=# class=load-board></a>
 
 		<textarea class=encoder></textarea>
 
@@ -3343,6 +3353,7 @@ console.log('getListWidth -> ', lw)
 		{
 			$('html').css('--fs', fs + '').addClass('fs-set');
 			updateFontSize();
+			adjustLayout();
 
 			if (getLineHeight() < fs)
 				setLineHeight(fs);
@@ -3357,6 +3368,7 @@ console.log('getListWidth -> ', lw)
 		{
 			$('html').css('--lh', lh + '').addClass('lh-set');
 			updateLineHeight();
+			adjustLayout();
 		}
 		return getLineHeight();
 	}
@@ -3376,12 +3388,14 @@ console.log('getListWidth -> ', lw)
 	function resetFontSize()
 	{
 		$('html').css('--fs', '').removeClass('fs-set');
+		adjustLayout();
 		return updateFontSize();
 	}
 
 	function resetLineHeight()
 	{
 		$('html').css('--lh', '').removeClass('lh-set');
+		adjustLayout();
 		return updateLineHeight();
 	}
 
@@ -3797,6 +3811,8 @@ console.log('getListWidth -> ', lw)
 	});
 
 	$(window).resize(adjustLayout);
+
+	$('body').on('dragstart', function(){ return false; });
 
 	/*
 	 *	the init()
