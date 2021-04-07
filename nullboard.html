@@ -949,6 +949,20 @@
 	}
 
 	/***/
+	.adjusting * {
+		cursor: row-resize !important;
+	}
+
+	.adjusting .config .teaser {
+		display: none;
+	}
+
+	.adjusting .config .bulk {
+		display: block;
+		opacity: 1;
+	}
+
+	/***/
 	.overlay {
 		position: fixed;
 		z-index: 10;
@@ -1259,7 +1273,7 @@
 	}
 
 	.theme-dark .load-dragster {
-		background: #09090A; 
+		background: #09090A;
 		box-shadow: 0px 2px 4px #000;
 		outline: 1px solid #fc2a;
 		color: #ddd;
@@ -1394,6 +1408,15 @@
 
 <script src="extras/jquery-3.3.1.min.js"></script>
 <script>window.jQuery || document.write('<script src="https://code.jquery.com/jquery-3.3.1.min.js">\x3C/script>')</script>
+
+<script type="text/javascript">
+
+	Number.prototype.clamp = function(min, max)
+	{
+		return Math.min(Math.max(this, min), max);
+	};
+
+</script>
 
 <script type="text/javascript">
 
@@ -2228,6 +2251,58 @@
 			}
 
 			this.item = null;
+		}
+	}
+
+</script>
+
+<script type="text/javascript">
+
+	function VarAdjust()
+	{
+		// state
+		this.onChange = null;
+		this.startY = 0;
+		this.used = false;
+
+		// api
+		this.start = function(ev, onChange)
+		{
+			if (! onChange)
+				return;
+
+			this.onChange = onChange;
+			this.startY = ev.clientY;
+			this.used = false;
+
+			var self = this;
+			setTimeout(function(){
+				if (self.onChange)
+				{
+					$('body').addClass('adjusting');
+					self.used = true;
+					self.onChange(0);
+				}
+			}, 350);
+		}
+
+		this.onMouseMove = function(ev)
+		{
+			if (! this.onChange)
+				return;
+
+			$('body').addClass('adjusting');
+			self.used = true;
+			this.onChange(ev.clientY - this.startY);
+		}
+
+		this.end = function()
+		{
+			if (! this.onChange)
+				return;
+
+			$('body').removeClass('adjusting');
+			this.onChange = null;
 		}
 	}
 
@@ -3078,9 +3153,9 @@
 
 		var max  = $board.width();
 		var want = $lists[0].scrollWidth;
-		var have = $inner.width();
+		var have = $inner.outerWidth();
 
-		if (want <= max)
+		if (want <= max+1)
 		{
 			$scroller.hide();
 			return;
@@ -3228,7 +3303,7 @@
 			if (conf.lineHeight)
 				setLineHeight(conf.lineHeight);
 
-			updateVars();
+			updateVarsAndLayout();
 		}
 
 		function onFontLoaded(f, ok)
@@ -3272,8 +3347,7 @@
 		$list.removeClass('active');
 		$list.filter('[font="' + font + '"]').addClass('active');
 
-		updateVars();
-		adjustLayout();
+		updateVarsAndLayout();
 	}
 
 	//
@@ -3322,50 +3396,47 @@
 		return val;
 	}
 
-	function updateVars()
+	function updateVarsAndLayout()
 	{
 		updateFontSize();
 		updateLineHeight();
 		updateListWidth();
+		adjustLayout();
 	}
 
 	//
 	function setFontSize(fs)
 	{
-		if (9 <= fs && fs <= 24)
-		{
-			$('html').css('--fs', fs + '').addClass('fs-set');
-			updateVars();
-			adjustLayout();
+		fs = fs.clamp(9, 24);
 
-			if (getLineHeight() < fs)
-				setLineHeight(fs);
-		}
+		$('html').css('--fs', fs + '').addClass('fs-set');
+		updateVarsAndLayout();
+
+		if (getLineHeight() < fs)
+			setLineHeight(fs);
+
 		return getFontSize();
 	}
 
 	function setLineHeight(lh)
 	{
-		lh = parseInt(10*lh) / 10.; // trim to a single decimal digit
-
 		var fs = getFontSize();
-		if (fs <= lh && lh <= 3*fs)
-		{
-			$('html').css('--lh', lh + '').addClass('lh-set');
-			updateVars();
-			adjustLayout();
-		}
+
+		lh = parseInt(10*lh) / 10.; // trim to a single decimal digit
+		lh  = lh.clamp(fs, 3*fs);
+
+		$('html').css('--lh', lh + '').addClass('lh-set');
+		updateVarsAndLayout();
+
 		return getLineHeight();
 	}
 
 	function setListWidth(lw)
 	{
-		if (200 <= lw && lw <= 400)
-		{
-			$('html').css('--lw', lw + '').addClass('lw-set');
-			updateVars();
-			adjustLayout();
-		}
+		lw = lw.clamp(200, 400);
+
+		$('html').css('--lw', lw + '').addClass('lw-set');
+		updateVarsAndLayout();
 		return getListWidth();
 	}
 
@@ -3373,21 +3444,21 @@
 	function resetFontSize()
 	{
 		$('html').css('--fs', '').removeClass('fs-set');
-		adjustLayout();
+		updateVarsAndLayout();
 		return updateFontSize();
 	}
 
 	function resetLineHeight()
 	{
 		$('html').css('--lh', '').removeClass('lh-set');
-		adjustLayout();
+		updateVarsAndLayout();
 		return updateLineHeight();
 	}
 
 	function resetListWidth()
 	{
 		$('html').css('--lw', '').removeClass('lw-set');
-		adjustLayout();
+		updateVarsAndLayout();
 		return updateListWidth();
 	}
 
@@ -3653,15 +3724,34 @@
 			NB.loadDrag.prime(this, ev);
 	});
 
+	//
+	$('.config').on('mousedown', '.ui-fs .val', function(ev){
+		var org = getFontSize();
+		NB.varAdjust.start(ev, function(delta){ setFontSize( org + delta/50. ); });
+	});
+
+	$('.config').on('mousedown', '.ui-lh .val', function(ev){
+		var org = getLineHeight();
+		NB.varAdjust.start(ev, function(delta){ setLineHeight( org + delta/50. ); });
+	});
+
+	$('.config').on('mousedown', '.ui-lw .val', function(ev){
+		var org = getListWidth();
+		NB.varAdjust.start(ev, function(delta){ setListWidth( org + delta/5. ); });
+	});
+
+	//
 	$(document).on('mouseup', function(ev){
 		NB.noteDrag.end();
 		NB.loadDrag.end();
+		NB.varAdjust.end();
 	});
 
 	$(document).on('mousemove', function(ev){
 		setRevealState(ev);
 		NB.noteDrag.onMouseMove(ev);
 		NB.loadDrag.onMouseMove(ev);
+		NB.varAdjust.onMouseMove(ev);
 	});
 
 	//
@@ -3700,42 +3790,42 @@
 
 	//
 	$('.config .f-prefs .ui-fs .less').on('click', function(){
-		var fs = setFontSize( getFontSize() - 0.5 );
+		var fs = setFontSize( parseInt(10*getFontSize()) / 10. - 0.5 );
 		NB.storage.setFontSize(fs);
 		return false;
 	});
 
 	$('.config .f-prefs .ui-fs .val').on('click', function(){
+		if (NB.varAdjust.used) return false;
 		var fs = resetFontSize();
-		if (getLineHeight() < fs)
-			setLineHeight(fs);
+		if (getLineHeight() < fs) setLineHeight(fs);
 		NB.storage.setFontSize(null);
 		return false;
 	});
 
 	$('.config .f-prefs .ui-fs .more').on('click', function(){
-		var fs = setFontSize( getFontSize() + 0.5 );
+		var fs = setFontSize( parseInt(10*getFontSize()) / 10. + 0.5 );
 		NB.storage.setFontSize(fs);
 		return false;
 	});
 
 	//
 	$('.config .f-prefs .ui-lh .less').on('click', function(){
-		var lh = setLineHeight( getLineHeight() - 0.1 );
+		var lh = setLineHeight( parseInt(10*getLineHeight()) / 10. - 0.1 );
 		NB.storage.setLineHeight(lh);
 		return false;
 	});
 
 	$('.config .f-prefs .ui-lh .val').on('click', function(){
+		if (NB.varAdjust.used) return false;
 		var lh = resetLineHeight();
-		if (lh < getFontSize())
-			setFontSize(lh);
+		if (lh < getFontSize()) setFontSize(lh);
 		NB.storage.setLineHeight(null);
 		return false;
 	});
 
 	$('.config .f-prefs .ui-lh .more').on('click', function(){
-		var lh = setLineHeight( getLineHeight() + 0.1 );
+		var lh = setLineHeight( parseInt(10*getLineHeight()) / 10. + 0.1 );
 		NB.storage.setLineHeight(lh);
 		return false;
 	});
@@ -3748,6 +3838,7 @@
 	});
 
 	$('.config .f-prefs .ui-lw .val').on('click', function(){
+		if (NB.varAdjust.used) return false;
 		resetListWidth();
 		NB.storage.setListWidth(null);
 		return false;
@@ -3804,8 +3895,8 @@
 	 */
 	var NB =
 	{
-		codeVersion: 20210402,
-		blobVersion: 20190412, // board blobs in storage
+		codeVersion: 20210407,
+		blobVersion: 20190412, // board blob format in Storage
 		board: null,
 	};
 
@@ -3835,6 +3926,8 @@
 	initFonts();
 
 	initDragAndDrop();
+
+	NB.varAdjust = new VarAdjust()
 
 	//
 	if (conf.theme)
