@@ -128,9 +128,8 @@
 	html {
 		--ff: f-barlow, sans-serif;
 
-		--fs: 11; /* font-size   */
-		--lh: 15; /* line-height */
-
+		--fs: 11;                        /* font-size   */
+		--lh: calc( var(--fs) * 1.25 );  /* line-height */
 		--fs-head: 13.6;                 /* font-size of board heading */
 		--fs-nops: 9;                    /* font-size of the note ops */
 		--lw: calc(20 * var(--fs) + 30); /* .list width */
@@ -151,14 +150,6 @@
 	}
 
 	/***/
-	html.f-maven-pro {
-		--ff: f-maven-pro, sans-serif;
-		--fs: 12;
-		--fs-head: 13;
-		--lw: calc(20 * var(--fs) + 47);  /* .list width */
-	}
-
-	/***/
 	html.f-open-sans {
 		--ff: f-open-sans, sans-serif;
 		--fs: 11;
@@ -173,6 +164,14 @@
 		--fs-head: 13;
 		--fs-nops: 8;
 		--lw: calc(22 * var(--fs) + 40);  /* .list width */
+	}
+
+	/***/
+	html.f-maven-pro {
+		--ff: f-maven-pro, sans-serif;
+		--fs: 12;
+		--fs-head: 13;
+		--lw: calc(20 * var(--fs) + 47);  /* .list width */
 	}
 
 	/***/
@@ -3229,8 +3228,7 @@
 			if (conf.lineHeight)
 				setLineHeight(conf.lineHeight);
 
-			updateFontSize();
-			updateLineHeight();
+			updateVars();
 		}
 
 		function onFontLoaded(f, ok)
@@ -3274,30 +3272,32 @@
 		$list.removeClass('active');
 		$list.filter('[font="' + font + '"]').addClass('active');
 
-		updateFontSize();
-		updateLineHeight();
-		updateListWidth();
+		updateVars();
 		adjustLayout();
 	}
 
 	//
+	function getVar(name)
+	{
+		var v = $('html').css(name);
+		var m = v.match(/^\s*calc\((.*)\)$/);
+		if (m) v = eval(m[1]);
+		return parseFloat( v );
+	}
+
 	function getFontSize()
 	{
-		return parseFloat( $('html').css('--fs') );
+		return getVar('--fs');
 	}
 
 	function getLineHeight()
 	{
-		return parseFloat( $('html').css('--lh') );
+		return getVar('--lh');;
 	}
 
 	function getListWidth()
 	{
-		var lw = $('html').css('--lw');
-		var m = lw.match(/^\s*calc\((.*)\)$/);
-		if (m) lw = eval(m[1]);
-console.log('getListWidth -> ', lw)
-		return parseInt( lw );
+		return parseInt( getVar('--lw') );
 	}
 
 	//
@@ -3322,13 +3322,20 @@ console.log('getListWidth -> ', lw)
 		return val;
 	}
 
+	function updateVars()
+	{
+		updateFontSize();
+		updateLineHeight();
+		updateListWidth();
+	}
+
 	//
 	function setFontSize(fs)
 	{
 		if (9 <= fs && fs <= 24)
 		{
 			$('html').css('--fs', fs + '').addClass('fs-set');
-			updateFontSize();
+			updateVars();
 			adjustLayout();
 
 			if (getLineHeight() < fs)
@@ -3339,11 +3346,13 @@ console.log('getListWidth -> ', lw)
 
 	function setLineHeight(lh)
 	{
+		lh = parseInt(10*lh) / 10.; // trim to a single decimal digit
+
 		var fs = getFontSize();
 		if (fs <= lh && lh <= 3*fs)
 		{
 			$('html').css('--lh', lh + '').addClass('lh-set');
-			updateLineHeight();
+			updateVars();
 			adjustLayout();
 		}
 		return getLineHeight();
@@ -3354,8 +3363,8 @@ console.log('getListWidth -> ', lw)
 		if (200 <= lw && lw <= 400)
 		{
 			$('html').css('--lw', lw + '').addClass('lw-set');
+			updateVars();
 			adjustLayout();
-			updateListWidth();
 		}
 		return getListWidth();
 	}
@@ -3712,7 +3721,7 @@ console.log('getListWidth -> ', lw)
 
 	//
 	$('.config .f-prefs .ui-lh .less').on('click', function(){
-		var lh = setLineHeight( getLineHeight() - 0.5 );
+		var lh = setLineHeight( getLineHeight() - 0.1 );
 		NB.storage.setLineHeight(lh);
 		return false;
 	});
@@ -3726,7 +3735,7 @@ console.log('getListWidth -> ', lw)
 	});
 
 	$('.config .f-prefs .ui-lh .more').on('click', function(){
-		var lh = setLineHeight( getLineHeight() + 0.5 );
+		var lh = setLineHeight( getLineHeight() + 0.1 );
 		NB.storage.setLineHeight(lh);
 		return false;
 	});
