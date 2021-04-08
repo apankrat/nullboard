@@ -720,7 +720,8 @@
 		background: #f8f9fb;
 	}
 
-	.crowded .config:hover {
+	.crowded .config:hover,
+	.crowded.adjusting .config {
 		background: #fff;
 		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 	}
@@ -939,11 +940,13 @@
 		opacity: 0;
 	}
 
-	.config:hover .teaser {
+	.config:hover .teaser,
+	.adjusting .config .teaser {
 		display: none;
 	}
 
-	.config:hover .bulk {
+	.config:hover .bulk,
+	.adjusting .config .bulk {
 		display: block;
 		opacity: 1;
 	}
@@ -951,15 +954,6 @@
 	/***/
 	.adjusting * {
 		cursor: row-resize !important;
-	}
-
-	.adjusting .config .teaser {
-		display: none;
-	}
-
-	.adjusting .config .bulk {
-		display: block;
-		opacity: 1;
 	}
 
 	/***/
@@ -2277,13 +2271,11 @@
 
 			var self = this;
 			setTimeout(function(){
-				if (self.onChange)
-				{
-					$('body').addClass('adjusting');
-					self.used = true;
-					self.onChange(0);
-				}
-			}, 350);
+				if (! self.onChange)
+					return;
+				$('body').addClass('adjusting');
+				self.used = true;
+			}, 250);
 		}
 
 		this.onMouseMove = function(ev)
@@ -3155,7 +3147,7 @@
 		var want = $lists[0].scrollWidth;
 		var have = $inner.outerWidth();
 
-		if (want <= max+1)
+		if (want <= max+5)
 		{
 			$scroller.hide();
 			return;
