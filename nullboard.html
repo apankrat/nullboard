@@ -1774,6 +1774,7 @@
 		openInner()
 		{
 			var conf = this.getJson('config');
+			var newInstall = true;
 
 			if (conf && (conf.format != NB.confVersion))
 			{
@@ -1789,9 +1790,6 @@
 			}
 			else
 			{
-				this.conf.verLast = 20210327;
-				this.conf.verSeen = 20200220; // 20200429;
-
 				this.conf.theme = this.getItem('theme');
 
 				if (this.getItem('fsize') == 'z1')
@@ -1855,6 +1853,8 @@
 				if (! m)
 					continue;
 
+				newInstall = false;
+
 				var board_id = parseInt(m[1]);
 				if (this.boardIndex.has(board_id))
 					continue;
@@ -1869,6 +1869,12 @@
 
 			if (this.conf.board && ! this.boardIndex.has(this.conf.board))
 				this.conf.board = null;
+
+			if (! conf && ! newInstall) // pre-20210410 upgrade
+			{
+				this.conf.verLast = 20210327;
+				this.conf.verSeen = 20200220; // 20200429;
+			}
 
 			this.type = 'LocalStorage';
 
@@ -2954,7 +2960,7 @@
 	{
 		var conf = NB.storage.getConfig();
 
-		if (conf.verSeen < NB.codeVersion)
+		if (conf.verSeen && conf.verSeen < NB.codeVersion)
 		{
 			$('.logo').addClass('updated');
 			$('.logo .alert').html("(updated)");
