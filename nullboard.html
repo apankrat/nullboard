@@ -668,8 +668,8 @@
 		left: 9px;
 		line-height: calc(19 / 11);
 		padding: 6px 12px;
-		opacity: 0.6;
 		z-index: 3;
+		opacity: 0.6;
 		background: #f8f9fb;
 	}
 
@@ -680,6 +680,13 @@
 
 	.logo:hover {
 		opacity: 1.0;
+	}
+
+	.logo .alert {
+		display: none;
+		font-style: normal;
+		margin-left: 5px;
+		color: #d20;
 	}
 
 	.logo .bulk {
@@ -695,19 +702,36 @@
 		opacity: 1;
 	}
 
-	.logo a {
+	.logo a.site,
+	.logo .bulk a {
 		color: #000;
-		display: block;
 	}
 
-	.logo a:hover {
+	.logo .bulk a:hover {
 		color: #1489db;
+	}
+
+	.logo .bulk a {
+		display: block;
 	}
 
 	.logo .bulk a:before {
 		display: inline-block;
 		content: '-';
 		width: 11px;
+	}
+
+	/***/
+	.logo.updated {
+		opacity: 1;
+	}
+
+	.logo.updated .alert {
+		display: inline-block;
+	}
+
+	.logo.updated .bulk .view-changes {
+		color: #d20;
 	}
 
 	/***/
@@ -827,6 +851,7 @@
 	}
 
 	/***/
+
 	.config .bulk .section .title {
 		text-align: center;
 		width: 0;
@@ -878,6 +903,7 @@
 
 	/***/
 	.config .bulk .ui-prefs .f-prefs table {
+		width: 10px; /* mobile safari */
 		padding: 0;
 		margin: 0;
 		border-collapse: collapse;
@@ -1277,11 +1303,13 @@
 
 </head>
 <body>
-	<div class=logo>
-		<a href=https://nullboard.io>Nullboard</a>
+	<div class="logo">
+		<a class=site href=https://nullboard.io>Nullboard</a>
+		<i class=alert></i>
 		<div class=bulk>
 			<a href=# class=view-about>About</a>
 			<a href=# class=view-license>License</a>
+			<a href=https://nullboard.io/changes target=_blank class=view-changes>Changes</a>
 			<a href=https://nullboard.io/github  target=_blank>Github</a>
 			<a href=https://nullboard.io/twitter target=_blank>Twitter</a>
 		</div>
@@ -1417,12 +1445,16 @@
 	function AppConfig()
 	{
 		this.format     = NB.confVersion;
+		this.verLast    = null;             // last used codeVersion
+		this.verSeen    = null;             // latest codeVersion they saw the changelog for
+
 		this.maxUndo    = 50;               // board revisions to keep
 		this.fontName   = null;             // font-family
 		this.fontSize   = null;             // font-size
 		this.lineHeight = null;             // line-height
 		this.listWidth  = null;             // list-width
 		this.theme      = null;             // default or 'dark'
+
 		this.board      = null;             // active board
 	}
 
@@ -1457,6 +1489,18 @@
 		getConfig()
 		{
 			return this.conf;
+		}
+
+		setVerLast(ver)
+		{
+			this.conf.verLast = ver || NB.codeVersion;
+			return this.setJson('config', this.conf);
+		}
+
+		setVerSeen(ver)
+		{
+			this.conf.verSeen = ver || NB.codeVersion;
+			return this.setJson('config', this.conf);
 		}
 
 		setActiveBoard(board_id)
@@ -1745,8 +1789,10 @@
 			}
 			else
 			{
+				this.conf.verLast = 20210327;
+				this.conf.verSeen = 20200220; // 20200429;
+
 				this.conf.theme = this.getItem('theme');
-				this.conf.board = this.getItem('last_board');
 
 				if (this.getItem('fsize') == 'z1')
 				{
@@ -1759,6 +1805,8 @@
 					this.conf = null;
 					return false;
 				}
+
+				this.conf.board = this.getItem('last_board');
 			}
 
 			this.boardIndex = new Map();
@@ -2902,6 +2950,23 @@
 		if (! empty) $index.show();
 	}
 
+	function setWhatsNew()
+	{
+		var conf = NB.storage.getConfig();
+
+		if (conf.verSeen < NB.codeVersion)
+		{
+			$('.logo').addClass('updated');
+			$('.logo .alert').html("(updated)");
+		}
+
+		var $link = $('.logo .view-changes');
+		var link = $link.attr('href') + '/?have=' + NB.codeVersion;
+		if (conf.verSeen) link += '&seen=' + conf.verSeen;
+		if (conf.verLast) link += '&last=' + conf.verLast;
+		$link.attr('href', link);
+	}
+
 	/*
 	 *	generic utils
 	 */
@@ -3300,8 +3365,8 @@
 
 		function onFontLoaded(f, ok)
 		{
-			var f_name = f.family.substr(3,f.family.length-4);
-
+			var m = f.family.match(/["']?f-([^"']*)/);
+			var f_name = m ? m[1] : ''; /* ios safari will set 'family' to 'weight' on failure ! */
 			if (! ok)
 			{
 				console.log( `! Failed to load ${f.family} ${f.weight}` );
@@ -3878,6 +3943,13 @@
 		return false;
 	});
 
+	$('.view-changes').click(function(){
+		if (! $('.logo').hasClass('updated'))
+			return;
+		NB.storage.setVerSeen();
+		$('.logo').removeClass('updated');
+	});
+
 	$(window).resize(adjustLayout);
 
 	$('body').on('dragstart', function(){ return false; });
@@ -3887,7 +3959,7 @@
 	 */
 	var NB =
 	{
-		codeVersion: 20210407,
+		codeVersion: 20210410,
 		blobVersion: 20190412, // board blob format in Storage
 		board: null,
 	};
@@ -3926,11 +3998,15 @@
 		$('html').addClass('theme-' + conf.theme);
 
 	if (conf.board)
-		openBoard(conf.board)
+		openBoard(conf.board);
 
 	adjustLayout();
 
 	updateBoardIndex();
+
+	setWhatsNew();
+
+	NB.storage.setVerLast();
 
 	//
 	if (! NB.board && ! $('.config .load-board').length)

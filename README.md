@@ -46,7 +46,7 @@ Longer notes can be collapsed to show just the first line, for even more compact
 
 ![Collapsed notes](images/nullboard-collapsed-notes.gif)
 
-The font is [Barlow](https://tribby.com/fonts/barlow/) - it's both narrow *and* still very legible. Absolutely fantastic design!
+The default font is [Barlow](https://tribby.com/fonts/barlow/) - it's both narrow *and* still very legible. Absolutely fantastic design!
 
 ![Barlow speciment](images/barlow-specimen.png)
 
@@ -66,9 +66,13 @@ Lists can be moved around as well, though not as flashy as notes:
 
 ![List swapping](images/nullboard-list-swap.gif)
 
-The color theme can be inversed and the font size can be increased:
+The font can be changed; its size and line height can be adjusted:
 
-![Theme and zoom](images/nullboard-theme-and-zoom.gif)
+![Theme and zoom](images/nullboard-ui-preferences.gif)
+
+The color theme can be inverted:
+
+![Dark theme](images/nullboard-dark-theme.gif)
 
 Also:
 
