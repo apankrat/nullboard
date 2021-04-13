@@ -1455,15 +1455,18 @@
 		this.listWidth  = null;             // list-width
 		this.theme      = null;             // default or 'dark'
 
+		this.backups    = [ ];              // [ { id: '?', conf: { } } ];
+
 		this.board      = null;             // active board
 	}
 
 	function BoardMeta()
 	{
 		this.title   = '';
-		this.current = 1;                 // revision
-		this.ui_spot = 0;                 // 0 = not set
-		this.history = [ ];               // revision IDs
+		this.current = 1;                   // revision
+		this.ui_spot = 0;                   // 0 = not set
+		this.history = [ ];                 // revision IDs
+		this.backups = [ ];                 // backup agents IDs with which this board is stored
 	}
 
 	class Storage
@@ -1474,6 +1477,8 @@
 
 			this.conf = new AppConfig();
 			this.boardIndex = new Map();
+
+			this.backups = [];          // BackupStorage
 		}
 
 		open()
@@ -1494,13 +1499,13 @@
 		setVerLast(ver)
 		{
 			this.conf.verLast = ver || NB.codeVersion;
-			return this.setJson('config', this.conf);
+			return this.saveConfig();
 		}
 
 		setVerSeen(ver)
 		{
 			this.conf.verSeen = ver || NB.codeVersion;
-			return this.setJson('config', this.conf);
+			return this.saveConfig();
 		}
 
 		setActiveBoard(board_id)
@@ -1510,42 +1515,56 @@
 			if (! meta)
 				throw `Invalid board_id in setActiveBoard(... ${board_id})`;
 
+			if (this.conf.board == board_id)
+				return true;
+
 			this.conf.board = board_id;
-			return this.setJson('config', this.conf);
+			return this.saveConfig();
 		}
 
 		setTheme(theme)
 		{
 			if (this.conf.theme == theme) return;
 			this.conf.theme = theme;
-			return this.setJson('config', this.conf);
+			return this.saveConfig();
 		}
 
 		setFontName(fname)
 		{
 			if (this.conf.fontName == fname) return;
 			this.conf.fontName = fname;
-			return this.setJson('config', this.conf);
+			return this.saveConfig();
 		}
 
 		setFontSize(fs)
 		{
 			if (this.conf.fontSize == fs) return;
 			this.conf.fontSize = fs;
-			return this.setJson('config', this.conf);
+			return this.saveConfig();
 		}
 
 		setLineHeight(lh)
 		{
 			if (this.conf.lineHeight == lh) return;
 			this.conf.lineHeight = lh;
-			return this.setJson('config', this.conf);
+			return this.saveConfig();
 		}
 
 		setListWidth(lw)
 		{
 			if (this.conf.listWidth == lw) return;
 			this.conf.listWidth = lw;
+			return this.saveConfig();
+		}
+
+		saveConfig()
+		{
+			var self = this;
+
+			this.backups.forEach(function(store){
+				store.saveConfig(self.conf);
+			});
+
 			return this.setJson('config', this.conf);
 		}
 
@@ -1613,8 +1632,19 @@
 				meta.history = rebuild;
 			}
 
+			meta.backups = [];
+
+			/*
+			 *	save meta
+			 */
 			ok_meta = this.setJson('board.' + board.id + '.meta', meta) &&
 			          this.setJson('board.' + board.id, meta.current); // for older versions
+
+			/*
+			 *	run backups
+			 */
+			if (ok_meta && ok_data)
+				this.backupBoard(board)
 
 			board.history = meta.history; // restore
 
@@ -1674,6 +1704,10 @@
 
 			this.delItem('board.' + board_id + '.meta');
 			this.boardIndex.delete(board_id);
+
+			this.backups.forEach(function(store){
+				store.nukeBoard(board_id);
+			});
 
 			console.log( `Deleted board ${board_id} (${title})` );
 		}
@@ -1749,6 +1783,22 @@
 
 			return true;
 		}
+
+		backupBoard(board)
+		{
+			var self = this;
+			var meta = this.boardIndex.get(board.id);
+			var toGo = 0;
+
+			this.backups.forEach(function(store){
+				store.saveBoard(board.id, board, meta, function(ok){
+console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` );
+					if (ok) meta.backups.push(store.id);
+					if (! --toGo) self.setJson('board.' + board.id + '.meta', meta);
+				});
+				toGo++;
+			});
+		}
 	};
 
 	class Storage_Local extends Storage
@@ -1791,7 +1841,7 @@
 
 			if (conf)
 			{
-				this.conf = conf;
+				this.conf = Object.assign(new AppConfig(), conf);
 			}
 			else
 			{
@@ -1951,6 +2001,89 @@
 		}
 	}
 
+	/*
+	 *
+	 */
+	class BackupStorage
+	{
+		constructor(conf)
+		{
+			this.id = '?';
+			this.conf = conf;
+		}
+
+		checkStatus(cb)                { return false; }
+		saveConfig(conf, cb)           { throw 'implement-me'; }
+		saveBoard (id, data, meta, cb) { throw 'implement-me'; }
+		nukeBoard (id, cb)             { throw 'implement-me'; }
+	}
+
+	class SimpleBackup extends BackupStorage
+	{
+		constructor(conf)
+		{
+			super();
+			this.id = 'sb';
+			this.conf = { base: 'http://127.0.0.1:10001', auth: '' }
+			this.conf = Object.assign(this.conf, conf);
+		}
+
+		checkStatus(cb)
+		{
+			var self = this;
+
+			$.get(this.conf.base + '/nullboard/status')
+			 .done(function(){ cb.call(self,  true); })
+			 .fail(function(){ cb.call(self, false); })
+		}
+
+		saveConfig(conf, cb)
+		{
+			var self = this;
+
+			$.ajax({
+				url: this.conf.base + '/nullboard/config',
+				type: 'put',
+				headers: { 'X-Access-Token': this.conf.auth },
+				data: JSON.stringify(conf),
+			})
+			.done(function(){ if (cb) cb.call(self,  true); })
+			.fail(function(){ if (cb) cb.call(self, false); })
+		}
+
+		saveBoard(id, data, meta, cb)
+		{
+			var self = this;
+
+			$.ajax({
+				url: this.conf.base + '/nullboard/board/' + id,
+				type: 'put',
+				headers: { 'X-Access-Token': this.conf.auth },
+				data:
+				{
+					data: data ? JSON.stringify(data) : null,
+					meta: meta ? JSON.stringify(meta) : null
+				},
+				dataType: 'json',
+			})
+			.done(function(){ if (cb) cb.call(self,  true); })
+			.fail(function(){ if (cb) cb.call(self, false); })
+		}
+
+		nukeBoard(id, cb)
+		{
+			var self = this;
+
+			$.ajax({
+				url:  this.conf.base + '/nullboard/board/' + id,
+				type: 'delete',
+				headers: { 'X-Access-Token': this.conf.auth },
+			})
+			.done(function(){ if (cb) cb.call(self,  true); })
+			.fail(function(){ if (cb) cb.call(self, false); })
+		}
+	}
+
 </script>
 
 <script type="text/javascript">
@@ -2047,8 +2180,6 @@
 
 		this.onPrimed = function()
 		{
-			console.log('onPrimed');
-
 			clearTimeout(this.priming);
 			this.priming = null;
 
@@ -2568,8 +2699,9 @@
 		NB.board = null;
 		NB.storage.setActiveBoard(null);
 
-		updateUndoRedo();
+//		updateUndoRedo();
 		updateBoardIndex();
+		updatePageTitle();
 	}
 
 	//
@@ -2614,13 +2746,16 @@
 	function deleteBoard()
 	{
 		var $list = $('.wrap .board .list');
+		var board_id = NB.board.id;
 
 		if ($list.length && ! confirm("PERMANENTLY delete this board, all its lists and their notes?"))
 			return;
 
-		NB.storage.nukeBoard(NB.board.id);
-
 		closeBoard();
+
+		NB.storage.nukeBoard(board_id);
+
+		updateBoardIndex();
 	}
 
 	//
@@ -2883,6 +3018,23 @@
 		}
 
 		openBoard(data[0].id);
+	}
+
+	/*
+	 *
+	 */
+	function initBackups()
+	{
+		var conf = NB.storage.getConfig();
+
+		NB.backupTypes = new Map();
+		NB.backupTypes.set('sb', SimpleBackup);
+
+		conf.backups.forEach(function(agent){
+			var x = NB.backupTypes.get(agent.id);
+			if (x)
+				NB.storage.backups.push(new x(agent.conf));
+		});
 	}
 
 	/*
@@ -3319,7 +3471,7 @@
 			}
 			else
 			{
-				if (drag.org_log != noteLocation($note))
+				if (this.org_loc != noteLocation($note))
 					saveBoard();
 			}
 		}
@@ -4027,7 +4179,8 @@
 	console.log( `Theme:  [${conf.theme}]` );
 	console.log( `Font:   [${conf.fontName}], size [${conf.fontSize || '-'}], line-height [${conf.lineHeight || '-'}]` );
 
-	//
+	initBackups();
+
 	initFonts();
 
 	initDragAndDrop();
