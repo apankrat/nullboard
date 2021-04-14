@@ -1853,20 +1853,23 @@
 			var self = this;
 			var pending = 0;
 			var success = true;
+			var store_id = 1;
 
 			this.backups = [];
 
 			this.conf.backups.forEach(function(agent){
-				var T = NB.backupTypes.get(agent.id);
+				var T = NB.backupTypes.get(agent.type);
 				if (! T)
 				{
-					console.log( `Unknown backup type "${agent.id}" - skipped` );
+					console.log( `Unknown backup type "${agent.type}" - skipped` );
 					return;
 				}
 
 				var store = new T(agent.conf);
+				store.id = `${store.type}-${store_id++}`;
 				self.backups.push(store);
-				console.log( `Added backup storage of type '${agent.id}'` );
+
+				console.log( `Added backup storage of type '${store.type}' -> '${store.id}'` );
 
 				self.setBackupStatus('busy');
 
@@ -2161,6 +2164,8 @@
 		constructor(conf)
 		{
 			this.id = '?';
+
+			this.type = '?';
 			this.conf = conf;
 		}
 
@@ -2175,7 +2180,7 @@
 		constructor(conf)
 		{
 			super();
-			this.id = 'simp';
+			this.type = 'simp';
 			this.conf = { base: 'http://127.0.0.1:10001', auth: '' }
 			this.conf = Object.assign(this.conf, conf);
 		}
@@ -3182,7 +3187,7 @@
 		if (conf.backups.length)
 			conf.backups = [];
 		else
-			conf.backups.push( { id: 'simp', conf: { auth: 'hello.there' } });
+			conf.backups.push( { type: 'simp', conf: { auth: 'hello.there' } });
 
 		NB.storage.saveConfig();
 		NB.storage.initBackups(onBackupStatus);
@@ -4356,13 +4361,13 @@
 	console.log( `Active:  [${conf.board}]` );
 	console.log( `Theme:   [${conf.theme}]` );
 	console.log( `Font:    [${conf.fontName}], size [${conf.fontSize || '-'}], line-height [${conf.lineHeight || '-'}]` );
-	console.log( 'Backups: ', conf.backups);
+	console.log( 'Backups: ' + JSON.stringify(conf.backups));
 
 	/*
 	 *	backups
 	 */
 	NB.backupTypes = new Map();
-	NB.backupTypes.set( (new SimpleBackup).id, SimpleBackup );
+	NB.backupTypes.set( (new SimpleBackup).type, SimpleBackup );
 
 	NB.storage.initBackups(onBackupStatus);
 
