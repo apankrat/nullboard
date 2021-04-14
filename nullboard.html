@@ -2105,8 +2105,11 @@
 			var x = pos.left + $drag.width()/2 - $win.scrollLeft();
 			var y = pos.top + $drag.height()/2 - $win.scrollTop();
 
-			var target = null;    // if over some item
-			var before = false;   // if should go before that item
+			var targetList = null;
+			var targetItem = null;  // if over some item
+			var before = false;     // if should go before targetItem
+
+			var $target;
 
 			$(this.listSel).each(function(){
 
@@ -2139,54 +2142,68 @@
 					if (this == drag.item)
 						return;
 
-					target = this;
+					targetList = list;
+					targetItem = this;
 					before = (y < (rcItem.top + rcItem.bottom)/2);
 				});
 
 				if (y < rcList.top)
 				{
-					target = itemTop;
+					targetList = list;
+					targetItem = itemTop;
 					before = true;
 				}
 				else
 				if (y >= rcList.bottom)
 				{
-					target = itemBottom;
+					targetList = list;
+					targetItem = itemBottom;
 					before = false;
 				}
 
 			});
 
-			if (! target)
+			if (! targetList)
 				return;
 
-			if (target == drag.item)
-				return;
+			if (targetItem)
+			{
+				if (targetItem == drag.item)
+					return;
 
-			if (! before && $(target).next()[0] == drag.item ||
-			      before && $(target).prev()[0] == drag.item)
-				return;
+				$target = $(targetItem);
+
+				if (! before && $target.next()[0] == drag.item ||
+				      before && $target.prev()[0] == drag.item)
+					return;
+			}
 
 			/*
 			 *	swap 'em
 			 */
-			var $target = $(target);
-
 			var have = drag.item;
 			var $have = $(have);
 			var $want = $have.clone();
 
 			$want.css({ display: 'none' });
 
-			if (before)
+			if (targetItem)
 			{
-				$want.insertBefore($target);
-				$want = $target.prev();
+				if (before)
+				{
+					$want.insertBefore($target);
+					$want = $target.prev();
+				}
+				else
+				{
+					$want.insertAfter($target);
+					$want = $target.next();
+				}
 			}
 			else
 			{
-				$want.insertAfter($target);
-				$want = $target.next();
+				var $list = $(targetList);
+				$want = $list.append($want).find(drag.itemSel)
 			}
 
 			drag.item = $want[0];
@@ -2201,7 +2218,7 @@
 			/*
 			 *	see if it's a same-list move
 			 */
-			if (target.parentNode == have.parentNode)
+			if (targetList == have.parentNode)
 			{
 				var delta = $have.offset().top - $target.offset().top;
 
@@ -3269,7 +3286,7 @@
 	function initDragAndDrop()
 	{
 		NB.noteDrag = new Drag2();
-		NB.noteDrag.listSel = '.board .list';
+		NB.noteDrag.listSel = '.board .list .notes';
 		NB.noteDrag.itemSel = '.note';
 		NB.noteDrag.dragster = 'note-dragster';
 		NB.noteDrag.onDragging = function(started)
@@ -3965,7 +3982,7 @@
 	 */
 	var NB =
 	{
-		codeVersion: 20210410,
+		codeVersion: 20210414,
 		blobVersion: 20190412, // board blob format in Storage
 		board: null,
 	};
