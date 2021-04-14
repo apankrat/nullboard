@@ -124,3 +124,5 @@ That is, you can use, change and re-distribute it for as long as you don't try a
 ## Updates
 
 Primary feed is through [@nullboard](https://twitter.com/nullboard) on Twitter.
+
+The changelog is here => https://nullboard.io/changes
