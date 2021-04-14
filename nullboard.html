@@ -766,8 +766,13 @@
 		position: relative;
 	}
 
+	.config .teaser i {
+		/* backups off */
+		font-style: normal;
+	}
+
 	.config .teaser u {
-		/* backup status */
+		/* backups on */
 		display: none;
 		text-decoration: none;
 	}
@@ -859,20 +864,17 @@
 	}
 
 	/***/
+	.config.backups-on .teaser i {
+		display: none;
+	}
+
 	.config.backups-on .teaser u {
 		display: inline-block;
-		position: absolute;
 		font-size: calc(8rem / 11);
-		top: 8px;
 		color: #555;
 	}
 
-	.config.backups-on .teaser u:before {
-		content: '\2714';
-		padding-left: 3px;
-	}
-
-	.config.backups-on.backing-up .teaser u:before {
+	.config.backups-on.backing-up .teaser u {
 		opacity: 0.4;
 	}
 
@@ -884,8 +886,8 @@
 	}
 
 	/***/
-	.config.backups-on.backup-err .teaser u:before {
-		content: '';
+	.config.backups-on.backup-err .teaser i {
+		display: inline-block;
 	}
 
 	.config.backups-on.backup-err .teaser u {
@@ -897,6 +899,7 @@
 		top: 13px;
 		right: -4px;
 		background: #d20;
+		color: transparent;
 	}
 
 	.config.backups-on.backup-err .bulk .auto-backup {
@@ -1376,7 +1379,7 @@
 	</div>
 
 	<div class='config no-user-select'>
-		<a href=# class=teaser>&equiv;<u></u></a>
+		<a href=# class=teaser><i>&equiv;</i><u>&#x2714;</u></a>
 		<div class=bulk>
 			<a href=# class=add-board>Add new board...</a>
 
@@ -1855,7 +1858,11 @@
 			var success = true;
 			var store_id = 1;
 
+			NB.storage.backupCb = backupStatusCb;
+
 			this.backups = [];
+
+			self.setBackupStatus('');
 
 			this.conf.backups.forEach(function(agent){
 				var T = NB.backupTypes.get(agent.type);
@@ -1884,8 +1891,6 @@
 					self.setBackupStatus(success ? 'ok' : 'failed');
 				});
 			});
-
-			NB.storage.backupCb = backupStatusCb;
 		}
 
 		backupBoard(board_id, board, meta)
@@ -3202,7 +3207,7 @@
 
 		if (! backups.length)
 		{
-			$config.removeClass('backups-on backup-err');
+			$config.removeClass('backups-on backup-err backing-up');
 			return;
 		}
 
@@ -4284,7 +4289,7 @@
 	});
 
 	//
-	$('.config .switch-them').on('click', function() {
+	$('.config .switch-theme').on('click', function() {
 		var $html = $('html');
 		$html.toggleClass('theme-dark');
 		NB.storage.setTheme($html.hasClass('theme-dark') ? 'dark' : '');
