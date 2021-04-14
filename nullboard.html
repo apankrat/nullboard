@@ -763,6 +763,13 @@
 	.config .teaser {
 		padding: 5px;
 		color: #999;
+		position: relative;
+	}
+
+	.config .teaser u {
+		/* backup status */
+		display: none;
+		text-decoration: none;
 	}
 
 	.config .bulk {
@@ -837,6 +844,13 @@
 		display: none;
 	}
 
+	.config .bulk .break {
+		padding: 6px 2px 0;
+		margin: 6px -2px 0;
+		border-top: 1px solid #00000028;
+	}
+
+	/***/
 	.config .bulk input.imp-board-select {
 		position: absolute;
 		width: 1px;
@@ -844,10 +858,56 @@
 		visibility: hidden;
 	}
 
-	.config .bulk .break {
-		padding: 6px 2px 0;
-		margin: 6px -2px 0;
-		border-top: 1px solid #00000028;
+	/***/
+	.config.backups-on .teaser u {
+		display: inline-block;
+		position: absolute;
+		font-size: calc(8rem / 11);
+		top: 8px;
+		color: #555;
+	}
+
+	.config.backups-on .teaser u:before {
+		content: '\2714';
+		padding-left: 3px;
+	}
+
+	.config.backups-on.backing-up .teaser u:before {
+		opacity: 0.4;
+	}
+
+	.config.backups-on .bulk .auto-backup:before {
+		content: '\2713 ';
+		display: inline-block;
+		width: 15px;
+		margin-left: -15px;
+	}
+
+	/***/
+	.config.backups-on.backup-err .teaser u:before {
+		content: '';
+	}
+
+	.config.backups-on.backup-err .teaser u {
+		display: inline-block;
+		position: absolute;
+		width: 4px;
+		height: 4px;
+		border-radius: 10px;
+		top: 13px;
+		right: -4px;
+		background: #d20;
+	}
+
+	.config.backups-on.backup-err .bulk .auto-backup {
+		color: #d20;
+	}
+
+	.config.backups-on.backup-err .bulk .auto-backup:before {
+		content: '! ';
+		color: #d20;
+		width: 13px;
+		margin-left: -13px;
 	}
 
 	/***/
@@ -1316,7 +1376,7 @@
 	</div>
 
 	<div class='config no-user-select'>
-		<a href=# class=teaser>&equiv;</a>
+		<a href=# class=teaser>&equiv;<u></u></a>
 		<div class=bulk>
 			<a href=# class=add-board>Add new board...</a>
 
@@ -1327,6 +1387,8 @@
 			<a href=# class=exp-board>Export current board...</a>
 			<a href=# class=imp-board>Import boards...</a>
 				<input class=imp-board-select type="file" accept=".nbx">
+
+			<a href=# class=auto-backup>Auto-backup...</a>
 
 			<div class="section ui-prefs break">
 				<a href=# class=title>UI preferences<u>...</u></a>
@@ -1479,6 +1541,8 @@
 			this.boardIndex = new Map();
 
 			this.backups = [];          // BackupStorage
+			this.backupStatus = '';     // '', 'ok', 'busy', 'failed'
+			this.backupCb = null;
 		}
 
 		open()
@@ -1559,12 +1623,7 @@
 
 		saveConfig()
 		{
-			var self = this;
-
-			this.backups.forEach(function(store){
-				store.saveConfig(self.conf);
-			});
-
+			this.backupConfig();
 			return this.setJson('config', this.conf);
 		}
 
@@ -1644,7 +1703,7 @@
 			 *	run backups
 			 */
 			if (ok_meta && ok_data)
-				this.backupBoard(board)
+				this.backupBoard(board.id, board, meta)
 
 			board.history = meta.history; // restore
 
@@ -1737,6 +1796,8 @@
 
 			meta.current = revision;
 
+			backupBoard(board_id, null, meta);
+
 			return this.setJson('board.' + board_id + '.meta', meta) &&
 			       this.setJson('board.' + board_id, revision); // for older versions
 		}
@@ -1784,20 +1845,111 @@
 			return true;
 		}
 
-		backupBoard(board)
+		/*
+		 *	backups
+		 */
+		initBackups(backupStatusCb)
 		{
 			var self = this;
-			var meta = this.boardIndex.get(board.id);
-			var toGo = 0;
+			var pending = 0;
+			var success = true;
+
+			this.backups = [];
+
+			this.conf.backups.forEach(function(agent){
+				var T = NB.backupTypes.get(agent.id);
+				if (! T)
+				{
+					console.log( `Unknown backup type "${agent.id}" - skipped` );
+					return;
+				}
+
+				var store = new T(agent.conf);
+				self.backups.push(store);
+				console.log( `Added backup storage of type '${agent.id}'` );
+
+				self.setBackupStatus('busy');
+
+				pending++;
+				store.checkStatus(function(ok){
+					console.log( `Backup storage '${store.id}' is ${ok ? 'ready' : 'NOT ready'} ` );
+					success &= ok;
+
+					if (--pending)
+						return;
+
+					self.setBackupStatus(success ? 'ok' : 'failed');
+				});
+			});
+
+			NB.storage.backupCb = backupStatusCb;
+		}
+
+		backupBoard(board_id, board, meta)
+		{
+			var self = this;
+			var pending = 0;
+			var success = true;
+
+			meta.backups = [];
+
+			if (! this.backups.length)
+			{
+				this.setBackupStatus('');
+				return;
+			}
+
+			this.setBackupStatus('busy');
 
 			this.backups.forEach(function(store){
-				store.saveBoard(board.id, board, meta, function(ok){
-console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` );
+				pending++;
+				store.saveBoard(board_id, board, meta, function(ok){
+
+					var what = 'Backup of ' + board_id + (board ? '' : ' (meta)');
+					console.log( `${what} to '${store.id}' -> ${ok ? 'ok' : 'failed'}` );
+
 					if (ok) meta.backups.push(store.id);
-					if (! --toGo) self.setJson('board.' + board.id + '.meta', meta);
+					else    success = false;
+
+					if (--pending)
+						return;
+
+					self.setJson('board.' + board_id + '.meta', meta);
+					self.setBackupStatus(success ? 'ok' : 'failed');
 				});
-				toGo++;
 			});
+		}
+
+		backupConfig()
+		{
+			var self = this;
+			var pending = 0;
+			var success = true;
+
+			if (! this.backups.length)
+			{
+				this.setBackupStatus('');
+				return;
+			}
+
+			this.setBackupStatus('busy');
+
+			this.backups.forEach(function(store){
+				pending++;
+				store.saveConfig(self.conf, function(ok){
+					success &= ok;
+					if (--pending)
+						return;
+
+					self.setBackupStatus(success ? 'ok' : 'failed');
+				});
+			});
+		}
+
+		setBackupStatus(status)
+		{
+			this.backupStatus = status;
+			if (this.backupCb) this.backupCb.call(this, status);
 		}
 	};
 
@@ -2023,7 +2175,7 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 		constructor(conf)
 		{
 			super();
-			this.id = 'sb';
+			this.id = 'simp';
 			this.conf = { base: 'http://127.0.0.1:10001', auth: '' }
 			this.conf = Object.assign(this.conf, conf);
 		}
@@ -2032,9 +2184,9 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 		{
 			var self = this;
 
-			$.get(this.conf.base + '/nullboard/status')
-			 .done(function(){ cb.call(self,  true); })
-			 .fail(function(){ cb.call(self, false); })
+			$.get(this.conf.base + '/status')
+			.done(function(){ if (cb) cb.call(self,  true); })
+			.fail(function(){ if (cb) cb.call(self, false); })
 		}
 
 		saveConfig(conf, cb)
@@ -2042,7 +2194,7 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 			var self = this;
 
 			$.ajax({
-				url: this.conf.base + '/nullboard/config',
+				url: this.conf.base + '/config',
 				type: 'put',
 				headers: { 'X-Access-Token': this.conf.auth },
 				data: JSON.stringify(conf),
@@ -2056,7 +2208,7 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 			var self = this;
 
 			$.ajax({
-				url: this.conf.base + '/nullboard/board/' + id,
+				url: this.conf.base + '/board/' + id,
 				type: 'put',
 				headers: { 'X-Access-Token': this.conf.auth },
 				data:
@@ -2075,7 +2227,7 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 			var self = this;
 
 			$.ajax({
-				url:  this.conf.base + '/nullboard/board/' + id,
+				url:  this.conf.base + '/board/' + id,
 				type: 'delete',
 				headers: { 'X-Access-Token': this.conf.auth },
 			})
@@ -3023,18 +3175,37 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 	/*
 	 *
 	 */
-	function initBackups()
+	function toggleBackups()
 	{
 		var conf = NB.storage.getConfig();
 
-		NB.backupTypes = new Map();
-		NB.backupTypes.set('sb', SimpleBackup);
+		if (conf.backups.length)
+			conf.backups = [];
+		else
+			conf.backups.push( { id: 'simp', conf: { auth: 'hello.there' } });
 
-		conf.backups.forEach(function(agent){
-			var x = NB.backupTypes.get(agent.id);
-			if (x)
-				NB.storage.backups.push(new x(agent.conf));
-		});
+		NB.storage.saveConfig();
+		NB.storage.initBackups(onBackupStatus);
+	}
+
+	function onBackupStatus(_status)
+	{
+		var backups = NB.storage.backups;
+		var status  = NB.storage.backupStatus;
+		var $config = $('.config');
+		var $status = $('.config .teaser u')
+
+		if (! backups.length)
+		{
+			$config.removeClass('backups-on backup-err');
+			return;
+		}
+
+		$config.addClass('backups-on');
+
+		if (status == 'failed') $config.addClass('backup-err').removeClass('backing-up'); else
+		if (status == 'busy')   $config.addClass('backing-up').removeClass('backup-err'); else
+		if (status == 'ok')     $config.removeClass('backing-up backup-err');
 	}
 
 	/*
@@ -3092,6 +3263,7 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 	{
 		var $index  = $('.config .boards');
 		var $export = $('.config .exp-board');
+		var $backup = $('.config .auto-backup');
 		var $entry  = $('tt .load-board');
 
 		var $board = $('.wrap .board');
@@ -3125,10 +3297,12 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 		{
 			if (id_now) $export.html('Export this board...').show();
 			else        $export.html('Export all boards...').show();
+			$backup.show();
 		}
 		else
 		{
 			$export.hide();
+			$backup.hide();
 		}
 
 		if (! empty) $index.show();
@@ -4005,12 +4179,12 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 	});
 
 	//
-	$('.config').on('click', '.imp-board', function(ev){
+	$('.config .imp-board').on('click', function(ev){
 		$('.config .imp-board-select').click();
 		return false;
 	});
 
-	$('.config').on('change', '.imp-board-select' , function(){
+	$('.config .imp-board-select').on('change' , function(){
 		var files = this.files;
 		var reader = new FileReader();
 		reader.onload = function(ev){ importBoard(ev.target.result); };
@@ -4018,11 +4192,15 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 		return true;
 	});
 
-	$('.config').on('click', '.exp-board', function(){
+	$('.config .exp-board').on('click', function(){
 		var pack = exportBoard();
 		$(this).attr('href', pack.blob);
 		$(this).attr('download', pack.file);
 		return true;
+	});
+
+	$('.config .auto-backup').on('click', function(){
+		toggleBackups();
 	});
 
 	//
@@ -4101,7 +4279,7 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 	});
 
 	//
-	$('.config').on('click', '.switch-theme', function() {
+	$('.config .switch-them').on('click', function() {
 		var $html = $('html');
 		$html.toggleClass('theme-dark');
 		NB.storage.setTheme($html.hasClass('theme-dark') ? 'dark' : '');
@@ -4175,12 +4353,22 @@ console.log( `Backup of ${board.id} to ${store.id} -> ${ok ? 'ok' : 'failed'}` )
 	//
 	var conf = NB.storage.getConfig();
 
-	console.log( `Active: [${conf.board}]` );
-	console.log( `Theme:  [${conf.theme}]` );
-	console.log( `Font:   [${conf.fontName}], size [${conf.fontSize || '-'}], line-height [${conf.lineHeight || '-'}]` );
+	console.log( `Active:  [${conf.board}]` );
+	console.log( `Theme:   [${conf.theme}]` );
+	console.log( `Font:    [${conf.fontName}], size [${conf.fontSize || '-'}], line-height [${conf.lineHeight || '-'}]` );
+	console.log( 'Backups: ', conf.backups);
 
-	initBackups();
+	/*
+	 *	backups
+	 */
+	NB.backupTypes = new Map();
+	NB.backupTypes.set( (new SimpleBackup).id, SimpleBackup );
 
+	NB.storage.initBackups(onBackupStatus);
+
+	/*
+	 *	the ui
+	 */
 	initFonts();
 
 	initDragAndDrop();
