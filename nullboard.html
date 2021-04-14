@@ -1516,30 +1516,35 @@
 
 		setTheme(theme)
 		{
+			if (this.conf.theme == theme) return;
 			this.conf.theme = theme;
 			return this.setJson('config', this.conf);
 		}
 
 		setFontName(fname)
 		{
+			if (this.conf.fontName == fname) return;
 			this.conf.fontName = fname;
 			return this.setJson('config', this.conf);
 		}
 
 		setFontSize(fs)
 		{
+			if (this.conf.fontSize == fs) return;
 			this.conf.fontSize = fs;
 			return this.setJson('config', this.conf);
 		}
 
 		setLineHeight(lh)
 		{
+			if (this.conf.lineHeight == lh) return;
 			this.conf.lineHeight = lh;
 			return this.setJson('config', this.conf);
 		}
 
 		setListWidth(lw)
 		{
+			if (this.conf.listWidth == lw) return;
 			this.conf.listWidth = lw;
 			return this.setJson('config', this.conf);
 		}
@@ -2327,16 +2332,18 @@
 	{
 		// state
 		this.onChange = null;
+		this.onFinish = null;
 		this.startY = 0;
 		this.used = false;
 
 		// api
-		this.start = function(ev, onChange)
+		this.start = function(ev, onChange, onFinish)
 		{
 			if (! onChange)
 				return;
 
 			this.onChange = onChange;
+			this.onFinish = onFinish;
 			this.startY = ev.clientY;
 			this.used = false;
 
@@ -2366,6 +2373,8 @@
 
 			$('body').removeClass('adjusting');
 			this.onChange = null;
+
+			if (this.onFinish) this.onFinish();
 		}
 	}
 
@@ -3542,6 +3551,15 @@
 		return updateListWidth();
 	}
 
+	//
+	function saveUiPrefs()
+	{
+		var $html = $('html');
+		NB.storage.setFontSize   ( $html.hasClass('fs-set') ? getFontSize()   : null );
+		NB.storage.setLineHeight ( $html.hasClass('lh-set') ? getLineHeight() : null );
+		NB.storage.setListWidth  ( $html.hasClass('lw-set') ? getListWidth()  : null );
+	}
+
 	/*
 	 *	event handlers
 	 */
@@ -3807,17 +3825,17 @@
 	//
 	$('.config').on('mousedown', '.ui-fs .val', function(ev){
 		var org = getFontSize();
-		NB.varAdjust.start(ev, function(delta){ setFontSize( org + delta/50. ); });
+		NB.varAdjust.start(ev, function(delta){ setFontSize( org + delta/50. ); }, saveUiPrefs);
 	});
 
 	$('.config').on('mousedown', '.ui-lh .val', function(ev){
 		var org = getLineHeight();
-		NB.varAdjust.start(ev, function(delta){ setLineHeight( org + delta/50. ); });
+		NB.varAdjust.start(ev, function(delta){ setLineHeight( org + delta/50. ); }, saveUiPrefs);
 	});
 
 	$('.config').on('mousedown', '.ui-lw .val', function(ev){
 		var org = getListWidth();
-		NB.varAdjust.start(ev, function(delta){ setListWidth( org + delta/5. ); });
+		NB.varAdjust.start(ev, function(delta){ setListWidth( org + delta/5. ); }, saveUiPrefs);
 	});
 
 	//
@@ -3870,8 +3888,8 @@
 
 	//
 	$('.config .f-prefs .ui-fs .less').on('click', function(){
-		var fs = setFontSize( parseInt(10*getFontSize()) / 10. - 0.5 );
-		NB.storage.setFontSize(fs);
+		setFontSize( parseInt(10*getFontSize()) / 10. - 0.5 );
+		saveUiPrefs();
 		return false;
 	});
 
@@ -3879,20 +3897,20 @@
 		if (NB.varAdjust.used) return false;
 		var fs = resetFontSize();
 		if (getLineHeight() < fs) setLineHeight(fs);
-		NB.storage.setFontSize(null);
+		saveUiPrefs();
 		return false;
 	});
 
 	$('.config .f-prefs .ui-fs .more').on('click', function(){
-		var fs = setFontSize( parseInt(10*getFontSize()) / 10. + 0.5 );
-		NB.storage.setFontSize(fs);
+		setFontSize( parseInt(10*getFontSize()) / 10. + 0.5 );
+		saveUiPrefs();
 		return false;
 	});
 
 	//
 	$('.config .f-prefs .ui-lh .less').on('click', function(){
-		var lh = setLineHeight( parseInt(10*getLineHeight()) / 10. - 0.1 );
-		NB.storage.setLineHeight(lh);
+		setLineHeight( parseInt(10*getLineHeight()) / 10. - 0.1 );
+		saveUiPrefs();
 		return false;
 	});
 
@@ -3900,33 +3918,33 @@
 		if (NB.varAdjust.used) return false;
 		var lh = resetLineHeight();
 		if (lh < getFontSize()) setFontSize(lh);
-		NB.storage.setLineHeight(null);
+		saveUiPrefs();
 		return false;
 	});
 
 	$('.config .f-prefs .ui-lh .more').on('click', function(){
-		var lh = setLineHeight( parseInt(10*getLineHeight()) / 10. + 0.1 );
-		NB.storage.setLineHeight(lh);
+		setLineHeight( parseInt(10*getLineHeight()) / 10. + 0.1 );
+		saveUiPrefs();
 		return false;
 	});
 
 	//
 	$('.config .f-prefs .ui-lw .less').on('click', function(){
-		var lw = setListWidth( getListWidth() - 5 );
-		NB.storage.setListWidth(lw);
+		setListWidth( getListWidth() - 5 );
+		saveUiPrefs();
 		return false;
 	});
 
 	$('.config .f-prefs .ui-lw .val').on('click', function(){
 		if (NB.varAdjust.used) return false;
 		resetListWidth();
-		NB.storage.setListWidth(null);
+		saveUiPrefs();
 		return false;
 	});
 
 	$('.config .f-prefs .ui-lw .more').on('click', function(){
-		var lw = setListWidth( getListWidth() + 5 );
-		NB.storage.setListWidth(lw);
+		setListWidth( getListWidth() + 5 );
+		saveUiPrefs();
 		return false;
 	});
 
@@ -3982,7 +4000,7 @@
 	 */
 	var NB =
 	{
-		codeVersion: 20210414,
+		codeVersion: 20210415,
 		blobVersion: 20190412, // board blob format in Storage
 		board: null,
 	};
