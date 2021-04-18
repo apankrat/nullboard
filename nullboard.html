@@ -1152,8 +1152,6 @@
 
 		content: ' ';
 		display: inline-block;
-		width: 20px;
-		font-size: calc(13rem / 11);
 		margin-top: -1px;
 
 		display: inline-block;
@@ -1179,7 +1177,6 @@
 	}
 
 	.overlay .backup-conf .opt:hover {
-		--col: #1489db;
 		color: #1489db;
 	}
 
@@ -1188,8 +1185,10 @@
 	}
 
 	.overlay .backup-conf .etc {
-		padding: 5px 0 0 19px;
+		padding: 5px 0 0 14px;
 		margin-bottom: 10px;
+		margin-left: calc( 9rem / 22 );
+		border-left: 1px solid #888;
 	}
 
 	.overlay .backup-conf .off .etc {
@@ -1208,12 +1207,11 @@
 		padding: 0 5px;
 		line-height: calc(20 / 11);
 		margin-bottom: 3px;
-		border: 1px solid #aaa;
+		border: 1px solid #ccc;
 	}
 
 	.overlay .backup-conf .etc input:focus {
-		border: 1px solid #666;
-		xbox-shadow: 0 1px 2px #ccc;
+		border-bottom: 1px solid #888;
 	}
 
 	.overlay .backup-conf .etc input::placeholder {
@@ -1225,14 +1223,20 @@
 		opacity: 0.4;
 	}
 
-	.overlay .backup-conf .etc .last-err {
+	.overlay .backup-conf .etc .status {
 		display: none;
-		color: #d20;
 		margin: 0;
 	}
 
-	.overlay .backup-conf .etc .last-err i {
-		font-style: normal;
+	.overlay .backup-conf .etc .status input {
+		color: #222;
+		background: #0000000E;
+		border: 1px solid transparent;
+	}
+
+	.overlay .backup-conf .etc .status.error input {
+		color: #d20;
+		background: #dd220018;
 	}
 
 	.overlay .backup-conf .save {
@@ -1620,7 +1624,7 @@
 				<div class=opt>Local backup</div>
 				<div class=etc>
 					<span>Access token</span> <input class=auth placeholder="required"><br>
-					<p class=last-err><span>Last error</span> <i></i></p>
+					<p class=status><span>Status</span> <input disabled></p>
 				</div>
 			</div>
 
@@ -1629,7 +1633,7 @@
 				<div class=etc>
 					<span>URL</span>    <input class=base placeholder="API entry point"><br>
 					<span>Access token</span> <input class=auth placeholder="required"><br>
-					<p class=last-err><span>Last error</span> <i></i></p>
+					<p class=status><span>Status</span> <input disabled></p>
 				</div>
 			</div>
 
@@ -3405,14 +3409,19 @@
 
 		if (loc.enabled)
 		{
+			var $status = $loc.find('.status');
 			var b = findBackup(loc);
 			var last = b && b.last;
+			var text = 'OK';
 
 			if (last && ! last.ok)
 			{
-				$loc.find('.last-err i').html( `${last.text}` );
-				$loc.find('.last-err').css({ display: 'block' });
+				text = last.text;
+				$status.addClass('error');
 			}
+
+			$status.find('input').val(text);
+			$status.css({ display: 'block' });
 		}
 		else
 		{
@@ -3421,14 +3430,19 @@
 
 		if (rem.enabled)
 		{
+			var $status = $rem.find('.status');
 			var b = findBackup(rem);
 			var last = b && b.last;
+			var text = 'OK';
 
 			if (last && ! last.ok)
 			{
-				$rem.find('.last-err i').html( `${last.text}` );
-				$rem.find('.last-err').css({ display: 'block' });
+				text = last.text;
+				$status.addClass('error');
 			}
+
+			$status.find('input').val(text);
+			$status.css({ display: 'block' });
 		}
 		else
 		{
@@ -3656,13 +3670,13 @@
 	{
 		$x
 		.css({ position: 'relative' })
+		.focus()
 		.animate({ left: '+4px' }, 60)
 		.animate({ left: '-3px' }, 60)
 		.animate({ left: '+2px' }, 60)
 		.animate({ left:  '0px' }, 60)
-		.delay(300)
 		.queue(function(){
-			$x.css({ position: '', left: '' }).focus().dequeue();
+			$x.css({ position: '', left: '' }).dequeue();
 		});
 	}
 
