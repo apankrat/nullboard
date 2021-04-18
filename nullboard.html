@@ -1054,78 +1054,198 @@
 		width: 100%;
 		height: 100%;
 		background: rgba(0,0,0,0.9);
-		display: none;
 		color: #000;
+
+		display: none; /* flex */
+		justify-content: center;
+	}
+
+	.overlay > div {
+		font-size: calc(12rem / 11);
+		line-height: calc(16 / 12);
+		background: #fff;
+		align-self: start;
+		margin-top: 100px;
+		border-radius: 1px;
+		box-shadow: 0 2px 6px #000;
 	}
 
 	/***/
-	.overlay .license {
-		font-size: calc(12rem / 11);
-		line-height: calc(16 / 12);
+	.overlay > div.license {
 		white-space: pre-wrap;
-		width: 384px;
-		height: auto;
-		max-height: 600px;
 		padding: 20px 25px 22px;
 		overflow-y: auto;
-		background: #fff;
-		position: absolute;
-		top: 100px;
-		left: 50%;
-		margin-left: -192px;
 
 		width: calc( (var(--fs) * 36 + 6) * 1px ); /* 402px, 476px */
 	}
 
-	.overlay .license a {
+	.overlay > div.license a {
 		color: #1489db;
 	}
 
-	.overlay .license span {
+	.overlay > div.license span {
 		display: inline-block;
 		padding-right: 8px;
 	}
 
 	/***/
-	.overlay .about {
-		font-size: calc(12rem / 11);
-		line-height: calc(16 / 12);
+	.overlay > div.about {
 		text-align: center;
-		height: auto;
-		padding: 50px 25px;
-		background: #fff;
-		position: absolute;
-		top: 100px;
-		left: 50%;
-		margin-left: -145px;
+		padding: 50px 50px;
 	}
 
-	.overlay .about,
-	.overlay .about div {
-		width: calc( (var(--fs) * 18 + 39) * 1px ); /* 240px, 277px */
-	}
-
-	.overlay .about h1 {
+	.overlay > div.about h1 {
 		font-size: calc(15rem / 11);
 		font-weight: 500;
 		margin-bottom: 10px;
 	}
 
-	.overlay .about a {
+	.overlay > div.about a {
 		display: block;
 		color: #1489db;
 	}
 
-	.overlay .about div {
+	.overlay > div.about div {
 		position: absolute;
 		bottom: -30px;
 		color: #eee;
 	}
 
-	.overlay .about div span {
+	.overlay > div.about div span {
 		display: inline-block;
 		text-align: left;
 		padding-right: 10px;
+	}
+
+	/***/
+
+	.overlay .backup-conf {
+		padding: 20px 40px;
+		min-width: 300px;
+	}
+
+	.overlay .backup-conf h3 {
+		font-size: calc(15rem / 11);
+		font-weight: 500;
+		text-align: center;
+		margin: 20px 0 0 0;
+	}
+
+	.overlay .backup-conf .what {
+		display: block;
+		text-align: center;
+		border-bottom: 1px solid #888;
+		margin: 0 -10px 20px;
+		padding: 0 10px 30px;
+	}
+
+	.overlay .backup-conf .what a {
+		color: #1489db;
+	}
+
+	.overlay .backup-conf .opt {
+		margin-top: 5px;
+	}
+
+	.overlay .backup-conf .opt:before {
+		--col: #333;
+
+		content: ' ';
+		display: inline-block;
+		width: 20px;
+		font-size: calc(13rem / 11);
+		margin-top: -1px;
+
+		display: inline-block;
+		content: ' ';
+		width: calc(9rem / 11);
+		height: calc(9rem / 11);
+		margin-right: 8px;
+
+		position: relative;
+		top: 1px;
+		background: var(--col);
+		border: 1px solid var(--col);
+		border-radius: 1px;
+		box-shadow: 0 2px 0 #fff inset, 0 -2px 0 #fff inset, 2px 0 0 #fff inset, -2px 0 0 #fff inset;
+	}
+
+	.overlay .backup-conf .opt:hover:before {
+		--col: #1489db;
+	}
+
+	.overlay .backup-conf .off .opt:before {
+		background: #fff;
+	}
+
+	.overlay .backup-conf .opt:hover {
+		--col: #1489db;
+		color: #1489db;
+	}
+
+	.overlay .backup-conf .opt {
+		cursor: pointer;
+	}
+
+	.overlay .backup-conf .etc {
+		padding: 5px 0 0 19px;
+		margin-bottom: 10px;
+	}
+
+	.overlay .backup-conf .off .etc {
+		display: none;
+	}
+
+	.overlay .backup-conf .etc span {
+		display: inline-block;
+		min-width: calc( 3px + var(--fs) * 7px );
+		margin-right: calc( var(--fs) * 1px );
+	}
+
+	.overlay .backup-conf .etc input {
+		display: inline-block;
+		width: 170px;
+		padding: 0 5px;
+		line-height: calc(20 / 11);
+		margin-bottom: 3px;
+		border: 1px solid #aaa;
+	}
+
+	.overlay .backup-conf .etc input:focus {
+		border: 1px solid #666;
+		xbox-shadow: 0 1px 2px #ccc;
+	}
+
+	.overlay .backup-conf .etc input::placeholder {
+		font-weight: 400;
+		font-size: calc(10rem / 11);
+		line-height: calc(20 / 10);
+		text-transform: uppercase;
+		color: #000;
+		opacity: 0.4;
+	}
+
+	.overlay .backup-conf .etc .last-err {
+		display: none;
+		color: #d20;
+		margin: 0;
+	}
+
+	.overlay .backup-conf .etc .last-err i {
+		font-style: normal;
+	}
+
+	.overlay .backup-conf .save {
+		display: block;
+		text-align: center;
+		margin: 20px -10px 5px;
+		padding: 20px 10px 0;
+		border-top: 1px solid #888;
+		word-spacing: 30px;
+	}
+
+	.overlay .backup-conf .save a {
+		color: #1489db;
 	}
 
 	/***/
@@ -1489,6 +1609,32 @@
 
 		<div class=license>
 		</div>
+
+		<div class=backup-conf>
+			<h3>Auto-backup</h3>
+			<div class=what>
+				<a href=https://nullboard.io/backups target=_blank>What is this?</a>
+			</div>
+
+			<div class=loc>
+				<div class=opt>Local backup</div>
+				<div class=etc>
+					<span>Access token</span> <input class=auth placeholder="required"><br>
+					<p class=last-err><span>Last error</span> <i></i></p>
+				</div>
+			</div>
+
+			<div class=rem>
+				<div class=opt>Remote backup</div>
+				<div class=etc>
+					<span>URL</span>    <input class=base placeholder="API entry point"><br>
+					<span>Access token</span> <input class=auth placeholder="required"><br>
+					<p class=last-err><span>Last error</span> <i></i></p>
+				</div>
+			</div>
+
+			<div class=save><a href=# class=ok>Apply</a> <a href=# class=cancel>Cancel</a></div>
+		</div>
 	</tt>
 
 </body>
@@ -1509,20 +1655,21 @@
 
 	function AppConfig()
 	{
-		this.format     = NB.confVersion;
-		this.verLast    = null;             // last used codeVersion
-		this.verSeen    = null;             // latest codeVersion they saw the changelog for
+		this.format       = NB.confVersion;
+		this.verLast      = null;           // last used codeVersion
+		this.verSeen      = null;           // latest codeVersion they saw the changelog for
 
-		this.maxUndo    = 50;               // board revisions to keep
-		this.fontName   = null;             // font-family
-		this.fontSize   = null;             // font-size
-		this.lineHeight = null;             // line-height
-		this.listWidth  = null;             // list-width
-		this.theme      = null;             // default or 'dark'
+		this.maxUndo      = 50;             // board revisions to keep
+		this.fontName     = null;           // font-family
+		this.fontSize     = null;           // font-size
+		this.lineHeight   = null;           // line-height
+		this.listWidth    = null;           // list-width
+		this.theme        = null;           // default or 'dark'
 
-		this.backups    = [ ];              // [ { id: '?', conf: { } } ];
+		this.backups      = [ ];            // [ { type, id, enabled, conf } ];
+		this.nextBackupId = 1;
 
-		this.board      = null;             // active board
+		this.board        = null;           // active board
 	}
 
 	function BoardMeta()
@@ -1864,25 +2011,33 @@
 
 			self.setBackupStatus('');
 
-			this.conf.backups.forEach(function(agent){
-				var T = NB.backupTypes.get(agent.type);
+			this.conf.backups.forEach(function(b){
+
+				var T = NB.backupTypes.get(b.type);
 				if (! T)
 				{
-					console.log( `Unknown backup type "${agent.type}" - skipped` );
+					console.log( `Unknown backup type "${b.type}" - skipped` );
 					return;
 				}
 
-				var store = new T(agent.conf);
-				store.id = `${store.type}-${store_id++}`;
+				if (! b.enabled)
+					return;
+
+				var store = new T(b.id, b.conf);
 				self.backups.push(store);
 
-				console.log( `Added backup storage of type '${store.type}' -> '${store.id}'` );
+				console.log( `Added backup storage - type '${store.type}', id '${store.id}'` );
 
 				self.setBackupStatus('busy');
 
 				pending++;
-				store.checkStatus(function(ok){
+				store.checkStatus(function(ok, xhr){
 					console.log( `Backup storage '${store.id}' is ${ok ? 'ready' : 'NOT ready'} ` );
+
+					var text = xhr.responseText;
+					if (! text) text = xhr.status ? `Request failed with ${xhr.status}` : 'Offline or CORS-blocked';
+
+					store.last = { ok: ok, text: text, code: xhr.status };
 					success &= ok;
 
 					if (--pending)
@@ -2166,11 +2321,11 @@
 	 */
 	class BackupStorage
 	{
-		constructor(conf)
+		constructor(id, conf)
 		{
-			this.id = '?';
-
 			this.type = '?';
+
+			this.id = id;
 			this.conf = conf;
 		}
 
@@ -2182,21 +2337,28 @@
 
 	class SimpleBackup extends BackupStorage
 	{
-		constructor(conf)
+		constructor(id, conf)
 		{
-			super();
+			super(id, null);
+
 			this.type = 'simp';
-			this.conf = { base: 'http://127.0.0.1:10001', auth: '' }
+			this.conf = { base: '', auth: '' }
 			this.conf = Object.assign(this.conf, conf);
+
 		}
 
 		checkStatus(cb)
 		{
 			var self = this;
+			var test = new Image;
 
-			$.get(this.conf.base + '/status')
-			.done(function(){ if (cb) cb.call(self,  true); })
-			.fail(function(){ if (cb) cb.call(self, false); })
+			$.ajax({
+				url: this.conf.base + '/test',
+				type: 'put',
+				headers: { 'X-Access-Token': this.conf.auth },
+			})
+			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
+			.fail(function(x, s, e) { if (cb) cb.call(self, false, x, s, e); })
 		}
 
 		saveConfig(conf, cb)
@@ -2209,8 +2371,8 @@
 				headers: { 'X-Access-Token': this.conf.auth },
 				data: JSON.stringify(conf),
 			})
-			.done(function(){ if (cb) cb.call(self,  true); })
-			.fail(function(){ if (cb) cb.call(self, false); })
+			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
+			.fail(function(x, s, e) { if (cb) cb.call(self, false, x, s, e); })
 		}
 
 		saveBoard(id, data, meta, cb)
@@ -2228,8 +2390,8 @@
 				},
 				dataType: 'json',
 			})
-			.done(function(){ if (cb) cb.call(self,  true); })
-			.fail(function(){ if (cb) cb.call(self, false); })
+			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
+			.fail(function(x, s, e) { if (cb) cb.call(self, false, x, s, e); })
 		}
 
 		nukeBoard(id, cb)
@@ -2241,8 +2403,8 @@
 				type: 'delete',
 				headers: { 'X-Access-Token': this.conf.auth },
 			})
-			.done(function(){ if (cb) cb.call(self,  true); })
-			.fail(function(){ if (cb) cb.call(self, false); })
+			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
+			.fail(function(x, s, e) { if (cb) cb.call(self, false, x, s, e); })
 		}
 	}
 
@@ -3185,17 +3347,139 @@
 	/*
 	 *
 	 */
-	function toggleBackups()
+	function findBackup(which)
+	{
+		var s = null;
+
+		NB.storage.backups.forEach(function(store){
+			if (store.type      == which.type &&
+			    store.conf.auth == which.conf.auth &&
+			    store.conf.base == which.conf.base)
+			{
+				s = store;
+			}
+		});
+
+		return s;
+	}
+
+	function configBackups()
 	{
 		var conf = NB.storage.getConfig();
 
-		if (conf.backups.length)
-			conf.backups = [];
-		else
-			conf.backups.push( { type: 'simp', conf: { auth: 'hello.there' } });
+		var $div = $('tt .backup-conf').clone();
+		var $loc = $div.find('.loc');
+		var $rem = $div.find('.rem');
 
-		NB.storage.saveConfig();
-		NB.storage.initBackups(onBackupStatus);
+		var typ = (new SimpleBackup).type;
+
+		if (conf.backups.length != 2 ||
+		    conf.backups[0].type != typ || conf.backups[0].conf.base != 'http://127.0.0.1:10001' ||
+		    conf.backups[1].type != typ)
+		{
+			console.log('Unexpected backup config, will re-initialize.', conf.backups);
+
+			conf.backups.push({
+				type: typ,
+				id: typ + '-' + (conf.nextBackupId++),
+				enabled: false,
+				conf: { base: 'http://127.0.0.1:10001', auth: '' }
+			})
+
+			conf.backups.push({
+				type: typ,
+				id: typ + '-' + (conf.nextBackupId++),
+				enabled: false,
+				conf: { base: '', auth: '' }
+			})
+
+			NB.storage.saveConfig();
+		}
+
+		var loc = conf.backups[0];
+		var rem = conf.backups[1];
+
+		$loc.find('.auth').val( loc.conf.auth );
+		$rem.find('.auth').val( rem.conf.auth );
+		$rem.find('.base').val( rem.conf.base );
+
+		if (loc.enabled)
+		{
+			var b = findBackup(loc);
+			var last = b && b.last;
+
+			if (last && ! last.ok)
+			{
+				$loc.find('.last-err i').html( `${last.text}` );
+				$loc.find('.last-err').css({ display: 'block' });
+			}
+		}
+		else
+		{
+			$loc.addClass('off');
+		}
+
+		if (rem.enabled)
+		{
+			var b = findBackup(rem);
+			var last = b && b.last;
+
+			if (last && ! last.ok)
+			{
+				$rem.find('.last-err i').html( `${last.text}` );
+				$rem.find('.last-err').css({ display: 'block' });
+			}
+		}
+		else
+		{
+			$rem.addClass('off');
+		}
+
+		$div.find('a.cancel').click(function(){
+			hideOverlay();
+		});
+
+		$div.find('a.ok').click(function(){
+
+			var locEnabled = ! $loc.hasClass('off');
+			var locAuth    = $loc.find('.auth').val();
+
+			var remEnabled = ! $rem.hasClass('off');
+			var remBase    = $rem.find('.base').val();
+			var remAuth    = $rem.find('.auth').val();
+
+			if (locEnabled && locAuth == '')
+				return shakeControl($loc.find('.auth'));
+
+			if (remEnabled)
+			{
+				if (remBase == '')
+					return shakeControl($rem.find('.base'));
+
+				if (remAuth == '')
+					return shakeControl($rem.find('.auth'));
+			}
+
+			if (locEnabled && ! loc.enabled)
+				loc.id = typ + '-' + (conf.nextBackupId++);
+
+			if (remEnabled && ! rem.enabled)
+				rem.id = typ + '-' + (conf.nextBackupId++);
+
+			loc.enabled   = locEnabled;
+			loc.conf.auth = locAuth;
+
+			rem.enabled   = remEnabled;
+			rem.conf.auth = remAuth;
+			rem.conf.base = remBase;
+
+			NB.storage.saveConfig();
+			NB.storage.initBackups(onBackupStatus);
+
+			hideOverlay();
+		});
+
+		showOverlay($div);
 	}
 
 	function onBackupStatus(_status)
@@ -3368,6 +3652,20 @@
 		else if (document.selection) { document.selection.empty(); }
 	}
 
+	function shakeControl($x)
+	{
+		$x
+		.css({ position: 'relative' })
+		.animate({ left: '+4px' }, 60)
+		.animate({ left: '-3px' }, 60)
+		.animate({ left: '+2px' }, 60)
+		.animate({ left:  '0px' }, 60)
+		.delay(300)
+		.queue(function(){
+			$x.css({ position: '', left: '' }).focus().dequeue();
+		});
+	}
+
 	/*
 	 *	inline editing
 	 */
@@ -3476,7 +3774,7 @@
 		$('.overlay')
 		.html('')
 		.append($div)
-		.css({ opacity: 0, display: 'block' })
+		.css({ opacity: 0, display: 'flex' })
 		.animate({ opacity: 1 });
 	}
 
@@ -4210,7 +4508,7 @@
 	});
 
 	$('.config .auto-backup').on('click', function(){
-		toggleBackups();
+		configBackups();
 	});
 
 	//
@@ -4329,6 +4627,16 @@
 			return;
 		NB.storage.setVerSeen();
 		$('.logo').removeClass('updated');
+	});
+
+	/***/
+
+	$('.overlay').on('click', '.backup-conf .opt', function(){
+		var $div = $(this).parent();
+		$div.toggleClass('off');
+		if (! $div.hasClass('off'))
+			$div.find('input').first().delay(500).queue(function(){ $(this).focus().dequeue(); });
+		return false;
 	});
 
 	$(window).resize(adjustLayout);
