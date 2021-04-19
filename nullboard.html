@@ -1638,6 +1638,7 @@
 			</div>
 
 			<div class=save><a href=# class=ok>Apply</a> <a href=# class=cancel>Cancel</a></div>
+
 		</div>
 	</tt>
 
@@ -2000,6 +2001,47 @@
 		}
 
 		/*
+		 *	config
+		 */
+		fixupConfig(newInstall)
+		{
+			var conf = this.conf;
+			var simp = (new SimpleBackup).type;
+
+			if (conf.board && ! this.boardIndex.has(conf.board))
+				conf.board = null;
+
+			if (! conf && ! newInstall) // pre-20210410 upgrade
+			{
+				conf.verLast = 20210327;
+				conf.verSeen = 20200220; // 20200429;
+			}
+
+			if (conf.backups.length != 2 ||
+			    conf.backups[0].type != simp || conf.backups[0].conf.base != 'http://127.0.0.1:10001' ||
+			    conf.backups[1].type != simp)
+			{
+				console.log('Unexpected backup config, will re-initialize.', conf.backups);
+
+				conf.backups.push({
+					type: simp,
+					id: simp + '-' + (conf.nextBackupId++),
+					enabled: false,
+					conf: { base: 'http://127.0.0.1:10001', auth: '' }
+				})
+
+				conf.backups.push({
+					type: simp,
+					id: simp + '-' + (conf.nextBackupId++),
+					enabled: false,
+					conf: { base: '', auth: '' }
+				})
+
+				NB.storage.saveConfig();
+			}
+		}
+
+		/*
 		 *	backups
 		 */
 		initBackups(backupStatusCb)
@@ -2241,14 +2283,7 @@
 				this.boardIndex.set(board_id, meta);
 			}
 
-			if (this.conf.board && ! this.boardIndex.has(this.conf.board))
-				this.conf.board = null;
-
-			if (! conf && ! newInstall) // pre-20210410 upgrade
-			{
-				this.conf.verLast = 20210327;
-				this.conf.verSeen = 20200220; // 20200429;
-			}
+			this.fixupConfig(newInstall);
 
 			this.type = 'LocalStorage';
 
@@ -3048,7 +3083,7 @@
 	function saveBoard()
 	{
 		var $board = $('.wrap .board');
-		var board = Object.assign({}, NB.board); // id, revision & title
+		var board = jsonClone(NB.board); // id, revision & title
 
 		board.lists = [];
 
@@ -3367,129 +3402,140 @@
 		return s;
 	}
 
+	function initBackupEtc($div, backupConf)
+	{
+		if (! backupConf.enabled)
+		{
+			$div.addClass('off');
+			return;
+		}
+
+		var $status = $div.find('.status');
+		var b = findBackup(backupConf);
+		var text = 'OK';
+
+		if (b && b.last && ! b.last.ok)
+		{
+			text = b.last.text;
+			$status.addClass('error');
+		}
+
+		$status.find('input').val(text);
+		$status.css({ display: 'block' });
+	}
+
+	function checkBackupConfig(backupConf, $div, onDone)
+	{
+		var $status = $div.find('.status');
+		var $text = $status.find('input');
+
+		$text.val('Checking...');
+		$status.removeClass('error').slideDown();
+
+		$div.delay(700).queue(function(){
+
+			$status.find('input').val('OK');
+			onDone();
+			$(this).dequeue();
+		});
+	}
+
 	function configBackups()
 	{
 		var conf = NB.storage.getConfig();
 
+		if (conf.backups.length != 2)
+			throw 'Invalid conf.backups[]'; // as per fixupConfig()
+
+		//
 		var $div = $('tt .backup-conf').clone();
 		var $loc = $div.find('.loc');
 		var $rem = $div.find('.rem');
 
 		var typ = (new SimpleBackup).type;
-
-		if (conf.backups.length != 2 ||
-		    conf.backups[0].type != typ || conf.backups[0].conf.base != 'http://127.0.0.1:10001' ||
-		    conf.backups[1].type != typ)
-		{
-			console.log('Unexpected backup config, will re-initialize.', conf.backups);
-
-			conf.backups.push({
-				type: typ,
-				id: typ + '-' + (conf.nextBackupId++),
-				enabled: false,
-				conf: { base: 'http://127.0.0.1:10001', auth: '' }
-			})
-
-			conf.backups.push({
-				type: typ,
-				id: typ + '-' + (conf.nextBackupId++),
-				enabled: false,
-				conf: { base: '', auth: '' }
-			})
-
-			NB.storage.saveConfig();
-		}
-
 		var loc = conf.backups[0];
 		var rem = conf.backups[1];
 
+		var locChecked = jsonClone(loc);
+		var remChecked = jsonClone(rem);
+
+		//
 		$loc.find('.auth').val( loc.conf.auth );
 		$rem.find('.auth').val( rem.conf.auth );
 		$rem.find('.base').val( rem.conf.base );
 
-		if (loc.enabled)
-		{
-			var $status = $loc.find('.status');
-			var b = findBackup(loc);
-			var last = b && b.last;
-			var text = 'OK';
-
-			if (last && ! last.ok)
-			{
-				text = last.text;
-				$status.addClass('error');
-			}
-
-			$status.find('input').val(text);
-			$status.css({ display: 'block' });
-		}
-		else
-		{
-			$loc.addClass('off');
-		}
-
-		if (rem.enabled)
-		{
-			var $status = $rem.find('.status');
-			var b = findBackup(rem);
-			var last = b && b.last;
-			var text = 'OK';
-
-			if (last && ! last.ok)
-			{
-				text = last.text;
-				$status.addClass('error');
-			}
-
-			$status.find('input').val(text);
-			$status.css({ display: 'block' });
-		}
-		else
-		{
-			$rem.addClass('off');
-		}
-
-		$div.find('a.cancel').click(function(){
-			hideOverlay();
-		});
+		initBackupEtc($loc, loc);
+		initBackupEtc($rem, rem);
 
 		$div.find('a.ok').click(function(){
 
-			var locEnabled = ! $loc.hasClass('off');
-			var locAuth    = $loc.find('.auth').val();
+			if ($div.hasClass('checking'))
+				return;
 
-			var remEnabled = ! $rem.hasClass('off');
-			var remBase    = $rem.find('.base').val();
-			var remAuth    = $rem.find('.auth').val();
+			var locNew = jsonClone(loc);
+			var remNew = jsonClone(rem);
 
-			if (locEnabled && locAuth == '')
+			locNew.enabled   = ! $loc.hasClass('off');
+			locNew.conf.auth = $loc.find('.auth').val();
+
+			remNew.enabled   = ! $rem.hasClass('off');
+			remNew.conf.base = $rem.find('.base').val();
+			remNew.conf.auth = $rem.find('.auth').val();
+
+			// basic checks
+			if (locNew.enabled && ! locNew.conf.auth)
 				return shakeControl($loc.find('.auth'));
 
-			if (remEnabled)
-			{
-				if (remBase == '')
-					return shakeControl($rem.find('.base'));
+			if (remNew.enabled && ! remNew.conf.base)
+				return shakeControl($rem.find('.base'));
 
-				if (remAuth == '')
-					return shakeControl($rem.find('.auth'));
+			if (remNew.enabled && ! remNew.conf.auth)
+				return shakeControl($rem.find('.auth'));
+
+			// validate if enabled && changed
+			var checking = 0;
+
+			if (locNew.enabled && ! jsonMatch(locNew, locChecked))
+			{
+				$div.addClass('checking');
+				checking++;
+				checkBackupConfig(locNew, $loc, function(){
+					locChecked = locNew;
+					if (! --checking) $div.removeClass('checking');
+				});
 			}
 
-			if (locEnabled && ! loc.enabled)
-				loc.id = typ + '-' + (conf.nextBackupId++);
+			if (remNew.enabled && ! jsonMatch(remNew, remChecked))
+			{
+				$div.addClass('checking');
+				checking++;
+				checkBackupConfig(remNew, $rem, function(){
+					remChecked = remNew;
+					if (! --checking) $div.removeClass('checking');
+				});
+			}
 
-			if (remEnabled && ! rem.enabled)
-				rem.id = typ + '-' + (conf.nextBackupId++);
+			if (checking)
+				return;
 
-			loc.enabled   = locEnabled;
-			loc.conf.auth = locAuth;
+			//
+			if (locNew.enabled && ! loc.enabled)
+				locNew.id = typ + '-' + (conf.nextBackupId++);
 
-			rem.enabled   = remEnabled;
-			rem.conf.auth = remAuth;
-			rem.conf.base = remBase;
+			if (remNew.enabled && ! rem.enabled)
+				remNew.id = typ + '-' + (conf.nextBackupId++);
+
+			//
+			conf.backups[0] = locNew;
+			conf.backups[1] = remNew;
 
 			NB.storage.saveConfig();
 			NB.storage.initBackups(onBackupStatus);
 
+			hideOverlay();
+		});
+
+		$div.find('a.cancel').click(function(){
 			hideOverlay();
 		});
 
@@ -3636,6 +3682,16 @@
 	/*
 	 *	generic utils
 	 */
+	function jsonMatch(a, b)
+	{
+		return JSON.stringify(a) == JSON.stringify(b);
+	}
+
+	function jsonClone(x)
+	{
+		return JSON.parse(JSON.stringify(x));
+	}
+
 	function htmlEncode(raw)
 	{
 		return $('tt .encoder').text(raw).html();
