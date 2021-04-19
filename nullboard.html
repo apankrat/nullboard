@@ -2080,10 +2080,7 @@
 				store.checkStatus(function(ok, xhr){
 					console.log( `Backup storage '${store.id}' is ${ok ? 'ready' : 'NOT ready'} ` );
 
-					var text = xhr.responseText;
-					if (! text) text = xhr.status ? `Request failed with ${xhr.status}` : 'Offline or CORS-blocked';
-
-					store.last = { ok: ok, text: text, code: xhr.status };
+					store.last = { ok: ok, text: xhr.responseText, code: xhr.status };
 					success &= ok;
 
 					if (--pending)
@@ -2397,7 +2394,7 @@
 				headers: { 'X-Access-Token': this.conf.auth },
 			})
 			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
-			.fail(function(x, s, e) { if (cb) cb.call(self, false, x, s, e); })
+			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
 		}
 
 		saveConfig(conf, cb)
@@ -2411,7 +2408,7 @@
 				data: JSON.stringify(conf),
 			})
 			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
-			.fail(function(x, s, e) { if (cb) cb.call(self, false, x, s, e); })
+			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
 		}
 
 		saveBoard(id, data, meta, cb)
@@ -2430,7 +2427,7 @@
 				dataType: 'json',
 			})
 			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
-			.fail(function(x, s, e) { if (cb) cb.call(self, false, x, s, e); })
+			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
 		}
 
 		nukeBoard(id, cb)
@@ -2443,7 +2440,17 @@
 				headers: { 'X-Access-Token': this.conf.auth },
 			})
 			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
-			.fail(function(x, s, e) { if (cb) cb.call(self, false, x, s, e); })
+			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
+		}
+
+		/*
+		 *	private
+		 */
+		patchXhr(x)
+		{
+			if (! x.responseText)
+				x.responseText = x.status ? `Request failed with ${x.status}` : 'Offline or CORS-blocked';
+			return x;
 		}
 	}
 
@@ -3432,10 +3439,25 @@
 		$text.val('Checking...');
 		$status.removeClass('error').slideDown();
 
-		$div.delay(700).queue(function(){
+		$div.delay(850).queue(function(){
 
-			$status.find('input').val('OK');
-			onDone();
+			var T = NB.backupTypes.get(backupConf.type);
+			var foo = new T(backupConf.id, backupConf.conf);
+
+			foo.checkStatus(function(ok, xhr){
+				if (ok)
+				{
+					$text.val('OK');
+				}
+				else
+				{
+					$text.val(xhr.responseText);
+					$status.addClass('error');
+				}
+
+				onDone();
+			});
+
 			$(this).dequeue();
 		});
 	}
@@ -3469,9 +3491,12 @@
 
 		$div.find('a.ok').click(function(){
 
-			if ($div.hasClass('checking'))
+			if ($div[0].checking)
 				return;
 
+			$div[0].checking = 0;
+
+			//
 			var locNew = jsonClone(loc);
 			var remNew = jsonClone(rem);
 
@@ -3493,29 +3518,25 @@
 				return shakeControl($rem.find('.auth'));
 
 			// validate if enabled && changed
-			var checking = 0;
-
 			if (locNew.enabled && ! jsonMatch(locNew, locChecked))
 			{
-				$div.addClass('checking');
-				checking++;
+				$div[0].checking++;
 				checkBackupConfig(locNew, $loc, function(){
 					locChecked = locNew;
-					if (! --checking) $div.removeClass('checking');
+					$div[0].checking--;
 				});
 			}
 
 			if (remNew.enabled && ! jsonMatch(remNew, remChecked))
 			{
-				$div.addClass('checking');
-				checking++;
+				$div[0].checking++;
 				checkBackupConfig(remNew, $rem, function(){
 					remChecked = remNew;
-					if (! --checking) $div.removeClass('checking');
+					$div[0].checking--;
 				});
 			}
 
-			if (checking)
+			if ($div[0].checking)
 				return;
 
 			//
