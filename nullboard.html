@@ -1122,6 +1122,22 @@
 	.overlay .backup-conf {
 		padding: 20px 40px;
 		min-width: 300px;
+		position: relative;
+	}
+
+	.overlay .backup-conf .close {
+		position: absolute;
+		top: 0px;
+		right: 12px;
+		font-size: calc(22rem / 11);
+		color: #000;
+		opacity: 0.3;
+		transition: opacity 300ms;
+	}
+
+	.overlay .backup-conf .close:hover {
+		opacity: 1;
+		transition: opacity 300ms;
 	}
 
 	.overlay .backup-conf h3 {
@@ -1185,9 +1201,10 @@
 	}
 
 	.overlay .backup-conf .etc {
-		padding: 5px 0 0 14px;
+		margin-top: 3px;
 		margin-bottom: 10px;
 		margin-left: calc( 9rem / 22 );
+		padding: 2px 0 0 14px;
 		border-left: 1px solid #888;
 	}
 
@@ -1246,10 +1263,17 @@
 		padding: 20px 10px 0;
 		border-top: 1px solid #888;
 		word-spacing: 30px;
+		position: relative;
 	}
 
 	.overlay .backup-conf .save a {
 		color: #1489db;
+	}
+
+	.overlay .backup-conf.off .save .check {
+		color: #aaa;
+		pointer-events: none;
+		cursor: default;
 	}
 
 	/***/
@@ -1615,6 +1639,8 @@
 		</div>
 
 		<div class=backup-conf>
+			<a href=# class=close>&times;</a>
+
 			<h3>Auto-backup</h3>
 			<div class=what>
 				<a href=https://nullboard.io/backups target=_blank>What is this?</a>
@@ -1637,8 +1663,7 @@
 				</div>
 			</div>
 
-			<div class=save><a href=# class=ok>Apply</a> <a href=# class=cancel>Cancel</a></div>
-
+			<div class=save><a href=# class=check>Check...</a> <a href=# class=ok>Save</a></div>
 		</div>
 	</tt>
 
@@ -3409,7 +3434,7 @@
 		return s;
 	}
 
-	function initBackupEtc($div, backupConf)
+	function setBackupConfigUi($div, backupConf)
 	{
 		if (! backupConf.enabled)
 		{
@@ -3429,6 +3454,50 @@
 
 		$status.find('input').val(text);
 		$status.css({ display: 'block' });
+	}
+
+	function getBackupConfigUi()
+	{
+		var conf = NB.storage.getConfig();
+		var loc  = conf.backups[0];
+		var rem  = conf.backups[1];
+
+		var $div = $('.overlay .backup-conf');
+		var $loc = $div.find('.loc');
+		var $rem = $div.find('.rem');
+
+		var ret = { 
+			loc: jsonClone(loc), 
+			rem: jsonClone(rem)
+		};
+
+		ret.loc.enabled   = ! $loc.hasClass('off');
+		ret.loc.conf.auth = $loc.find('.auth').val();
+
+		ret.rem.enabled   = ! $rem.hasClass('off');
+		ret.rem.conf.base = $rem.find('.base').val();
+		ret.rem.conf.auth = $rem.find('.auth').val();
+
+		//
+		if (ret.loc.enabled && ! ret.loc.conf.auth)
+		{
+			shakeControl($loc.find('.auth'));
+			return null;
+		}
+
+		if (ret.rem.enabled && ! ret.rem.conf.base)
+		{
+			shakeControl($rem.find('.base'));
+			return null;
+		}
+
+		if (ret.rem.enabled && ! ret.rem.conf.auth)
+		{
+			shakeControl($rem.find('.auth'));
+			return null;
+		}
+
+		return ret;
 	}
 
 	function checkBackupConfig(backupConf, $div, onDone)
@@ -3471,6 +3540,8 @@
 
 		//
 		var $div = $('tt .backup-conf').clone();
+		var  div = $div[0];
+
 		var $loc = $div.find('.loc');
 		var $rem = $div.find('.rem');
 
@@ -3478,77 +3549,94 @@
 		var loc = conf.backups[0];
 		var rem = conf.backups[1];
 
-		var locChecked = jsonClone(loc);
-		var remChecked = jsonClone(rem);
+		div.checking = 0;
 
 		//
 		$loc.find('.auth').val( loc.conf.auth );
 		$rem.find('.auth').val( rem.conf.auth );
 		$rem.find('.base').val( rem.conf.base );
 
-		initBackupEtc($loc, loc);
-		initBackupEtc($rem, rem);
+		setBackupConfigUi($loc, loc);
+		setBackupConfigUi($rem, rem);
 
-		$div.find('a.ok').click(function(){
+		if (! loc.enabled && ! rem.enabled)
+			$div.addClass('off');
 
-			if ($div[0].checking)
-				return;
+		//
+		$div.find('.opt').click(function(){
 
-			$div[0].checking = 0;
+			var $opt = $(this).parent();
 
-			//
-			var locNew = jsonClone(loc);
-			var remNew = jsonClone(rem);
-
-			locNew.enabled   = ! $loc.hasClass('off');
-			locNew.conf.auth = $loc.find('.auth').val();
-
-			remNew.enabled   = ! $rem.hasClass('off');
-			remNew.conf.base = $rem.find('.base').val();
-			remNew.conf.auth = $rem.find('.auth').val();
-
-			// basic checks
-			if (locNew.enabled && ! locNew.conf.auth)
-				return shakeControl($loc.find('.auth'));
-
-			if (remNew.enabled && ! remNew.conf.base)
-				return shakeControl($rem.find('.base'));
-
-			if (remNew.enabled && ! remNew.conf.auth)
-				return shakeControl($rem.find('.auth'));
-
-			// validate if enabled && changed
-			if (locNew.enabled && ! jsonMatch(locNew, locChecked))
+			if ($opt.hasClass('off'))
 			{
-				$div[0].checking++;
-				checkBackupConfig(locNew, $loc, function(){
-					locChecked = locNew;
-					$div[0].checking--;
-				});
+				$opt.find('.etc')
+				.css({ opacity: 0 })
+				.slideDown('fast')
+				.animate({ opacity: 1 }, 'fast')
+				.queue(function(){
+					$opt.removeClass('off');
+					$div.removeClass('off');
+					$(this).css('opacity', '').dequeue();
+				})
+
+				$opt.find('input').first()
+				.delay(800)
+				.queue(function(){ $(this).focus().dequeue(); });
+			}
+			else
+			{
+				$opt.find('.etc')
+				.animate({ opacity: 0 }, 'fast')
+				.slideUp('fast')
+				.queue(function(){
+					$opt.addClass('off');
+					if ($loc.hasClass('off') && $rem.hasClass('off'))
+						$div.addClass('off');
+					$(this).css({ opacity: '' }).dequeue();
+				})
 			}
 
-			if (remNew.enabled && ! jsonMatch(remNew, remChecked))
+			return false;
+		});
+
+		$div.find('.check').click(function(){
+
+			if (div.checking)
+				return false;
+
+			var foo = getBackupConfigUi();
+			if (! foo)
+				return false;
+
+			if (foo.loc.enabled)
 			{
-				$div[0].checking++;
-				checkBackupConfig(remNew, $rem, function(){
-					remChecked = remNew;
-					$div[0].checking--;
-				});
+				div.checking++;
+				checkBackupConfig(foo.loc, $loc, function(){ div.checking--; });
 			}
 
-			if ($div[0].checking)
-				return;
+			if (foo.rem.enabled)
+			{
+				div.checking++;
+				checkBackupConfig(foo.rem, $rem, function(){ div.checking--; });
+			}
 
-			//
-			if (locNew.enabled && ! loc.enabled)
-				locNew.id = typ + '-' + (conf.nextBackupId++);
+			return false;
+		});
 
-			if (remNew.enabled && ! rem.enabled)
-				remNew.id = typ + '-' + (conf.nextBackupId++);
+		$div.find('.ok').click(function(){
 
-			//
-			conf.backups[0] = locNew;
-			conf.backups[1] = remNew;
+			var foo = getBackupConfigUi();
+			if (! foo)
+				return false;
+
+			if (foo.loc.enabled && ! loc.enabled)
+				foo.loc.id = typ + '-' + (conf.nextBackupId++);
+
+			if (foo.rem.enabled && ! rem.enabled)
+				foo.rem.id = typ + '-' + (conf.nextBackupId++);
+
+			conf.backups[0] = foo.loc;
+			conf.backups[1] = foo.rem;
 
 			NB.storage.saveConfig();
 			NB.storage.initBackups(onBackupStatus);
@@ -3556,7 +3644,7 @@
 			hideOverlay();
 		});
 
-		$div.find('a.cancel').click(function(){
+		$div.find('a.close').click(function(){
 			hideOverlay();
 		});
 
@@ -4721,14 +4809,6 @@
 	});
 
 	/***/
-
-	$('.overlay').on('click', '.backup-conf .opt', function(){
-		var $div = $(this).parent();
-		$div.toggleClass('off');
-		if (! $div.hasClass('off'))
-			$div.find('input').first().delay(500).queue(function(){ $(this).focus().dequeue(); });
-		return false;
-	});
 
 	$(window).resize(adjustLayout);
 
