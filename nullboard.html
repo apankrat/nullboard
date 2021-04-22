@@ -1418,8 +1418,8 @@
 	}
 
 	/***/
-	.theme-dark textarea,
-	.theme-dark input {
+	.theme-dark .wrap textarea,
+	.theme-dark .wrap input {
 		background: #111315;
 		color: #eee;
 	}
@@ -1976,7 +1976,7 @@
 
 			meta.current = revision;
 
-			backupBoard(board_id, null, meta);
+			this.backupBoard(board_id, null, meta);
 
 			return this.setJson('board.' + board_id + '.meta', meta) &&
 			       this.setJson('board.' + board_id, revision); // for older versions
@@ -2411,12 +2411,17 @@
 		checkStatus(cb)
 		{
 			var self = this;
-			var test = new Image;
 
 			$.ajax({
-				url: this.conf.base + '/test',
+				url: this.conf.base + '/config',
 				type: 'put',
 				headers: { 'X-Access-Token': this.conf.auth },
+				data:
+				{
+					self: document.location.href,
+//					conf: -- without the data --
+				},
+				dataType: 'json'
 			})
 			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
 			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
@@ -2430,7 +2435,12 @@
 				url: this.conf.base + '/config',
 				type: 'put',
 				headers: { 'X-Access-Token': this.conf.auth },
-				data: JSON.stringify(conf),
+				data: 
+				{
+					self: document.location.href,
+					conf: JSON.stringify(conf)
+				},
+				dataType: 'json'
 			})
 			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
 			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
@@ -2446,10 +2456,11 @@
 				headers: { 'X-Access-Token': this.conf.auth },
 				data:
 				{
+					self: document.location.href,
 					data: data ? JSON.stringify(data) : null,
 					meta: meta ? JSON.stringify(meta) : null
 				},
-				dataType: 'json',
+				dataType: 'json'
 			})
 			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
 			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
@@ -3115,7 +3126,7 @@
 	function saveBoard()
 	{
 		var $board = $('.wrap .board');
-		var board = jsonClone(NB.board); // id, revision & title
+		var board = Object.assign(new Board(), NB.board); // id, revision & title
 
 		board.lists = [];
 
@@ -3669,6 +3680,10 @@
 		if (status == 'failed') $config.addClass('backup-err').removeClass('backing-up'); else
 		if (status == 'busy')   $config.addClass('backing-up').removeClass('backup-err'); else
 		if (status == 'ok')     $config.removeClass('backing-up backup-err');
+
+		// if become 'ok' - process all pending backups
+
+//		...
 	}
 
 	/*
