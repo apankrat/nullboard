@@ -1703,7 +1703,7 @@
 			nextId : 1
 		};
 
-		this.backupStatus = new Map();      // agentId => [ 'conf' ]
+		this.backupStatus = { };            // agentId => [ 'conf' ]
 	}
 
 	function BoardMeta()
@@ -1712,7 +1712,7 @@
 		this.current = 1;                   // revision
 		this.ui_spot = 0;                   // 0 = not set
 		this.history = [ ];                 // revision IDs
-		this.backupStatus = new Map();      // agentId => [ what's backed up ]
+		this.backupStatus = { };            // agentId => [ what's backed up ]
 	}
 
 	class Storage
@@ -2119,13 +2119,13 @@
 		backupBoard(board_id, board, meta)
 		{
 			var self = this;
-			var was = meta.backupStatus || new Map();
+			var was = meta.backupStatus || {};
 
-			meta.backupStatus = new Map();
+			meta.backupStatus = {};
 
 			if (! this.backups.agents.length)
 			{
-				if (was.size)
+				if (was['data'] || was['meta'])
 					self.setJson('board.' + board_id + '.meta', meta);
 				return;
 			}
@@ -2134,24 +2134,24 @@
 
 			this.backups.agents.forEach(function(agent){
 
-				var fields = was.get(agent.id) || { };
+				var fields = was[agent.id] || {};
 
 				if (board) delete fields.data;
 				if (meta)  delete fields.meta;
 
-				meta.backupStatus.set(agent.id, fields);
+				meta.backupStatus[agent.id] = fields;
 
 				agent.saveBoard(board_id, board, meta, function(ok){
 
 					var what = 'Backup of ' + board_id + (board ? '' : ' (meta)');
-					console.log( `${what} to '${agent.id}' -> ${agent.status}` );
+					console.log( `${what} to '${agent.id}' -> ${ok ? 'ok' : 'failed'}` );
 
 					if (ok)
 					{
 						if (board) fields.data = + new Date();
 						if (meta)  fields.meta = + new Date();
 
-						meta.backupStatus.set(agent.id, fields);
+						meta.backupStatus[agent.id] = fields;
 					}
 
 					self.setJson('board.' + board_id + '.meta', meta);
@@ -2162,13 +2162,13 @@
 		backupConfig()
 		{
 			var self = this;
-			var was = self.conf.backupStatus || new Map();
+			var was = self.conf.backupStatus || {};
 
-			self.conf.backupStatus = new Map();
+			self.conf.backupStatus = {};
 
 			if (! this.backups.agents.length)
 			{
-				if (was.size)
+				if (was['conf'])
 					this.setJson('config', this.conf);
 				return;
 			}
@@ -2177,14 +2177,14 @@
 
 				var fields = { };
 
-				self.conf.backupStatus.set(agent.id, fields);
+				self.conf.backupStatus[agent.id] = fields;
 
 				agent.saveConfig(self.conf, function(ok){
 
 					if (ok)
 					{
 						fields.conf = + new Date()
-						self.conf.backupStatus.set(agent.id, fields);
+						self.conf.backupStatus[agent.id] = fields;
 					}
 
 					self.setJson('config', self.conf);
@@ -2554,6 +2554,8 @@
 		{
 			if (status == 'busy' && this.status == 'busy')
 				throw `Backup agent ${this.id} is already busy!`;
+
+			console.log( `Backup agent '${this.id}' status: '${this.status}' -> '${status}'` );
 
 			this.status = status;
 			this.lastOp = op;
@@ -3777,31 +3779,50 @@
 			runPendingBackups();
 	}
 
+	function needsBackingUp(backupStatus, fields, agentIds)
+	{
+		var stale = false;
+		agentIds.forEach(function(id){
+			var obj = backupStatus[id];
+			if (obj) fields.forEach(function(f){ stale = !obj[f]; });
+			else stale = true;
+		});
+
+		return stale;
+	}
+
 	function runPendingBackups()
 	{
-console.log('runPendingBackups...');
-//		var boards = NB.storage.getBoardIndex();
-//		var backups = NB.storage.backups;
-//		var backupSet = [];
-//
-//		backups.forEach(function(b){ backupSet.push(b.id); });
-//		backupSet.sort();
-//
-//		console.log('Checking for pending backups. Current backup set - ', backupSet);
-//
-//		boards.forEach(function(meta, id){
-//
-//			var backItUp = false;
-//
-//			if (! meta.needsBackup && jsonMatch(meta.backups.sort(), backupSet))
-//				return;
-//
-//			console.log( `Board ${id} may need a backup`, meta.backups );
-//
-//			var board = NB.storage.loadBoard(id);
-//			if (board)
-//				NB.storage.backupBoard(id, board, meta)
-//		});
+		console.log('Checking for pending backups...');
+
+		var conf = NB.storage.getConfig();
+
+		var agentIds = [];
+		NB.storage.backups.agents.forEach(function(agent){
+			agentIds.push(agent.id);
+		});
+
+		if (needsBackingUp(conf.backupStatus, [ 'conf' ], agentIds))
+		{
+			console.log("  Backing up app config...");
+			NB.storage.backupConfig();
+		}
+
+		var boards = NB.storage.getBoardIndex();
+
+		boards.forEach(function(meta, id){
+
+			if (! needsBackingUp(meta.backupStatus, [ 'data', 'meta' ], agentIds))
+				return;
+
+			console.log(`  Backing up board ${id}...`);
+
+			var board = NB.storage.loadBoard(id);
+			if (! board)
+				return;
+
+			NB.storage.backupBoard(id, board, meta)
+		});
 	}
 
 	/*
@@ -4952,7 +4973,7 @@ console.log('runPendingBackups...');
 	 */
 	var NB =
 	{
-		codeVersion: 20210419,
+		codeVersion: 20210425,
 		blobVersion: 20190412, // board blob format in Storage
 		board: null,
 	};
@@ -4969,7 +4990,7 @@ console.log('runPendingBackups...');
 
 	boards.forEach( function(meta, board_id) {
 		var hist = meta.history.join(', ');
-		console.log( `Found board ${board_id} - "${meta.title}", revision ${meta.current}, history [${hist}]` );
+		console.log( `Found board ${board_id} - "${meta.title}", revision ${meta.current}, history [${hist}], backup ${JSON.stringify(meta.backupStatus)}` );
 	});
 
 	//
