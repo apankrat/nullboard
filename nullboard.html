@@ -2077,7 +2077,7 @@
 					conf: { base: '', auth: '' }
 				})
 
-				self.saveConfig();
+				this.saveConfig();
 			}
 		}
 
@@ -2119,7 +2119,7 @@
 		backupBoard(board_id, board, meta)
 		{
 			var self = this;
-			var was = meta.backups || new Map();
+			var was = meta.backupStatus || new Map();
 
 			meta.backupStatus = new Map();
 
@@ -2187,7 +2187,7 @@
 						self.conf.backupStatus.set(agent.id, fields);
 					}
 
-					self.setJson('config', this.conf);
+					self.setJson('config', self.conf);
 				});
 			});
 		}
@@ -3526,9 +3526,9 @@
 		var b = findBackupAgent(backupConf);
 		var text = 'OK';
 
-		if (b && b.last && ! b.last.ok)
+		if (b && b.status == 'error')
 		{
-			text = b.last.text;
+			text = b.lastXhr.text;
 			$status.addClass('error');
 		}
 
