@@ -1696,10 +1696,13 @@
 		this.listWidth    = null;           // list-width
 		this.theme        = null;           // default or 'dark'
 
-		this.backups      = [ ];            // [ { type, id, enabled, conf } ];
-		this.nextBackupId = 1;
-
 		this.board        = null;           // active board
+
+		this.backups      =
+		{
+			agents : [ ],               // [ { type, id, enabled, conf } ];
+			nextId : 1
+		};
 	}
 
 	function BoardMeta()
@@ -1708,7 +1711,7 @@
 		this.current = 1;                   // revision
 		this.ui_spot = 0;                   // 0 = not set
 		this.history = [ ];                 // revision IDs
-		this.backups = [ ];                 // backup agents IDs with which this board is stored
+		this.backups = [ ];                 // agents that this board is backed up with
 	}
 
 	class Storage
@@ -1720,9 +1723,11 @@
 			this.conf = new AppConfig();
 			this.boardIndex = new Map();
 
-			this.backups = [];          // BackupStorage
-			this.backupStatus = '';     // '', 'ok', 'busy', 'failed'
-			this.backupCb = null;
+			this.backups =
+			{
+				status : '',      // '', 'ok', 'busy', 'failed'
+				agents : [ ],     // BackupStorage instances
+			};
 		}
 
 		open()
@@ -1740,9 +1745,12 @@
 			return this.conf;
 		}
 
-		setVerLast(ver)
+		setVerLast()
 		{
-			this.conf.verLast = ver || NB.codeVersion;
+			if (this.conf.verLast == NB.codeVersion)
+				return true;
+
+			this.conf.verLast = NB.codeVersion;
 			return this.saveConfig();
 		}
 
@@ -1754,6 +1762,8 @@
 
 		setActiveBoard(board_id)
 		{
+			console.log('setActiveBoard [' + this.conf.board + '] -> [' + board_id + ']');
+
 			var meta = board_id ? this.boardIndex.get(board_id) : true;
 
 			if (! meta)
@@ -1944,7 +1954,7 @@
 			this.delItem('board.' + board_id + '.meta');
 			this.boardIndex.delete(board_id);
 
-			this.backups.forEach(function(store){
+			this.backups.agents.forEach(function(store){
 				store.nukeBoard(board_id);
 			});
 
@@ -2042,22 +2052,26 @@
 				conf.verSeen = 20200220; // 20200429;
 			}
 
-			if (conf.backups.length != 2 ||
-			    conf.backups[0].type != simp || conf.backups[0].conf.base != 'http://127.0.0.1:10001' ||
-			    conf.backups[1].type != simp)
-			{
-				console.log('Unexpected backup config, will re-initialize.', conf.backups);
+			var agents = conf.backups.agents;
 
-				conf.backups.push({
+			if (agents.length != 2 ||
+			    agents[0].type != simp || agents[0].conf.base != 'http://127.0.0.1:10001' ||
+			    agents[1].type != simp)
+			{
+				console.log('Unexpected backup config, will re-initialize.', agents);
+
+				conf.backups.agents = [];
+
+				conf.backups.agents.push({
 					type: simp,
-					id: simp + '-' + (conf.nextBackupId++),
+					id: simp + '-' + (conf.backups.nextId++),
 					enabled: false,
 					conf: { base: 'http://127.0.0.1:10001', auth: '' }
 				})
 
-				conf.backups.push({
+				conf.backups.agents.push({
 					type: simp,
-					id: simp + '-' + (conf.nextBackupId++),
+					id: simp + '-' + (conf.backups.nextId++),
 					enabled: false,
 					conf: { base: '', auth: '' }
 				})
@@ -2069,20 +2083,18 @@
 		/*
 		 *	backups
 		 */
-		initBackups(backupStatusCb)
+		initBackups(onBackupStatus)
 		{
 			var self = this;
 			var pending = 0;
 			var success = true;
 			var store_id = 1;
 
-			NB.storage.backupCb = backupStatusCb;
+			self.backups.agents = [];
 
-			this.backups = [];
+			onBackupStatus(null);
 
-			self.setBackupStatus('');
-
-			this.conf.backups.forEach(function(b){
+			this.conf.backups.agents.forEach(function(b){
 
 				var T = NB.backupTypes.get(b.type);
 				if (! T)
@@ -2094,59 +2106,40 @@
 				if (! b.enabled)
 					return;
 
-				var store = new T(b.id, b.conf);
-				self.backups.push(store);
+				var agent = new T(b.id, b.conf, onBackupStatus);
+				self.backups.agents.push(agent);
 
-				console.log( `Added backup storage - type '${store.type}', id '${store.id}'` );
+				console.log( `Added backup agent - type '${agent.type}', id '${agent.id}'` );
 
-				self.setBackupStatus('busy');
-
-				pending++;
-				store.checkStatus(function(ok, xhr){
-					console.log( `Backup storage '${store.id}' is ${ok ? 'ready' : 'NOT ready'} ` );
-
-					store.last = { ok: ok, text: xhr.responseText, code: xhr.status };
-					success &= ok;
-
-					if (--pending)
-						return;
-
-					self.setBackupStatus(success ? 'ok' : 'failed');
-				});
+				agent.checkStatus(null); // will need just onBackupStatus() callbacks
 			});
 		}
 
 		backupBoard(board_id, board, meta)
 		{
 			var self = this;
-			var pending = 0;
-			var success = true;
 
-			meta.backups = [];
-
-			if (! this.backups.length)
+			if (! this.backups.agents.length)
 			{
-				this.setBackupStatus('');
+				meta.backups = [];
 				return;
 			}
 
-			this.setBackupStatus('busy');
+			meta.backups = [];
 
-			this.backups.forEach(function(store){
-				pending++;
-				store.saveBoard(board_id, board, meta, function(ok){
+			console.log( `Backing up ${board_id}...` );
+
+			this.backups.agents.forEach(function(agent){
+
+				agent.saveBoard(board_id, board, meta, function(){
 
 					var what = 'Backup of ' + board_id + (board ? '' : ' (meta)');
-					console.log( `${what} to '${store.id}' -> ${ok ? 'ok' : 'failed'}` );
+					console.log( `${what} to '${agent.id}' -> ${agent.status}` );
 
-					if (ok) meta.backups.push(store.id);
-					else    success = false;
-
-					if (--pending)
-						return;
+					if (agent.status == 'ready')
+						meta.backups.push(agent.id);
 
 					self.setJson('board.' + board_id + '.meta', meta);
-					self.setBackupStatus(success ? 'ok' : 'failed');
 				});
 			});
 		}
@@ -2154,33 +2147,13 @@
 		backupConfig()
 		{
 			var self = this;
-			var pending = 0;
-			var success = true;
 
-			if (! this.backups.length)
-			{
-				this.setBackupStatus('');
+			if (! this.backups.agents.length)
 				return;
-			}
 
-			this.setBackupStatus('busy');
-
-			this.backups.forEach(function(store){
-				pending++;
-				store.saveConfig(self.conf, function(ok){
-					success &= ok;
-					if (--pending)
-						return;
-
-					self.setBackupStatus(success ? 'ok' : 'failed');
-				});
+			this.backups.agents.forEach(function(agent){
+				agent.saveConfig(self.conf, function(){});
 			});
-		}
-
-		setBackupStatus(status)
-		{
-			this.backupStatus = status;
-			if (this.backupCb) this.backupCb.call(this, status);
 		}
 	};
 
@@ -2276,6 +2249,9 @@
 
 				if (! meta)
 					continue;
+
+				delete meta.backingUp;      // run-time var
+				delete meta.needsBackup;    // ditto
 
 				meta = Object.assign(new BoardMeta(), meta);
 				this.boardIndex.set(board_id, meta);
@@ -2382,12 +2358,17 @@
 	 */
 	class BackupStorage
 	{
-		constructor(id, conf)
+		constructor(id, conf, onStatusChange)
 		{
-			this.type = '?';
+			this.type           = '?';
 
-			this.id = id;
-			this.conf = conf;
+			this.id             = id;
+			this.conf           = conf;
+			this.status         = '';
+			this.lastOp         = '';
+			this.lastXhr        = { op: '', text: '', code: 0 };
+			this.onStatusChange = onStatusChange;
+			this.queue          = [];
 		}
 
 		checkStatus(cb)                { return false; }
@@ -2398,95 +2379,144 @@
 
 	class SimpleBackup extends BackupStorage
 	{
-		constructor(id, conf)
+		constructor(id, conf, onStatusChange)
 		{
-			super(id, null);
+			super(id, null, onStatusChange);
 
 			this.type = 'simp';
 			this.conf = { base: '', auth: '' }
 			this.conf = Object.assign(this.conf, conf);
-
 		}
 
 		checkStatus(cb)
 		{
-			var self = this;
-
-			$.ajax({
-				url: this.conf.base + '/config',
-				type: 'put',
-				headers: { 'X-Access-Token': this.conf.auth },
-				data:
+			this.queue.push({
+				what : 'checkStatus',
+				cb   : cb,
+				args :
 				{
-					self: document.location.href,
-//					conf: -- without the data --
-				},
-				dataType: 'json'
-			})
-			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
-			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
+					url: this.conf.base + '/config',
+					type: 'put',
+					headers: { 'X-Access-Token': this.conf.auth },
+					data:
+					{
+						self: document.location.href,
+					//	conf: -- without the data --
+					},
+					dataType: 'json'
+				}
+			});
+
+			this.runQueue();
 		}
 
 		saveConfig(conf, cb)
 		{
-			var self = this;
-
-			$.ajax({
-				url: this.conf.base + '/config',
-				type: 'put',
-				headers: { 'X-Access-Token': this.conf.auth },
-				data: 
+			this.queue.push({
+				what : 'saveConfig',
+				cb   : cb,
+				args :
 				{
-					self: document.location.href,
-					conf: JSON.stringify(conf)
-				},
-				dataType: 'json'
-			})
-			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
-			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
+					url: this.conf.base + '/config',
+					type: 'put',
+					headers: { 'X-Access-Token': this.conf.auth },
+					data:
+					{
+						self: document.location.href,
+						conf: JSON.stringify(conf)
+					},
+					dataType: 'json'
+				}
+			});
+
+			this.runQueue();
 		}
 
 		saveBoard(id, data, meta, cb)
 		{
-			var self = this;
-
-			$.ajax({
-				url: this.conf.base + '/board/' + id,
-				type: 'put',
-				headers: { 'X-Access-Token': this.conf.auth },
-				data:
+			this.queue.push({
+				what : 'saveBoard',
+				cb   : cb,
+				args :
 				{
-					self: document.location.href,
-					data: data ? JSON.stringify(data) : null,
-					meta: meta ? JSON.stringify(meta) : null
-				},
-				dataType: 'json'
-			})
-			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
-			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
+					url: this.conf.base + '/board/' + id,
+					type: 'put',
+					headers: { 'X-Access-Token': this.conf.auth },
+					data:
+					{
+						self: document.location.href,
+						data: data ? JSON.stringify(data) : null,
+						meta: meta ? JSON.stringify(meta) : null
+					},
+					dataType: 'json'
+				}
+			});
+
+			this.runQueue();
 		}
 
 		nukeBoard(id, cb)
 		{
-			var self = this;
+			this.queue.push({
+				what : 'saveBoard',
+				cb   : cb,
+				args :
+				{
+					url:  this.conf.base + '/board/' + id,
+					type: 'delete',
+					headers: { 'X-Access-Token': this.conf.auth },
+				}
+			});
 
-			$.ajax({
-				url:  this.conf.base + '/board/' + id,
-				type: 'delete',
-				headers: { 'X-Access-Token': this.conf.auth },
-			})
-			.done(function(d, s, x) { if (cb) cb.call(self,  true, x, s, d); })
-			.fail(function(x, s, e) { if (cb) cb.call(self, false, self.patchXhr(x), s, e); })
+			this.runQueue();
 		}
 
 		/*
 		 *	private
 		 */
-		patchXhr(x)
+		runQueue()
 		{
-			if (! x.responseText)
-				x.responseText = x.status ? `Request failed with ${x.status}` : 'Offline or CORS-blocked';
-			return x;
+			var self = this;
+
+			if (! this.queue.length)
+				return;
+
+			if (this.status == 'busy')
+				return;
+
+			var req = this.queue.shift();
+
+			this.setStatus('busy', req.what);
+
+			$.ajax(req.args)
+			 .done(function(d, s, x) { self.onRequestDone(req,  true, x); })
+			 .fail(function(x, s, e) { self.onRequestDone(req, false, x); })
+		}
+
+		onRequestDone(req, ok, xhr)
+		{
+			console.log( `Backup agent '${this.id}', ${this.lastOp}() -> ${ok ? 'ok' : 'failed'}` );
+
+			var code = xhr.status;
+			var text = xhr.responseText || (code ? `Response code ${code}` : 'Offline or CORS-blocked');
+
+			this.lastXhr = { text: text, code: code };
+
+			this.setStatus(ok ? 'ready' : 'error', this.lastOp);
+
+			if (req.cb) req.cb.call(this);
+
+			this.runQueue();
+		}
+
+		setStatus(status, op)
+		{
+			if (status == 'busy' && this.status == 'busy')
+				throw `Backup agent ${this.id} is already busy!`;
+
+			this.status = status;
+			this.lastOp = op;
+			this.onStatusChange(this);
 		}
 	}
 
@@ -3093,6 +3123,9 @@
 
 	function closeBoard(quick)
 	{
+		if (! NB.board)
+			return;
+
 		var $board = $('.wrap .board');
 
 		if (quick)
@@ -3429,20 +3462,20 @@
 	/*
 	 *
 	 */
-	function findBackup(which)
+	function findBackupAgent(which)
 	{
-		var s = null;
+		var a = null;
 
-		NB.storage.backups.forEach(function(store){
-			if (store.type      == which.type &&
-			    store.conf.auth == which.conf.auth &&
-			    store.conf.base == which.conf.base)
+		NB.storage.backups.agents.forEach(function(agent){
+			if (agent.type      == which.type &&
+			    agent.conf.auth == which.conf.auth &&
+			    agent.conf.base == which.conf.base)
 			{
-				s = store;
+				a = agent;
 			}
 		});
 
-		return s;
+		return a;
 	}
 
 	function setBackupConfigUi($div, backupConf)
@@ -3454,7 +3487,7 @@
 		}
 
 		var $status = $div.find('.status');
-		var b = findBackup(backupConf);
+		var b = findBackupAgent(backupConf);
 		var text = 'OK';
 
 		if (b && b.last && ! b.last.ok)
@@ -3470,15 +3503,16 @@
 	function getBackupConfigUi()
 	{
 		var conf = NB.storage.getConfig();
-		var loc  = conf.backups[0];
-		var rem  = conf.backups[1];
+		var loc  = conf.backups.agents[0];
+		var rem  = conf.backups.agents[1];
 
 		var $div = $('.overlay .backup-conf');
 		var $loc = $div.find('.loc');
 		var $rem = $div.find('.rem');
 
-		var ret = { 
-			loc: jsonClone(loc), 
+		var ret =
+		{
+			loc: jsonClone(loc),
 			rem: jsonClone(rem)
 		};
 
@@ -3522,16 +3556,17 @@
 		$div.delay(850).queue(function(){
 
 			var T = NB.backupTypes.get(backupConf.type);
-			var foo = new T(backupConf.id, backupConf.conf);
+			var foo = new T(backupConf.id, backupConf.conf, function(){});
 
-			foo.checkStatus(function(ok, xhr){
-				if (ok)
+			foo.checkStatus(function(){
+
+				if (foo.status == 'ready')
 				{
 					$text.val('OK');
 				}
 				else
 				{
-					$text.val(xhr.responseText);
+					$text.val(foo.lastXhr.text);
 					$status.addClass('error');
 				}
 
@@ -3546,8 +3581,8 @@
 	{
 		var conf = NB.storage.getConfig();
 
-		if (conf.backups.length != 2)
-			throw 'Invalid conf.backups[]'; // as per fixupConfig()
+		if (conf.backups.agents.length != 2)
+			throw 'Invalid conf.backups.agents[]'; // as per fixupConfig()
 
 		//
 		var $div = $('tt .backup-conf').clone();
@@ -3557,8 +3592,8 @@
 		var $rem = $div.find('.rem');
 
 		var typ = (new SimpleBackup).type;
-		var loc = conf.backups[0];
-		var rem = conf.backups[1];
+		var loc = conf.backups.agents[0];
+		var rem = conf.backups.agents[1];
 
 		div.checking = 0;
 
@@ -3641,16 +3676,16 @@
 				return false;
 
 			if (foo.loc.enabled && ! loc.enabled)
-				foo.loc.id = typ + '-' + (conf.nextBackupId++);
+				foo.loc.id = typ + '-' + (conf.backups.nextId++);
 
 			if (foo.rem.enabled && ! rem.enabled)
-				foo.rem.id = typ + '-' + (conf.nextBackupId++);
+				foo.rem.id = typ + '-' + (conf.backups.nextId++);
 
-			conf.backups[0] = foo.loc;
-			conf.backups[1] = foo.rem;
+			conf.backups.agents[0] = foo.loc;
+			conf.backups.agents[1] = foo.rem;
 
+			NB.storage.initBackups(onBackupStatusChange);
 			NB.storage.saveConfig();
-			NB.storage.initBackups(onBackupStatus);
 
 			hideOverlay();
 		});
@@ -3662,14 +3697,17 @@
 		showOverlay($div);
 	}
 
-	function onBackupStatus(_status)
+	function onBackupStatusChange(agent)
 	{
-		var backups = NB.storage.backups;
-		var status  = NB.storage.backupStatus;
+		var agents = NB.storage.backups.agents;
+
 		var $config = $('.config');
 		var $status = $('.config .teaser u')
 
-		if (! backups.length)
+//		if (agent) console.log( `onBackupStatusChange: ${agent.id}, status ${agent.status}, op ${agent.lastOp}, xhr '${agent.lastXhr.text}' / ${agent.lastXhr.code}` );
+//		else       console.log( `onBackupStatusChange: <generic>` );
+
+		if (! agents.length)
 		{
 			$config.removeClass('backups-on backup-err backing-up');
 			return;
@@ -3677,13 +3715,51 @@
 
 		$config.addClass('backups-on');
 
-		if (status == 'failed') $config.addClass('backup-err').removeClass('backing-up'); else
-		if (status == 'busy')   $config.addClass('backing-up').removeClass('backup-err'); else
-		if (status == 'ok')     $config.removeClass('backing-up backup-err');
+		var busy  = 0;
+		var error = 0;
+		var ready = 0;
 
-		// if become 'ok' - process all pending backups
+		agents.forEach(function(agent){
+			if (agent.status == 'busy')  busy++;  else
+			if (agent.status == 'error') error++; else
+			if (agent.status == 'ready') ready++; else
+				throw `Unknown status [${agent.status}] on backup agent ${agent.id}`;
+		});
 
-//		...
+		if (error > 0) $config.addClass('backup-err').removeClass('backing-up'); else
+		if (busy > 0)  $config.addClass('backing-up').removeClass('backup-err'); else
+		               $config.removeClass('backing-up backup-err');
+
+		// process all pending backups if needed
+
+		if (! error && ! busy)
+			runPendingBackups();
+	}
+
+	function runPendingBackups()
+	{
+//		var boards = NB.storage.getBoardIndex();
+//		var backups = NB.storage.backups;
+//		var backupSet = [];
+//
+//		backups.forEach(function(b){ backupSet.push(b.id); });
+//		backupSet.sort();
+//
+//		console.log('Checking for pending backups. Current backup set - ', backupSet);
+//
+//		boards.forEach(function(meta, id){
+//
+//			var backItUp = false;
+//
+//			if (! meta.needsBackup && jsonMatch(meta.backups.sort(), backupSet))
+//				return;
+//
+//			console.log( `Board ${id} may need a backup`, meta.backups );
+//
+//			var board = NB.storage.loadBoard(id);
+//			if (board)
+//				NB.storage.backupBoard(id, board, meta)
+//		});
 	}
 
 	/*
@@ -4860,7 +4936,7 @@
 	console.log( `Active:  [${conf.board}]` );
 	console.log( `Theme:   [${conf.theme}]` );
 	console.log( `Font:    [${conf.fontName}], size [${conf.fontSize || '-'}], line-height [${conf.lineHeight || '-'}]` );
-	console.log( 'Backups: ' + JSON.stringify(conf.backups));
+	console.log( 'Backups: ', conf.backups);
 
 	/*
 	 *	backups
@@ -4868,7 +4944,7 @@
 	NB.backupTypes = new Map();
 	NB.backupTypes.set( (new SimpleBackup).type, SimpleBackup );
 
-	NB.storage.initBackups(onBackupStatus);
+	NB.storage.initBackups(onBackupStatusChange);
 
 	/*
 	 *	the ui
