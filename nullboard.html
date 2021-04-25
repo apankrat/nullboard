@@ -1685,7 +1685,6 @@
 
 	function AppConfig()
 	{
-		this.format       = NB.confVersion;
 		this.verLast      = null;           // last used codeVersion
 		this.verSeen      = null;           // latest codeVersion they saw the changelog for
 
@@ -1703,6 +1702,8 @@
 			agents : [ ],               // [ { type, id, enabled, conf } ];
 			nextId : 1
 		};
+
+		this.backupStatus = new Map();      // agentId => [ 'conf' ]
 	}
 
 	function BoardMeta()
@@ -1711,7 +1712,7 @@
 		this.current = 1;                   // revision
 		this.ui_spot = 0;                   // 0 = not set
 		this.history = [ ];                 // revision IDs
-		this.backups = [ ];                 // agents that this board is backed up with
+		this.backupStatus = new Map();      // agentId => [ what's backed up ]
 	}
 
 	class Storage
@@ -1881,8 +1882,6 @@
 				meta.history = rebuild;
 			}
 
-			meta.backups = [];
-
 			/*
 			 *	save meta
 			 */
@@ -2001,6 +2000,8 @@
 
 			meta.ui_spot = ui_spot;
 
+			this.backupBoard(board_id, null, meta);
+
 			return this.setJson('board.' + board_id + '.meta', meta);
 		}
 
@@ -2076,7 +2077,7 @@
 					conf: { base: '', auth: '' }
 				})
 
-				NB.storage.saveConfig();
+				self.saveConfig();
 			}
 		}
 
@@ -2118,18 +2119,27 @@
 		backupBoard(board_id, board, meta)
 		{
 			var self = this;
+			var was = meta.backups || new Map();
+
+			meta.backupStatus = new Map();
 
 			if (! this.backups.agents.length)
 			{
-				meta.backups = [];
+				if (was.size)
+					self.setJson('board.' + board_id + '.meta', meta);
 				return;
 			}
-
-			meta.backups = [];
 
 			console.log( `Backing up ${board_id}...` );
 
 			this.backups.agents.forEach(function(agent){
+
+				var fields = was.get(agent.id) || { };
+
+				if (board) delete fields.data;
+				if (meta)  delete fields.meta;
+
+				meta.backupStatus.set(agent.id, fields);
 
 				agent.saveBoard(board_id, board, meta, function(){
 
@@ -2137,7 +2147,12 @@
 					console.log( `${what} to '${agent.id}' -> ${agent.status}` );
 
 					if (agent.status == 'ready')
-						meta.backups.push(agent.id);
+					{
+						if (board) fields.data = + new Date();
+						if (meta)  fields.meta = + new Date();
+
+						meta.backupStatus.set(agent.id, fields);
+					}
 
 					self.setJson('board.' + board_id + '.meta', meta);
 				});
@@ -2147,12 +2162,33 @@
 		backupConfig()
 		{
 			var self = this;
+			var was = self.conf.backupStatus || new Map();
+
+			self.conf.backupStatus = new Map();
 
 			if (! this.backups.agents.length)
+			{
+				if (was.size)
+					this.setJson('config', this.conf);
 				return;
+			}
 
 			this.backups.agents.forEach(function(agent){
-				agent.saveConfig(self.conf, function(){});
+
+				var fields = { };
+
+				self.conf.backupStatus.set(agent.id, fields);
+
+				agent.saveConfig(self.conf, function(){
+
+					if (agent.status == 'ready')
+					{
+						fields.conf = + new Date()
+						self.conf.backupStatus.set(agent.id, fields);
+					}
+
+					self.setJson('config', this.conf);
+				});
 			});
 		}
 	};
@@ -2187,13 +2223,13 @@
 			var conf = this.getJson('config');
 			var newInstall = true;
 
-			if (conf && (conf.format != NB.confVersion))
-			{
-				if (! confirm('Preferences are stored in an unsupported format. Reset them?'))
-					return false;
-
-				conf = null;
-			}
+//			if (conf && (conf.format != NB.confVersion))
+//			{
+//				if (! confirm('Preferences are stored in an unsupported format. Reset them?'))
+//					return false;
+//
+//				conf = null;
+//			}
 
 			if (conf)
 			{
