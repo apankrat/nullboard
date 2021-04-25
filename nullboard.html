@@ -2141,12 +2141,12 @@
 
 				meta.backupStatus.set(agent.id, fields);
 
-				agent.saveBoard(board_id, board, meta, function(){
+				agent.saveBoard(board_id, board, meta, function(ok){
 
 					var what = 'Backup of ' + board_id + (board ? '' : ' (meta)');
 					console.log( `${what} to '${agent.id}' -> ${agent.status}` );
 
-					if (agent.status == 'ready')
+					if (ok)
 					{
 						if (board) fields.data = + new Date();
 						if (meta)  fields.meta = + new Date();
@@ -2179,9 +2179,9 @@
 
 				self.conf.backupStatus.set(agent.id, fields);
 
-				agent.saveConfig(self.conf, function(){
+				agent.saveConfig(self.conf, function(ok){
 
-					if (agent.status == 'ready')
+					if (ok)
 					{
 						fields.conf = + new Date()
 						self.conf.backupStatus.set(agent.id, fields);
@@ -2538,10 +2538,15 @@
 
 			this.lastXhr = { text: text, code: code };
 
-			this.setStatus(ok ? 'ready' : 'error', this.lastOp);
+			if (req.cb) req.cb.call(this, ok);
 
-			if (req.cb) req.cb.call(this);
+			if (! this.queue.length)
+			{
+				this.setStatus(ok ? 'ready' : 'error', this.lastOp);
+				return;
+			}
 
+			this.status = 'pre-busy';
 			this.runQueue();
 		}
 
@@ -3594,9 +3599,9 @@
 			var T = NB.backupTypes.get(backupConf.type);
 			var foo = new T(backupConf.id, backupConf.conf, function(){});
 
-			foo.checkStatus(function(){
+			foo.checkStatus(function(ok){
 
-				if (foo.status == 'ready')
+				if (ok)
 				{
 					$text.val('OK');
 				}
@@ -3774,6 +3779,7 @@
 
 	function runPendingBackups()
 	{
+console.log('runPendingBackups...');
 //		var boards = NB.storage.getBoardIndex();
 //		var backups = NB.storage.backups;
 //		var backupSet = [];
