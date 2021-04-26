@@ -79,6 +79,7 @@ Also:
 * Support for multiple boards with near-instant switching
 * Undo/redo for 50 revisions per board (configurable in the code)
 * Keyboard shortcuts, including Tab'ing through notes
+* Automatic backups to a local disk (with the help of [Nullboard Agent](https://nullboard.io/backups))
 
 ## Caveats
 
