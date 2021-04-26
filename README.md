@@ -16,7 +16,8 @@ The name also happens to abbreviate to [NB](https://en.wikipedia.org/wiki/Nota_b
 ## Locally stored
 
 * All data is stored locally, for now using [localStorage](https://developer.mozilla.org/en/docs/Web/API/Window/localStorage).
-* The data can also be exported to- or imported from a plain text file in a simple JSON format.
+* The data can be exported to- or imported from a plain text file in a simple JSON format.
+* The data can also be automatically backed up to a local disk (with the help of [Nullboard Agent](https://nullboard.io/backups)).
 
 ## Beta
 
@@ -79,7 +80,6 @@ Also:
 * Support for multiple boards with near-instant switching
 * Undo/redo for 50 revisions per board (configurable in the code)
 * Keyboard shortcuts, including Tab'ing through notes
-* Automatic backups to a local disk (with the help of [Nullboard Agent](https://nullboard.io/backups))
 
 ## Caveats
 
