@@ -1710,6 +1710,8 @@
 		this.listWidth    = null;           // list-width
 		this.theme        = null;           // default or 'dark'
 
+		this.fileLinks    = false;          // mark up `foo` as <a href=file:///foo>...</a>
+
 		this.board        = null;           // active board
 
 		this.backups      =
@@ -3980,11 +3982,20 @@
 		$note.attr('_text', text);
 
 		text = htmlEncode(text);
-                var hmmm = /\b(https?:\/\/[^\s]+)/mg;
 
+		var hmmm = /\b(https?:\/\/[^\s]+)/mg;
 		text = text.replace(hmmm, function(url){
 			return '<a href="' + url + '" target=_blank>' + url + '</a>';
 		});
+
+		if ( NB.peek('fileLinks') )
+		{
+			var xmmm = /`(.*?)`/mg;
+			text = text.replace(xmmm, function(full, text){
+				link = 'file:///' + text.replace('\\', '/');
+				return '`<a href="' + link + '" target=_blank>' + text + '</a>`';
+			});
+		}
 
 		$note.html(text); // ? text : ' ');
 	}
@@ -4988,9 +4999,22 @@
 	 */
 	var NB =
 	{
-		codeVersion: 20210426,
+		codeVersion: 20210804,
 		blobVersion: 20190412, // board blob format in Storage
 		board: null,
+		storage: null,
+
+		peek: function(name)
+		{
+			return this.storage.getConfig()[name];
+		},
+
+		poke: function(name, val)
+		{
+			var conf = this.storage.getConfig();
+			conf[name] = val;
+			return this.storage.saveConfig();
+		}
 	};
 
 	NB.storage = new Storage_Local();
@@ -5011,10 +5035,11 @@
 	//
 	var conf = NB.storage.getConfig();
 
-	console.log( `Active:  [${conf.board}]` );
-	console.log( `Theme:   [${conf.theme}]` );
-	console.log( `Font:    [${conf.fontName}], size [${conf.fontSize || '-'}], line-height [${conf.lineHeight || '-'}]` );
-	console.log( 'Backups: ', conf.backups);
+	console.log( `Active:    [${conf.board}]` );
+	console.log( `Theme:     [${conf.theme}]` );
+	console.log( `Font:      [${conf.fontName}], size [${conf.fontSize || '-'}], line-height [${conf.lineHeight || '-'}]` );
+	console.log( `FileLinks: [${conf.fileLinks}]` );
+	console.log( 'Backups:   ', conf.backups);
 
 	/*
 	 *	backups
