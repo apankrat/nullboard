@@ -3040,13 +3040,13 @@
 		$note.find('.text').html('');
 		$note.addClass('brand-new');
 
-		if ($before)
+		if ($before && $before.length)
 		{
 			$before.before($note);
 			$note = $before.prev();
 		}
 		else
-		if ($after)
+		if ($after && $after.length)
 		{
 			$after.after($note);
 			$note = $after.next();
@@ -4617,12 +4617,17 @@
 	//
 	$('.wrap').on('keydown', '.board .edit', function(ev){
 
-		var isNote = (this.tagName == 'TEXTAREA');
+		var $this = $(this);
+		var $note = $this.closest('.note');
+		var $list = $this.closest('.list');
+
+		var isNote = $note.length > 0;
+		var isList = $list.length > 0;
 
 		// esc
 		if (ev.keyCode == 27)
 		{
-			stopEditing($(this), true, false);
+			stopEditing($this, true, false);
 			return false;
 		}
 
@@ -4634,28 +4639,35 @@
 		}
 
 		// done
-		if (ev.keyCode == 13 && ! isNote ||
-		    ev.keyCode == 13 && ev.altKey ||
+		if (ev.keyCode == 13 && ev.altKey ||
 		    ev.keyCode == 13 && ev.shiftKey && ! ev.ctrlKey)
 		{
-			stopEditing($(this), false, false);
+			stopEditing($this, false, false);
 			return false;
 		}
 
 		// done + (add after / add before)
 		if (ev.keyCode == 13 && ev.ctrlKey)
 		{
-			var $this = $(this);
-			var $note = $this.closest('.note');
-			var $list = $note.closest('.list');
-
 			stopEditing($this, false, false);
 
-			if ($note && ev.shiftKey) // ctrl-shift-enter
-				addNote($list, null, $note);
+			if (isNote)
+			{
+				if (ev.shiftKey) // ctrl-shift-enter
+					addNote($list, null, $note);
+				else
+					addNote($list, $note);
+			}
 			else
-			if ($note && !ev.shiftKey) // ctrl-enter
+			if (isList)
+			{
+				$note = $list.find('.note').last();
 				addNote($list, $note);
+			}
+			else
+			{
+				addList();
+			}
 
 			return false;
 		}
@@ -4663,26 +4675,26 @@
 		// done + collapse
 		if (isNote && ev.altKey && ev.key == 'ArrowUp')
 		{
-			var $item = $(this).parent();
+			var $item = $this.parent();
 			$item[0]._collapsed = true;
-			stopEditing($(this), false, false);
+			stopEditing($this, false, false);
 			return false;
 		}
 
 		// done + expand
 		if (isNote && ev.altKey && ev.key == 'ArrowDown')
 		{
-			var $item = $(this).parent();
+			var $item = $this.parent();
 			$item[0]._collapsed = false;
-			stopEditing($(this), false, false);
+			stopEditing($this, false, false);
 			return false;
 		}
 
 		// done + toggle 'raw'
 		if (isNote && ev.altKey && ev.keyCode == 82)
 		{
-			$(this).parent().toggleClass('raw');
-			stopEditing($(this), false, false);
+			$this.parent().toggleClass('raw');
+			stopEditing($this, false, false);
 			return false;
 		}
 
@@ -4692,7 +4704,7 @@
 			var have = this.value;
 			var pos  = this.selectionStart;
 			var want = have.substr(0, pos) + '\u2022 ' + have.substr(this.selectionEnd);
-			$(this).val(want);
+			$this.val(want);
 			this.selectionStart = this.selectionEnd = pos + 2;
 			return false;
 		}
@@ -5002,7 +5014,7 @@
 	 */
 	var NB =
 	{
-		codeVersion: 20210804,
+		codeVersion: 20211023,
 		blobVersion: 20190412, // board blob format in Storage
 		board: null,
 		storage: null,
