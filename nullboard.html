@@ -125,6 +125,21 @@
 	}
 
 	/***/
+	@font-face {
+		font-family: 'f-jetbrains-mono';
+		font-weight: 400;
+		font-style: normal;
+		src: url('extras/JetBrainsMono-Regular.woff2') format('woff2');
+	}
+
+	@font-face {
+		font-family: 'f-jetbrains-mono';
+		font-weight: 500;
+		font-style: normal;
+		src: url('extras/JetBrainsMono-SemiBold.woff2') format('woff2');
+	}
+
+	/***/
 	html {
 		--ff: f-barlow, sans-serif;
 
@@ -172,6 +187,15 @@
 		--fs: 12;
 		--fs-head: 13;
 		--lw: calc(20 * var(--fs) + 47);  /* .list width */
+	}
+
+	/***/
+	html.f-jetbrains-mono {
+		--ff: f-jetbrains-mono, monospace;
+		--fs: 11;
+		--fs-head: 13;
+		--fs-nops: 8;
+		--lw: calc(22 * var(--fs) + 40);  /* .list width */
 	}
 
 	/***/
@@ -1567,6 +1591,7 @@
 					<a href="#" class="switch-font" font="open-sans">Use Open Sans</a>
 					<a href="#" class="switch-font" font="segoe-ui">Use Segoe UI</a>
 					<a href="#" class="switch-font" font="maven-pro">Use Maven Pro</a>
+					<a href="#" class="switch-font" font="jetbrains-mono">Use JetBrains Mono</a>
 
 					<div class='f-prefs break'>
 						<table>
