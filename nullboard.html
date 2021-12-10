@@ -4673,6 +4673,13 @@
 			return false;
 		}
 
+		// done on Enter if editing board or list title
+		if (ev.keyCode == 13 && ! isNote)
+		{
+			stopEditing($this, false, false);
+			return false;
+		}
+
 		// done + collapse
 		if (isNote && ev.altKey && ev.key == 'ArrowUp')
 		{
@@ -5015,7 +5022,7 @@
 	 */
 	var NB =
 	{
-		codeVersion: 20211023,
+		codeVersion: 20211210,
 		blobVersion: 20190412, // board blob format in Storage
 		board: null,
 		storage: null,
