@@ -4707,7 +4707,7 @@
 		}
 
 		// ctrl-shift-8
-		if (isNote && ev.key == '*' && ev.ctrlKey)
+		if (isNote && ev.key == '*' && ev.ctrlKey || isNote && ev.key == '8' && ev.metaKey && ev.shiftKey)
 		{
 			var have = this.value;
 			var pos  = this.selectionStart;
