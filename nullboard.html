@@ -3454,7 +3454,7 @@
 			return "Required board properties are empty.";
 
 		if (foo.format != NB.blobVersion)
-			return `Unsupported blob format "${board.format}", expecting "${NB.blobVersion}".`;
+			return `Unsupported blob format "${foo.format}", expecting "${NB.blobVersion}".`;                        
 
 		return null;
 	}
