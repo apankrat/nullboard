@@ -3501,15 +3501,48 @@
 		if (! confirm(msg))
 			return false;
 
+		var to_open = '';
+
 		for (var i=0; i<data.length; i++)
 		{
 			var board = data[i];
+			var check_title = true;
+
+			// check ID
 
 			if (index.has(board.id))
 			{
-				console.log(`Import: board ${board.id} (${board.title}) will be assigned new ID`);
-				board.id = +new Date();
+				var which = (data.length == 1) ? "with the same ID" : board.id;
+
+				if (confirm(`Board ${which} already exists. Overwrite it?`) &&
+				    confirm(`OVERWRITE for sure?`))
+				{
+					console.log(`Import: ${board.id} (${board.title} - will overwrite existing one`);
+					check_title = false;
+				}
+				else
+				if (confirm(`Import the board under a new ID?`))
+				{
+					var new_id = +new Date();
+					console.log(`Import: ${board.id} (${board.title} - will import as ${new_id}`);
+					board.id = new_id;
+				}
+				else
+				{
+					console.log(`Import: ${board.id} (${board.title} - ID conflict, will not import`);
+					continue;
+				}
 			}
+
+			if (check_title)
+			{
+				var retitle = false;
+				index.forEach( have => { retitle |= (have.title == board.title) } );
+
+				if (retitle) board.title += ' (imported)';
+			}
+
+			// ok, do the deed
 
 			board.revision--; // save will ++ it back
 
@@ -3518,9 +3551,11 @@
 				alert(`Failed to save board ${board.id}. Import failed.`);
 				return false;
 			}
+
+			if (! to_open) to_open = data[0].id;
 		}
 
-		openBoard(data[0].id);
+		if (to_open) openBoard(to_open);
 	}
 
 	/*
