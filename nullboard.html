@@ -4031,9 +4031,15 @@
 
 		text = htmlEncode(text);
 
-		var hmmm = /\b(https?:\/\/[^\s]+)/mg;
-		text = text.replace(hmmm, function(url){
+		var hmmm = /\b(?<!\()(https?:\/\/[^\s]+)(?!\))/mg;
+		text = text.replace(hmmm, function (url) {
 			return '<a href="' + url + '" target=_blank>' + url + '</a>';
+		});
+
+		// process commonmark/markdown-style links
+		var mdlink = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/mg
+		text = text.replace(mdlink, function(match, link_text, url){
+			return '<a href="' + url + '" target=_blank class=mdlink>' + link_text + '</a>';
 		});
 
 		if ( NB.peek('fileLinks') )
