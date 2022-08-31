@@ -1985,7 +1985,7 @@
 			var meta = this.boardIndex.get(board_id);
 
 			if (! meta)
-				throw `Invalid board_id in nukeBoard(${board.id})`;
+				throw `Invalid board_id in nukeBoard(${board_id})`;
 
 			var title = meta.title + '';
 
@@ -2038,7 +2038,7 @@
 			var meta = this.boardIndex.get(board_id);
 
 			if (! meta)
-				throw `Invalid board_id in setBoardRevision(${board_id}, ${revision})`;
+				throw `Invalid board_id in setBoardUiSpot(${board_id}, ${ui_spot})`;
 
 			meta.ui_spot = ui_spot;
 
