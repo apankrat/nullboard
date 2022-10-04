@@ -1,0 +1,15 @@
+{
+  "listeners": {
+    "*:80": {
+      "pass": "routes/main"
+    }
+  },
+  "routes": {
+    "main": [{
+      "action": {
+        "share": "/www/nullboard.html"
+      }
+    }]
+  }
+}
+
