@@ -1,4 +1,4 @@
-FROM nginx/unit:1.29.0-minimal
+FROM nginx/unit:1.28.0-minimal
 
 COPY unit.conf.json /docker-entrypoint.d/.unit.conf.json
 
