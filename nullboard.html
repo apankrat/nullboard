@@ -4433,6 +4433,9 @@
 			if (conf.lineHeight)
 				setLineHeight(conf.lineHeight);
 
+			if (conf.listWidth)
+				setListWidth(conf.listWidth);
+
 			updateVarsAndLayout();
 		}
 
@@ -4874,8 +4877,7 @@
 
 	//
 	$('.wrap').on('mousedown', '.board .note .text', function(ev){
-		if (ev.which === 1)
-			NB.noteDrag.prime(this.parentNode, ev);
+		NB.noteDrag.prime(this.parentNode, ev);
 	});
 
 	$('.config').on('mousedown', 'a.load-board', function(ev){
