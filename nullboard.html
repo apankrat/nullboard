@@ -1307,11 +1307,23 @@
 
 		.board .note {
 			box-shadow: none;
-			outline: 1px solid #ccc;
+			text-shadow: none !important;
+			outline: 1px solid #888;
+		}
+		.list {
+			outline: 1px solid #555;
+
+		}
+		.board .note .raw {
+			outline: none;
+			text-shadow: none;
 		}
 
-		.board .note.raw {
-			outline: none;
+		.board .head .text a,
+		.board .note .text a {
+			color: #333;
+			text-shadow: none;
+			text-decoration: underline;
 		}
 	}
 
