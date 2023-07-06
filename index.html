@@ -1630,7 +1630,7 @@
 				<div class=menu>
 					<a href=# class=teaser>&equiv;</a>
 					<div class=bulk>
-						<a href=# class='del-list warn'><u></u> List</a>
+						<a href=# class='del-list warn'><u></u> <span class=del-list-text>List</span></a>
 						<a href=# class='mov-list-l full'>&lt; Move</a>
 						<a href=# class='mov-list-l half'>&lt; Mo</a><a href=# class='mov-list-r half'>ve &gt;</a>
 						<a href=# class='mov-list-r full'>Move &gt;</a>
@@ -3120,6 +3120,23 @@
 		setupListScrolling();
 	}
 
+	function clearList($list)
+	{
+		if (!confirm("Delete all notes in this list?"))
+			return;
+
+		const $notes = $list.find('.note');
+		$notes
+		.animate({ opacity: 0 }, 'fast')
+		.slideUp('fast')
+		.queue(function(){
+			$notes.remove();
+			saveBoard();
+		});
+
+		setupListScrolling();
+	}
+
 	function deleteList($list)
 	{
 		var empty = true;
@@ -3241,6 +3258,15 @@
 		$('.wrap .board .head .text').click();
 	}
 
+	function updateDelListText($list)
+	{
+		const noteCount = $list.find('.note').length;
+		if (noteCount)
+			$list.find('.head .menu .bulk .del-list .del-list-text').text('Clear');
+		else
+			$list.find('.head .menu .bulk .del-list .del-list-text').text('Remove');
+	}
+
 	function saveBoard()
 	{
 		var $board = $('.wrap .board');
@@ -3251,6 +3277,8 @@
 		$board.find('.list').each(function(){
 			var $list = $(this);
 			var l = board.addList( getText($list.find('.head .text')) );
+
+			updateDelListText($list);
 
 			$list.find('.note').each(function(){
 				var $note = $(this)
@@ -4843,14 +4871,18 @@
 		return false;
 	});
 
-	//
 	$('.wrap').on('click', '.board .add-list', function(){
 		addList();
 		return false;
 	});
 
 	$('.wrap').on('click', '.board .del-list', function(){
-		deleteList( $(this).closest('.list') );
+		const $list = $(this).closest('.list');
+		const noteCount =  $list.find(".notes :not(.raw)").length;
+		if (noteCount)
+			clearList($list);
+		else
+			deleteList($list);
 		return false;
 	});
 
