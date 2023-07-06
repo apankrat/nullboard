@@ -3191,7 +3191,23 @@
 		});
 	}
 
-	//
+	function updateDelListText($list)
+	{
+		const noteCount = $list.find('.note').length;
+		if (noteCount)
+			$list.find('.head .menu .bulk .del-list .del-list-text').text('Clear');
+		else
+			$list.find('.head .menu .bulk .del-list .del-list-text').text('Remove');
+	}
+
+	function updateCurrentBoardDelListText()
+	{
+		var $board = $('.wrap .board');
+		$board.find('.list').each(function(){
+			updateDelListText($(this));	
+		});
+	}
+
 	function openBoard(board_id)
 	{
 		closeBoard(true);
@@ -3256,15 +3272,6 @@
 
 		$('.wrap .board .head').addClass('brand-new');
 		$('.wrap .board .head .text').click();
-	}
-
-	function updateDelListText($list)
-	{
-		const noteCount = $list.find('.note').length;
-		if (noteCount)
-			$list.find('.head .menu .bulk .del-list .del-list-text').text('Clear');
-		else
-			$list.find('.head .menu .bulk .del-list .del-list-text').text('Remove');
 	}
 
 	function saveBoard()
@@ -3406,6 +3413,7 @@
 		updatePageTitle();
 		updateUndoRedo();
 		updateBoardIndex();
+		updateCurrentBoardDelListText();
 		setupListScrolling();
 	}
 
