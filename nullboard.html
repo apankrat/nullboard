@@ -1723,6 +1723,14 @@
 
 <script type="text/javascript">
 
+	/*
+	 * allow external tools to inject the agents data here
+	 */
+	const DEFAULT_LOCAL_AUTH = '';
+	const DEFAULT_LOCAL_HOST = 'http://127.0.0.1:10001';
+	const DEFAULT_REMOTE_HOST = '';
+	const DEFAULT_REMOTE_AUTH = '';
+
 	function AppConfig()
 	{
 		this.verLast      = null;           // last used codeVersion
@@ -2098,7 +2106,7 @@
 			var agents = conf.backups.agents;
 
 			if (agents.length != 2 ||
-			    agents[0].type != simp || agents[0].conf.base != 'http://127.0.0.1:10001' ||
+			    agents[0].type != simp || agents[0].conf.base != DEFAULT_LOCAL_HOST ||
 			    agents[1].type != simp)
 			{
 				console.log('Unexpected backup config, will re-initialize.', agents);
@@ -2108,15 +2116,15 @@
 				conf.backups.agents.push({
 					type: simp,
 					id: simp + '-' + (conf.backups.nextId++),
-					enabled: false,
-					conf: { base: 'http://127.0.0.1:10001', auth: '' }
+					enabled: DEFAULT_LOCAL_AUTH.length > 0,
+					conf: { base: DEFAULT_LOCAL_HOST, auth: DEFAULT_LOCAL_AUTH }
 				})
 
 				conf.backups.agents.push({
 					type: simp,
 					id: simp + '-' + (conf.backups.nextId++),
-					enabled: false,
-					conf: { base: '', auth: '' }
+					enabled: (DEFAULT_REMOTE_HOST.length > 0) && (DEFAULT_REMOTE_AUTH.length > 0),
+					conf: { base: DEFAULT_REMOTE_HOST, auth: DEFAULT_REMOTE_AUTH }
 				})
 
 				this.saveConfig();
