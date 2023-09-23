@@ -20,6 +20,7 @@ The name also happens to abbreviate to [NB](https://en.wikipedia.org/wiki/Nota_b
 * The data can also be automatically backed up to a local disk with the help of:
   * [Nullboard Agent](https://nullboard.io/backups) - a native Windows app
   * [Nullboard Agent Express Port](https://github.com/justinpchang/nullboard-agent-express) - an express.js-based portable app
+  * [nbagent](https://github.com/luismedel/nbagent) - a version for Unix systems, in Python
 
 ## Beta
 
