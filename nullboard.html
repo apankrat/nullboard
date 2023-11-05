@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
   <!--
@@ -1749,6 +1749,14 @@
 		this.backupStatus = { };            // agentId => [ 'conf' ]
 	}
 
+	const default_backup_agents =
+	[
+		{ base: 'http://127.0.0.1:10001', auth: '' }, // local agent
+		{ base: '', auth: '' }                        // remote agent
+	];
+
+	//
+
 	function BoardMeta()
 	{
 		this.title   = '';
@@ -2102,22 +2110,26 @@
 			    agents[0].type != simp || agents[0].conf.base != 'http://127.0.0.1:10001' ||
 			    agents[1].type != simp)
 			{
+				const def = default_backup_agents;
+
 				console.log('Unexpected backup config, will re-initialize.', agents);
 
 				conf.backups.agents = [];
 
 				conf.backups.agents.push({
-					type: simp,
-					id: simp + '-' + (conf.backups.nextId++),
-					enabled: false,
-					conf: { base: 'http://127.0.0.1:10001', auth: '' }
+					// localhost
+					type    : simp,
+					id      : simp + '-' + (conf.backups.nextId++),
+					enabled : def[0].base && def[0].auth,
+					conf    : def[0],
 				})
 
 				conf.backups.agents.push({
-					type: simp,
-					id: simp + '-' + (conf.backups.nextId++),
-					enabled: false,
-					conf: { base: '', auth: '' }
+					// remote
+					type    : simp,
+					id      : simp + '-' + (conf.backups.nextId++),
+					enabled : def[1].base && def[1].auth,
+					conf    : def[1],
 				})
 
 				this.saveConfig();
@@ -5082,7 +5094,7 @@
 	 */
 	var NB =
 	{
-		codeVersion: 20221112,
+		codeVersion: 20231105,
 		blobVersion: 20190412, // board blob format in Storage
 		board: null,
 		storage: null,
