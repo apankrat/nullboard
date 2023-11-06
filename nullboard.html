@@ -517,6 +517,11 @@
 		transition: none;
 	}
 
+	.board .head .text a .mdlink,
+	.board .note .text a .mdlink {
+		text-decoration: underline;
+	}
+
 	@keyframes whoomp {
 		0%   { color: inherit; }
 		30%  { color: #888;    }
@@ -4056,9 +4061,15 @@
 
 		text = htmlEncode(text);
 
-		var hmmm = /\b(https?:\/\/[^\s]+)/mg;
-		text = text.replace(hmmm, function(url){
+		var hmmm = /\b(?<!\()(https?:\/\/[^\s]+)(?!\))/mg;
+		text = text.replace(hmmm, function (url) {
 			return '<a href="' + url + '" target=_blank>' + url + '</a>';
+		});
+
+		// process commonmark/markdown-style links
+		var mdlink = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/mg
+		text = text.replace(mdlink, function(match, link_text, url){
+			return '<a href="' + url + '" target=_blank class=mdlink>' + link_text + '</a>';
 		});
 
 		if ( NB.peek('fileLinks') )
